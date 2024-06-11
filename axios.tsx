@@ -7,6 +7,9 @@ import { Redirect, useRouter } from 'expo-router';
 import { store, useAppDispatch } from './app/(redux)/store';
 import { setTokensAction } from './app/(redux)/authSlice';
 
+
+const dispatch = (action:any) => store.dispatch(action)
+
 const axiosInstance = axios.create({
 	baseURL: baseURL,
 	timeout: 5000,
@@ -43,12 +46,11 @@ axiosInstance.interceptors.response.use(
 			);
 			return Promise.reject(error);
 		}
-		const router = useRouter();
-		const dispatch = useAppDispatch();
 		if ( error.response.status === 401 && originalRequest.url === baseURL + 'token/refresh/') {
 			console.log("Refresh token not valid...");
 			//redirect here
-			router.push('/');
+			return <Redirect href={'/'}/>;
+			//router.push('/');
 			return Promise.reject(error);
 		}
 		if (error.response.data.code === 'token_not_valid' && error.response.status === 401) {
@@ -63,8 +65,12 @@ axiosInstance.interceptors.response.use(
 					return axiosInstance
 						.post('/token/refresh/', { refresh: refreshToken })
 						.then((response) => {
-							if (response.data.access && response.data.refresh) {
-								dispatch(setTokensAction({token: response.data.access, refreshToken: response.data.refresh}))
+							if (response.data.access) {
+								if (response.data.refresh) {
+									dispatch(setTokensAction({token: response.data.access, refreshToken: response.data.refresh}))
+								} else {
+									dispatch(setTokensAction({token: response.data.access, refreshToken: refreshToken}))
+								}
 								axiosInstance.defaults.headers['Authorization'] = 'Bearer ' + response.data.access;
 							};
 							return axiosInstance(originalRequest);
@@ -74,13 +80,17 @@ axiosInstance.interceptors.response.use(
 						});
 				} else {
 					console.log('Refresh token is expired', tokenParts.exp, now);
+					dispatch(setTokensAction({token: null, refreshToken: null}))
 					//redirect here
-					router.push('/');
+					return <Redirect href={'/'}/>;
+					//router.push('/');
 				}
 			} else {
 				console.log('Refresh token not available.');
+				dispatch(setTokensAction({token: null, refreshToken: null}))
 				//redirect here
-				router.push('/');
+				return <Redirect href={'/'}/>;
+				//router.push('/');
 			}
 		}
 		console.log("ELSE", error.response.data.code, error.response.status, error.response.statusText);

@@ -17,6 +17,7 @@ import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { baseImageURL } from "@/settings";
+import { ThemedView } from "@/components/ThemedView";
 
 
 interface Errors {
@@ -127,7 +128,7 @@ export default function ClientCreate() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <View style={styles.form}>
+            <ThemedView style={styles.form}>
                 <ScrollView>
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
@@ -181,7 +182,7 @@ export default function ClientCreate() {
                     <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
                     <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Update</Text></TouchableOpacity>
                 </ScrollView>
-            </View>
+            </ThemedView>
             }
         </KeyboardAvoidingView>
     )
@@ -192,13 +193,12 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: "center",
       paddingHorizontal: 20,
-      backgroundColor: "#f5f5f5",
     },
     form: {
-      backgroundColor: "#ffffff",
+      backgroundColor: "#f0f0f0",
       padding: 20,
       borderRadius: 10,
-      shadowColor: "#000",
+      shadowColor: "#fff",
       shadowOffset: {
         width: 0,
         height: 2,

@@ -5,8 +5,6 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useColorScheme } from '@/hooks/useColorScheme';
-
-import AppWrapper from './(redux)/AppWrapper';
 import { persistor, store } from './(redux)/store';
 
 
@@ -23,6 +21,7 @@ export default function RootLayout() {
           >
           <Stack.Screen name="index" />
           <Stack.Screen name="register" />
+          <Stack.Screen name="initialSettings" />
           <Stack.Screen name="(app)" />
           <Stack.Screen name="+not-found" />
           </Stack>

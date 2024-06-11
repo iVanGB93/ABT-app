@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { useRouter } from "expo-router";
 import { ImagePickerAsset } from 'expo-image-picker';
+import { ThemedView } from "@/components/ThemedView";
 
 interface Errors {
     name?: string;
@@ -126,7 +127,7 @@ export default function ClientCreate() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <View style={styles.form}>
+            <ThemedView style={styles.form}>
                 {error ? (
                     <Text style={styles.errorText}>{error}</Text>
                 ) : null}
@@ -142,7 +143,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
 
-                    <Text style={styles.label}>Phone</Text>
+                    <Text style={styles.label}>Phone (optional)</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Enter client's phone"
@@ -153,7 +154,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.phone}</Text>
                     ) : null}
 
-                    <Text style={styles.label}>Email</Text>
+                    <Text style={styles.label}>Email (optional)</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Enter client's email"
@@ -164,7 +165,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.email}</Text>
                     ) : null}
                     
-                    <Text style={styles.label}>Address</Text>
+                    <Text style={styles.label}>Address (optional)</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Enter client's address"
@@ -180,7 +181,7 @@ export default function ClientCreate() {
                     <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
                     <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
                 </ScrollView>
-            </View>
+            </ThemedView>
             }
         </KeyboardAvoidingView>
     )
@@ -191,13 +192,12 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: "center",
       paddingHorizontal: 20,
-      backgroundColor: "#f5f5f5",
     },
     form: {
-      backgroundColor: "#ffffff",
+      backgroundColor: "#f0f0f0",
       padding: 20,
       borderRadius: 10,
-      shadowColor: "#000",
+      shadowColor: "#ffffff",
       shadowOffset: {
         width: 0,
         height: 2,

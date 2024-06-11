@@ -16,6 +16,8 @@ export default function JobLayout() {
       <Stack.Screen name="jobCreate" options={{headerTitle: 'Add New Job'}}/>
       <Stack.Screen name="jobUpdate" options={{headerTitle: 'Update Job'}}/>
       <Stack.Screen name="invoice" options={{headerTitle: 'Invoice'}}/>
+      <Stack.Screen name="invoiceCreate" options={{headerTitle: 'Create Invoice'}}/>
+      <Stack.Screen name="invoiceUpdate" options={{headerTitle: 'Update Invoice'}}/>
     </Stack>
   );
 }

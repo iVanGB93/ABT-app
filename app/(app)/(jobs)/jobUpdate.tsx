@@ -18,6 +18,7 @@ import { useRouter } from "expo-router";
 import axiosInstance from '@/axios';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { baseImageURL } from "@/settings.js";
+import { ThemedView } from "@/components/ThemedView";
 
 
 interface Errors {
@@ -131,7 +132,7 @@ export default function JobUpdate() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <View style={styles.form}>
+            <ThemedView style={styles.form}>
                 <ScrollView>
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
@@ -177,7 +178,7 @@ export default function JobUpdate() {
                     <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
                     <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
                 </ScrollView>
-            </View>
+            </ThemedView>
             }
         </KeyboardAvoidingView>
     )
@@ -188,7 +189,6 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: "center",
       paddingHorizontal: 20,
-      backgroundColor: "#f5f5f5",
     },
     form: {
       backgroundColor: "#ffffff",

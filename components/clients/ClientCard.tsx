@@ -74,15 +74,15 @@ export default function ClientCard({image, id, name, address, phone, email, inDe
       </View>
       <View style={styles.dataContainer}>
           <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
-          <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{address}</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{address ? address : 'No address saved'}</Text></Pressable>
       </View>
       <View style={styles.dataContainer}>
           <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
-          <Pressable onPress={() => Linking.openURL(`tel:${phone}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{phone}</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(`tel:${phone}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{phone ? phone : 'No phone saved'}</Text></Pressable>
       </View>
       <View style={styles.dataContainer}>
           <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
-          <Pressable onPress={() => Linking.openURL(`mailto:${email}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{email}</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(`mailto:${email}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{email ? email : 'No email saved'}</Text></Pressable>
       </View>
       {inDetail ?
       <View style={styles.dataContainer}>
@@ -103,15 +103,13 @@ export default function ClientCard({image, id, name, address, phone, email, inDe
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert('Action canceled.');
-          setModalVisible(!modalVisible);
-        }}>
+        onRequestClose={() => setModalVisible(!modalVisible)}
+      >
         <View style={styles.centeredView}>
           { clientLoading ?
           <ActivityIndicator color={color} size="large" />
           :
-          <View style={[styles.card, {padding: 10}]}>
+          <View style={[styles.card, {padding: 10, backgroundColor: darkMainColor}]}>
             <ThemedText style={[styles.name, {padding: 10}]}>Do you want to delete {name}?</ThemedText>
             <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
               <Pressable

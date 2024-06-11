@@ -8,18 +8,22 @@ import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 //import { SENDGRID_API_KEY } from '@env';
 import axiosInstance from '@/axios';
-import { jobFail, setInvoice, setCharges } from '@/app/(redux)/jobSlice';
+import { setInvoice, setCharges } from '@/app/(redux)/jobSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { darkSecondColor, lightSecondColor, darkMainColor } from '@/settings';
+import { useRouter } from 'expo-router';
 
 
 export default function Invoice() {
     const { color, darkTheme, businessName, businessLogo } = useSelector((state: RootState) => state.settings);
     const { client } = useSelector((state: RootState) => state.client);
-    const {job, invoice, jobError, jobLoading, charges} = useSelector((state: RootState) => state.job);
+    const {job, invoice, charges} = useSelector((state: RootState) => state.job);
     const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch();
+    const router = useRouter();
     
     const getInvoice = async () => {
         await axiosInstance
@@ -28,27 +32,23 @@ export default function Invoice() {
             if (response.status === 200) {
                 dispatch(setInvoice(response.data.invoice));
                 dispatch(setCharges(response.data.charges));
+                setLoading(false);
             } else {
                 dispatch(setInvoice(response.data.invoice));
                 dispatch(setCharges(response.data.charges));
-                dispatch(jobFail(response.data.message));
+                setError(response.data.message);
+                setLoading(false);
             }
         })
         .catch(function(error) {
             console.error('Error fetching an invoice', error);
-            dispatch(jobFail(error.message));
+            setError(error.message);
+            setLoading(false);
         });
     }
 
     useEffect(() => {
         getInvoice();
-        /* if (Object.keys(invoice).length !== 0 && invoice.job === job.id) {
-            dispatch(getInvoice(job.id));
-            dispatch(getCharges(invoice.id));
-        } else {
-            dispatch(setCharges([]));
-            dispatch(setInvoice([]));
-        } */
     }, []);
 
     const convertImageToBase64 = async (uri:any) => {
@@ -61,30 +61,34 @@ export default function Invoice() {
             <head>
             <style>
                 body { font-family: Arial, sans-serif; padding: 20px; }
-                .header { text-align: center; }
+                .header { display: flex; justify-content: space-between; }
                 .invoice-title { font-size: 24px; font-weight: bold; }
                 .invoice-number { font-size: 20px; font-weight: bold; }
-                .details { margin-top: 20px; }
+                .details { display: flex; justify-content: space-between; margin-top: 20px; }
                 .details p { margin: 5px 0; }
                 .table { width: 100%; margin-top: 20px; border-collapse: collapse; }
                 .table th, .table td { border: 1px solid #ddd; padding: 8px; }
                 .table th { background-color: #f2f2f2; text-align: left; }
-                .footer { margin-top: 20px; }
+                .footer { margin-top: 20px; text-align: end; }
             </style>
             </head>
             <body>
             <div class="header">
-                <img src=${base64Image} alt="logo-image" style="width: 100px;"/>
-                <p class="invoice-title">${businessName}</p>
-                <p class="invoice-number">Invoice #${invoice.number}</p>
-                <p>${formatDate(new Date(invoice.date))}</p>
+                <img src=${base64Image} alt="logo-image" style="width: 150px; height: 150px"/>
+                <div>
+                    <p class="invoice-title">${businessName}</p>
+                    <p class="invoice-number">Invoice #${invoice.number}</p>
+                    <p>${formatDate(new Date(invoice.date))}</p>
+                </div>
             </div>
             <div class="details">
                 <p><strong>Bill to:</strong></p>
-                <p>${client.user}</p>
-                <p>${client.email}</p>
-                <p>${client.phone}</p>
-                <p>${client.address}</p>
+                <div>
+                    <p>${client.user}</p>
+                    <p>${client.email}</p>
+                    <p>${client.phone}</p>
+                    <p>${client.address}</p>
+                </div>
             </div>
             <table class="table">
                 <tr>
@@ -94,14 +98,14 @@ export default function Invoice() {
                 ${charges.map((item: { description: any; amount: any; }) => `
                 <tr>
                     <td>${item.description}</td>
-                    <td>${item.amount}</td>
+                    <td>$ ${item.amount}</td>
                 </tr>
                 `).join('')}
             </table>
             <div class="footer">
-                <p><strong>Total:</strong> ${invoice.total}</p>
-                <p><strong>PAID:</strong> ${invoice.paid}</p>
-                <p><strong>Balance Due:</strong> ${invoice.due}</p>
+                <p><strong>Total:</strong> $ ${invoice.total}</p>
+                <p><strong>PAID:</strong> $ ${invoice.paid}</p>
+                <p><strong>Balance Due:</strong> $ ${invoice.due}</p>
             </div>
             </body>
         </html>
@@ -184,13 +188,13 @@ export default function Invoice() {
     };
 
     return (
-        jobLoading ?
+        loading ?
         <ActivityIndicator style={styles.loading} size="large" />
         :
         invoice ? 
-        <ScrollView style={[styles.container, {borderColor: color, backgroundColor:darkTheme ? darkMainColor: lightSecondColor}]}>
+        <ScrollView>
             <ThemedView style={styles.invoice}>
-                <ThemedView>
+                <ThemedView style={styles.header}>
                     <ThemedText style={styles.bussinessname}>{businessName}</ThemedText>
                     <ThemedText style={styles.invoiceTitle}>Invoice #{invoice.number}</ThemedText>
                     <ThemedText  style={styles.data}>{formatDate(new Date(invoice.date))}</ThemedText>
@@ -207,12 +211,18 @@ export default function Invoice() {
                     <ThemedText style={styles.tableHeader}>Description</ThemedText>
                     <ThemedText style={styles.tableHeader}>Amount</ThemedText>
                     </ThemedView>
-                    {charges.map((item: { description: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; amount: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
+                    { charges ?
+                    charges.map((item: { description: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; amount: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
                     <ThemedView style={styles.tableRow} key={index}>
                         <ThemedText>{item.description}</ThemedText>
                         <ThemedText>${item.amount}</ThemedText>
                     </ThemedView>
-                    ))}
+                    )) : 
+                    <ThemedView style={styles.tableRow}>
+                        <ThemedText>No charges created.</ThemedText>
+                        <ThemedText>$0</ThemedText>
+                    </ThemedView>
+                    }
                 </ThemedView>
                 <ThemedView style={styles.footer}>
                     <ThemedText style={styles.data}>Total: ${invoice.total}</ThemedText>
@@ -224,11 +234,11 @@ export default function Invoice() {
                     { invoice.closed ?
                     <Button  title='Closed'/>
                     :
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => navigation.navigate('Update Invoice')}><ThemedText style={[styles.headerText, {color: 'white', textAlign: 'center'}]}>Change</ThemedText></TouchableOpacity>
+                    <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => router.push('invoiceUpdate')}><ThemedText style={{color: 'white', textAlign: 'center'}}>Change</ThemedText></TouchableOpacity>
                     }
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => createAndSendInvoice()}><ThemedText style={[styles.headerText, {color: 'white', textAlign: 'center'}]}>Send Invoice</ThemedText></TouchableOpacity>
+                    <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => createAndSendInvoice()}><ThemedText style={{color: 'white', textAlign: 'center'}}>Send Invoice</ThemedText></TouchableOpacity>
                 </ThemedView>
-                <Modal
+                {/* <Modal
                     animationType="slide"
                     transparent={true}
                     visible={modalVisibleInvoice}
@@ -236,7 +246,7 @@ export default function Invoice() {
                         setModalVisibleInvoice(!modalVisibleInvoice);
                     }}>
                     <View style={styles.centeredView}>
-                    { jobLoading ?
+                    { loading ?
                     <ActivityIndicator style={styles.loading} size="large" />
                     :
                     <View style={[styles.card, {padding: 10}]}>
@@ -256,13 +266,13 @@ export default function Invoice() {
                     </View>
                     }
                     </View>
-                </Modal>
+                </Modal> */}
             </ThemedView>
         </ScrollView>
         :
         <ThemedView style={styles.container}>
-            <ThemedText style={[styles.invoiceTitle, {textAlign: 'center', margin: 'auto'}]}>{jobError}</ThemedText> 
-            <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => navigation.navigate('Create Invoice')}><ThemedText style={[styles.headerText, {color: 'white', textAlign: 'center'}]}>Create</ThemedText></TouchableOpacity>
+            <ThemedText style={[styles.invoiceTitle, {textAlign: 'center', margin: 'auto'}]}>{error}</ThemedText> 
+            <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => router.push('invoiceCreate')}><ThemedText style={{color: 'white', textAlign: 'center'}}>Create</ThemedText></TouchableOpacity>
         </ThemedView>
     );
 };
@@ -273,15 +283,12 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     invoice: {
-        padding: 5,
+        margin: 10,
         borderTopWidth: 1,
         borderTopColor: '#ddd', 
     },
     header: {
-      textAlign: 'center',
-      marginBottom: 10,
-      borderTopWidth: 1,
-        borderTopColor: '#ddd', 
+        padding: 10,
     },
     bussinessname: {
       fontSize: 24,
@@ -290,10 +297,10 @@ const styles = StyleSheet.create({
     invoiceTitle: {
         textAlign:  'right',
         fontSize: 20,
-      fontWeight: 'bold',
+        fontWeight: 'bold',
     },
     details: {
-      marginVertical: 10,
+        padding: 10,
     },
     bold: {
       fontWeight: 'bold',
@@ -302,10 +309,11 @@ const styles = StyleSheet.create({
     data: {
         fontSize: 15,
         textAlign: 'right',
-    },  
+    },
     table: {
-      width: '100%',
-      marginTop: 20,
+        margin: 'auto',
+        width: '90%',
+        marginVertical: 20,
     },
     tableRow: {
       flexDirection: 'row',
@@ -318,7 +326,7 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     },
     footer: {
-        marginVertical: 10,
+        padding: 10,
     },
     button: {
         backgroundColor: '#694fad',

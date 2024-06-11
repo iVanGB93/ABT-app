@@ -131,7 +131,7 @@ export default function JobCard({id, status, client, address, description, price
         </View>
         { inDetail ?
         <View style={styles.dataContainer}>
-            <ThemedText style={[styles.LabelText, {fontSize: 22, margin: 10}]}>{description}</ThemedText>
+            <ThemedText style={[styles.LabelText, {fontSize: 22, margin: 5}]}>{description}</ThemedText>
         </View>
         : null }
         <View style={styles.dataContainer}>
