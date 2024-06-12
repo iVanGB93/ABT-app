@@ -22,6 +22,7 @@ import { ThemedView } from "@/components/ThemedView";
 
 interface Errors {
     name?: string;
+    lastName?: string;
     phone?: string;
     email?: string;
     address?: string;
@@ -31,7 +32,8 @@ export default function ClientCreate() {
     const {color } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const { client } = useSelector((state: RootState) => state.client);
-    const [name, setName] = useState(client.user);
+    const [name, setName] = useState(client.name);
+    const [lastName, setLastName] = useState(client.lastName);
     const [phone, setPhone] = useState(client.phone);
     const [email, setEmail] = useState(client.email);
     const [address, setAddress] = useState(client.address);
@@ -84,6 +86,7 @@ export default function ClientCreate() {
             formData.append('action', 'update');
             formData.append('id', client.id);
             formData.append('name', name);
+            formData.append('last_name', name);
             formData.append('phone', phone);
             formData.append('email', email);
             formData.append('address', address);
@@ -99,7 +102,7 @@ export default function ClientCreate() {
             };
             setIsLoading(true);
             await axiosInstance
-            .post(`user/client/update/${userName}/`, formData,
+            .post(`clients/update/${userName}/`, formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
@@ -143,7 +146,16 @@ export default function ClientCreate() {
                     {errors.name ? (
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
-
+                    <Text style={styles.label}>Last Name (optional)</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder={lastName ? lastName : "Enter client's last name"}
+                        value={lastName}
+                        onChangeText={setLastName}
+                    />
+                    {errors.lastName ? (
+                        <Text style={styles.errorText}>{errors.lastName}</Text>
+                    ) : null}
                     <Text style={styles.label}>Phone</Text>
                     <TextInput
                         style={styles.input}

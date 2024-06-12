@@ -10,8 +10,11 @@ import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from "./(redux)/store";
 import { authSuccess } from "./(redux)/authSlice";
 import {commonStyles} from '@/constants/commonStyles';
+import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
 
+
+SplashScreen.preventAutoHideAsync();
 
 interface Errors {
   username?: string;
@@ -25,16 +28,18 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-/*   useEffect(() => {
+  SplashScreen.hideAsync();
+  /* useEffect(() => {
     setTimeout(() => {
       setLoading(false);
       SplashScreen.hideAsync();
-    }, 3000);
+    }, 1000);
     if (token != null) {
       router.push('/(app)/(clients)');
     }
@@ -56,8 +61,11 @@ export default function Login() {
       .then(function(response) {
           if (response.data.access !== undefined) {
             dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
+            router.push('(app)/(clients)');
           } else {
             setError(response.data.message);
+            setLoading(false);
+            setAlertVisible(true);
           }
       })
       .catch(function(error) {
@@ -67,8 +75,12 @@ export default function Login() {
           } else {
             if (error.response.status === 401) {
               setError("Username or Password incorrect");
+              setLoading(false);
+              setAlertVisible(true);
             } else {
               setError(error.message);
+              setLoading(false);
+              setAlertVisible(true);
             };
           };
       });
@@ -81,10 +93,8 @@ export default function Login() {
     ) : (
     <ThemedView style={[commonStyles.container, {backgroundColor: color}]}>
       <View style={commonStyles.header}>
+        <Text style={commonStyles.text_header}>Advance Business Tools</Text>
         <Text style={commonStyles.text_header}>Welcome!</Text>
-        {error ? (
-          <Text style={{color: 'white', textAlign: 'center', fontSize: 15, marginTop: 10}}>{error}</Text>
-        ) : null}
       </View>
       <ThemedView style={commonStyles.footer}>        
         <Text style={commonStyles.text_footer}>User</Text>
@@ -131,6 +141,12 @@ export default function Login() {
           <Text style={commonStyles.buttonText}>I'm new, create account!!</Text>
         </TouchableOpacity>
       </ThemedView>
+      <CustomAlert
+        title='Login'
+        visible={alertVisible}
+        message={error}
+        onClose={() => setAlertVisible(false)}
+      />
     </ThemedView>
     )
   );

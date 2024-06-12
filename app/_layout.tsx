@@ -1,5 +1,4 @@
-import { Text } from 'react-native';
-import { Stack, Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';

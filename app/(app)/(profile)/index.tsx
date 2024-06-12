@@ -1,21 +1,100 @@
-import React, { useState } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, Platform, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View, ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, Platform, Image } from 'react-native';
 import { useSelector } from "react-redux";
 import * as ImagePicker from 'expo-image-picker';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setBusinessLogo, setBusinessName } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
+import axiosInstance from '@/axios';
+import { baseImageURL } from '@/settings';
 
 
 export default function Profile () {
     const { color, darkTheme, businessName, businessLogo } = useSelector((state: RootState) => state.settings);
     const { userName } = useSelector((state: RootState) => state.auth);
-    const [newName, setNewName] = useState(businessName)
+    const [newName, setNewName] = useState(businessName);
+    const [newLogo, setNewLogo] = useState<any>(businessLogo);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch();
+
+    const getAccount = async () => {
+        await axiosInstance
+        .get(`user/account/${userName}/`)
+        .then(function(response) {
+            console.log('====================================');
+            console.log(response.data);
+            console.log('====================================');
+            if (response.data) {
+                dispatch(setBusinessName(response.data.business_name));
+                let logo = baseImageURL + response.data.business_logo;
+                setNewLogo(logo);
+                setLoading(false);
+            } else {
+                setError(response.data.message);
+                setLoading(false);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching jobs:', error);
+            try {
+                const message = error.data.message;
+                setError(message);
+                setLoading(false);
+            } catch(e) {
+                setError("Error getting your jobs.");
+                setLoading(false);
+            }
+        });
+    };
+
+    useEffect(() => {
+        getAccount();
+    }, []);
     
-    const handleBN = () => {
-        dispatch(setBusinessName(newName));
+    const handleBN = async () => {
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('business_name', newName);
+        const uriParts = newLogo.uri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        const fileName = `${userName}BusinessLogo.${fileType}`;
+        formData.append('business_logo', {
+            uri: newLogo.uri,
+            name: fileName,
+            type: `image/${fileType}`,
+        } as unknown as Blob)
+        await axiosInstance
+        .post(`user/account/${userName}/`, formData,
+        { headers: {
+            'content-Type': 'multipart/form-data',
+        }})
+        .then(function(response) {
+            console.log('====================================');
+            console.log(response.data);
+            console.log('====================================');
+            if (response.data) {
+                dispatch(setBusinessName(newName));
+                let logo = baseImageURL + response.data.business_logo;
+                dispatch(setBusinessLogo(logo));
+                setLoading(false);
+            } else {
+                setError(response.data.message);
+                setLoading(false);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching jobs:', error);
+            try {
+                const message = error.data.message;
+                setError(message);
+                setLoading(false);
+            } catch(e) {
+                setError("Error getting your jobs.");
+                setLoading(false);
+            }
+        });
     };
 
     const handleImage = async () => {
@@ -26,21 +105,18 @@ export default function Profile () {
             quality: 1,
         });
         if (!result.canceled) {
-            dispatch(setBusinessLogo(result.assets[0].uri));
+            setNewLogo(result.assets[0]);
         }
     };
 
-    const handleLoadImage = () => {
-        // Aquí cargarías la imagen y actualizarías la ruta en el estado
-        const uri = 'ruta_de_la_imagen.jpg';
-        dispatch(setBusinessLogo(uri));
-    };
-
     return (
+        loading ?
+        <ActivityIndicator size="large" color={color} />
+        :
         <View style={[styles.container, {backgroundColor:darkTheme ? 'black': 'white'}]}>
             <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? '#333': '#9999'}]}>
                 <Text style={[styles.header, {color:darkTheme ? 'white': 'black'}]}>Hello, {userName}</Text>
-                {businessLogo && <Image source={{ uri: businessLogo }} style={{ width: 150, height: 150 }} />}
+                {businessLogo && <Image source={{ uri: newLogo.uri }} style={{ width: 150, height: 150 }} />}
                 <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Change Logo</Text></TouchableOpacity>
             </View>
             <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? '#333': '#9999'}]}>

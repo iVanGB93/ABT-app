@@ -21,6 +21,7 @@ import { ThemedView } from "@/components/ThemedView";
 
 interface Errors {
     name?: string;
+    lastName?: string;
     phone?: string;
     email?: string;
     address?: string;
@@ -28,6 +29,7 @@ interface Errors {
   
 export default function ClientCreate() {
     const [name, setName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
@@ -83,6 +85,7 @@ export default function ClientCreate() {
             const formData = new FormData();
             formData.append('action', 'new');
             formData.append('name', name);
+            formData.append('last_name', name);
             formData.append('phone', phone);
             formData.append('email', email);
             formData.append('address', address);
@@ -98,7 +101,7 @@ export default function ClientCreate() {
             };
             setIsLoading(true);
             await axiosInstance
-            .post(`user/client/create/${userName}/`, formData,
+            .post(`clients/create/${userName}/`, formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
@@ -142,7 +145,16 @@ export default function ClientCreate() {
                     {errors.name ? (
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
-
+                    <Text style={styles.label}>Last Name (optional)</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder={lastName ? lastName : "Enter client's last name"}
+                        value={lastName}
+                        onChangeText={setLastName}
+                    />
+                    {errors.lastName ? (
+                        <Text style={styles.errorText}>{errors.lastName}</Text>
+                    ) : null}
                     <Text style={styles.label}>Phone (optional)</Text>
                     <TextInput
                         style={styles.input}

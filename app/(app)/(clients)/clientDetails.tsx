@@ -72,7 +72,7 @@ export default function ClientDetail() {
             { clientLoading ? 
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ClientCard id={client.id} image={client.image} name={client.user} address={client.address} phone={client.phone} email={client.email}  inDetail={true}/>
+            <ClientCard id={client.id} image={client.image} name={client.name} address={client.address} phone={client.phone} email={client.email}  inDetail={true}/>
             }
             <ThemedText style={styles.headerText}>Jobs</ThemedText>
             { jobLoading ?

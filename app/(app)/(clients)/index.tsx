@@ -32,7 +32,7 @@ export default function Clients() {
   const getClients = async() => {
     dispatch(clientSetLoading(true));
     await axiosInstance
-    .get(`user/clients/${userName}/`)
+    .get(`clients/${userName}/`)
     .then(function(response) {
         if (response.data) {
           dispatch(setClients(response.data));
@@ -89,7 +89,7 @@ export default function Clients() {
         renderItem={({ item }) => {
           return (
             <TouchableOpacity onPress={() => handlePressable(item.id)}>
-              <ClientCard id={item.id} name={item.user} address={item.address} phone={item.phone} email={item.email} image={item.image}/>
+              <ClientCard id={item.id} name={item.name} address={item.address} phone={item.phone} email={item.email} image={item.image}/>
             </TouchableOpacity>
           );
         }}

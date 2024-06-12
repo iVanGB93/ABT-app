@@ -45,7 +45,7 @@ export default function JobCreate() {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        const clientsList = clients.map((item: { user: any; }) => item.user);
+        const clientsList = clients.map((item: { name: string; }) => item.name);
         setClientsNames(clientsList);
     }, []);
 

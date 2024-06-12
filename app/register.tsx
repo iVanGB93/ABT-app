@@ -1,13 +1,14 @@
 import React, {useState, useEffect} from 'react';
-import { Text, View, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
+import { Text, View, TouchableOpacity, TextInput, ActivityIndicator, ScrollView } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from 'expo-router';
 import { useAppDispatch, RootState } from './(redux)/store';
+
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
-import { authSetMessage } from './(redux)/authSlice';
+import { authSetMessage, authSuccess } from './(redux)/authSlice';
 
 interface Errors {
   username?: string;
@@ -31,7 +32,7 @@ export default function Register() {
 
   useEffect(() => {
     if (token != null) {
-      router.push('/(app)/(clients)');
+      router.push('initialSettings');
     }
   }, [token]);
 
@@ -44,6 +45,37 @@ export default function Register() {
     return Object.keys(errors).length === 0;
   };
 
+  const loginUser = async () => {
+    setError('Account created, login in...');
+    setAlertVisible(true);
+    await axiosInstance
+    .post("token/", {username: username, password: password})
+    .then(function(response) {
+      if (response.data.access !== undefined) {
+        dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
+        router.push('initialSettings');
+      } else {
+        setError(response.data.message);
+        setAlertVisible(true);
+      }
+    })
+    .catch(function(error) {
+      console.error('Error logging in:', error.response, error.message);
+      if (typeof error.response === 'undefined') {
+        setError("Error logging in, undefinded");
+        setAlertVisible(true);
+      } else {
+        if (error.response.status === 401) {
+          setError("Username or Password incorrect");
+          setAlertVisible(true);
+        } else {
+          setError(error.message);
+          setAlertVisible(true);
+        };
+      };
+    });
+  };
+
   const handleSubmit = async () => {
     if (validateForm()) {
       setLoading(true);
@@ -52,7 +84,7 @@ export default function Register() {
       .then(function(response) {
           if (response.status === 201) {
             dispatch(authSetMessage("Account created!!!"));
-            router.push('initialSettings');
+            loginUser();
           } 
           if (response.status === 203) {
             setLoading(false);
@@ -76,9 +108,11 @@ export default function Register() {
   return (
     <View style={[commonStyles.container, {backgroundColor: color}]}>
       <View style={commonStyles.header}>
+        <Text style={commonStyles.text_header}>Advance Business Tools</Text>
         <Text style={commonStyles.text_header}>Hello, please register!</Text>
       </View>     
-      <View style={commonStyles.footer}>     
+      <View style={commonStyles.footer}>   
+        <ScrollView>  
         <Text style={commonStyles.text_footer}>User</Text>
         <View style={commonStyles.action}>
           <Ionicons name="person"/>
@@ -134,9 +168,10 @@ export default function Register() {
           onPress={() => router.push('/')}>
           <Text style={commonStyles.buttonText}>Go to Login!!</Text>
         </TouchableOpacity>
+        </ScrollView>
       </View>
       <CustomAlert
-        title='Registration error'
+        title='Registration'
         visible={alertVisible}
         message={error}
         onClose={() => setAlertVisible(false)}

@@ -70,5 +70,16 @@ export const commonStyles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         textAlign: 'center',
-    }
+    },
+    colorsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    color: {
+        width: 50,
+        height: 50,
+        marginHorizontal: 15,
+        borderRadius: 25,
+    },
 });

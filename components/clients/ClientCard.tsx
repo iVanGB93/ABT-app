@@ -27,30 +27,26 @@ interface ClientCardProps {
 export default function ClientCard({image, id, name, address, phone, email, inDetail}: ClientCardProps) {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const [modalVisible, setModalVisible] = useState(false);
-  const { clients, clientLoading} = useSelector((state: RootState) => state.client);
   const [imageError, setImageError] = useState(false);
+  const [loading, setLoading] = useState(false);
   const imageObj = {'uri': baseImageURL + image};
-  const dispatch = useAppDispatch();
   const router = useRouter();
 
   const deleteClient = async () => {
-    //dispatch(changeLoading(true));
+    setLoading(true);
     await axiosInstance
-    .post(`jobs/client/delete/${id}/`, { action: 'delete'},
+    .post(`clients/delete/${id}/`, { action: 'delete'},
     { headers: {
       'content-Type': 'multipart/form-data',
     }})
     .then(function(response) {
-      console.log(response.data);
       if (response.data.OK) {
-        //dispatch(getClients());
         router.push('/(app)/(clients)');
-        //dispatch(changeLoading(false));
-        Alert.alert("Client deleted");
       }
     })
     .catch(function(error) {
-        console.error('Error deleting a client:', error);
+      setLoading(false);
+      console.error('Error deleting a client:', error);
     });
   };
 
@@ -106,7 +102,7 @@ export default function ClientCard({image, id, name, address, phone, email, inDe
         onRequestClose={() => setModalVisible(!modalVisible)}
       >
         <View style={styles.centeredView}>
-          { clientLoading ?
+          { loading ?
           <ActivityIndicator color={color} size="large" />
           :
           <View style={[styles.card, {padding: 10, backgroundColor: darkMainColor}]}>
