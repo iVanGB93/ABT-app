@@ -112,7 +112,7 @@ export default function JobCard({id, status, client, address, description, price
   };
 
   const handleInvoice = () => {
-    let pickedClient = clients.find((pickedClient: { user: any; }) => pickedClient.user === client);
+    let pickedClient = clients.find((pickedClient: { name: any; }) => pickedClient.name === client);
     dispatch(setClient(pickedClient));
     router.push('(app)/(jobs)/invoice');
   };
@@ -239,19 +239,21 @@ export default function JobCard({id, status, client, address, description, price
 
 const styles = StyleSheet.create({
     card: {
-      borderRadius: 16,
-      borderWidth: 2,
+      borderRadius: 10,
       marginHorizontal: 10,
+      borderBottomWidth: 1,
+      borderRightWidth: 1,
+      shadowColor: "#fff",
       padding: 10,
       ...Platform.select({
         ios: {
           shadowOffset: { width: 2, height: 2 },
-          shadowColor: "#333",
+          shadowColor: "#fff",
           shadowOpacity: 0.3,
           shadowRadius: 4,
         },
         android: {
-          elevation: 5,
+          elevation: 8,
         },
       }),
     },

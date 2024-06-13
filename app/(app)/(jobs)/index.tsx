@@ -91,7 +91,7 @@ export default function Jobs() {
             }}
             />
         }
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ jobError ? jobError.toString() + ", pull to refresh" : "No jobs found"}</ThemedText>}
+        ListEmptyComponent={<ThemedText style={styles.loading}>{ jobError ? jobError.toString() + ", pull to refresh" : "No jobs found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={

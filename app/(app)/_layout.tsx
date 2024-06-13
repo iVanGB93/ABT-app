@@ -4,21 +4,22 @@ import { StatusBar } from 'expo-status-bar';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
 
-import { darkSecondColor } from '@/settings';
+import { darkSecondColor, lightSecondColor } from '@/settings';
 
 
 export default function TabLayout() {
   const token = useSelector((state:RootState) => state.auth.token);
+  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
   if (!token) {
     return <Redirect href="/" />;
   }
   return (
     <>
-    <StatusBar style="light" />
+    <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#6A5ACD',
-        tabBarStyle: {backgroundColor: darkSecondColor},
+        tabBarActiveTintColor: color,
+        tabBarStyle: {backgroundColor: darkTheme ? darkSecondColor : lightSecondColor},
       }}
     >
       <Tabs.Screen

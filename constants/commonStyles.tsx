@@ -2,43 +2,46 @@ import { StyleSheet, Platform } from 'react-native';
 
 export const commonStyles = StyleSheet.create({
     container: {
-        flex: 1, 
-    },
-    containerActivity: {
-        flex: 1, 
-        backgroundColor: '#0034',
-        justifyContent: 'center',
-        alignItems: 'center',
+        flex: 1,
     },
     header: {
         flex: 1,
         justifyContent: 'flex-end',
-        paddingHorizontal: 20,
-        paddingBottom: 50
+        padding: 10,
+    },
+    image : {
+        width: 60,
+        height: 60,
+        borderRadius: 50,
+        alignSelf: 'center',
+    },
+    text_header: {
+        fontWeight: 'bold',
+        fontSize: 30,
+        margin: 5
+    },
+    sub_text_header: {
+        fontSize: 18,
+        alignSelf: 'center',
     },
     footer: {
         flex: 3,
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
+        borderRadius: 30,
+        borderWidth: 2,
+        marginHorizontal: 15,
         paddingHorizontal: 20,
-        paddingVertical: 30
-    },
-    text_header: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 30
+        paddingTop: 30
     },
     text_footer: {
-        color: '#05375a',
         fontSize: 18
     },
     action: {
         flexDirection: 'row',
-        marginTop: 10,
+        marginVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#f2f2f2',
-        paddingBottom: 5
+        borderTopLeftRadius: 15,
+        borderTopEndRadius: 15,
     },
     actionError: {
         flexDirection: 'row',

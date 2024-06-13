@@ -19,6 +19,7 @@ export default function ClientDetail() {
     const {clients, clientLoading, clientError, client} = useSelector((state: RootState) => state.client);
     const {jobs, jobLoading, jobError} = useSelector((state: RootState) => state.job);
     const [ stateJobs, setStateJobs ] = useState<any>([]);
+    const [error, setError] = useState<string>('');
     const dispatch = useAppDispatch()
     const router = useRouter();
 
@@ -35,18 +36,21 @@ export default function ClientDetail() {
         })
         .catch(function(error) {
             console.error('Error fetching jobs:', error);
-            try {
-                const message = error.data.message;
-                dispatch(jobFail(message));
-            } catch(e) {
-                dispatch(jobFail("Error getting your jobs."));
-            }
+            if (typeof error.response === 'undefined') {
+                setError("Error fetching jobs, undefinded");
+              } else {
+                if (error.response.status === 401) {
+                    router.push('/');
+                } else {
+                  setError(error.message);
+                };
+            };
         });
     };
 
     const fetchJobs = async () => {
         getJobs();
-        let jobList = jobs.filter((jobs: { client: any; }) => jobs.client === client.user)
+        let jobList = jobs.filter((jobs: { client: any; }) => jobs.client === client.name)
         setStateJobs(jobList);
     };
 

@@ -3,21 +3,22 @@ import { Text, View, ActivityIndicator, TextInput, TouchableOpacity, Platform, I
 import { useSelector } from "react-redux";
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import { setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
+import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
 import { commonStyles } from '@/constants/commonStyles';
 import { authSetMessage } from './(redux)/authSlice';
 import axiosInstance from '@/axios';
-import { baseImageURL } from '@/settings';
+import { baseImageURL, darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from '@/settings';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 
 
 export default function InitialSettings () {
     const {token} = useSelector((state: RootState) => state.auth);
     const { authMessage, userName } = useSelector((state: RootState) => state.auth);
-    const { color, businessName } = useSelector((state: RootState) => state.settings);
+    const { color, businessName, darkTheme, business } = useSelector((state: RootState) => state.settings);
     const [businessLogo, setNewBusinessLogo] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [newName, setNewName] = useState(businessName);
@@ -32,7 +33,9 @@ export default function InitialSettings () {
             if (response.data) {
                 dispatch(setBusinessName(response.data.business_name));
                 let logo = {'uri': baseImageURL + response.data.business_logo};
+                setNewBusinessLogo(logo);
                 dispatch(setBusinessLogo(logo));
+                dispatch(setBusiness(response.data));
                 setLoading(false);
             } else {
                 setError(response.data.message);
@@ -125,47 +128,51 @@ export default function InitialSettings () {
     };
 
     return (
-        <View style={[commonStyles.container, {backgroundColor: color}]}>
+        <ThemedView style={commonStyles.container}>
             <View style={commonStyles.header}>
-                <Text style={commonStyles.text_header}>Let's define your business!</Text>
+                <Image style={commonStyles.image} source={require('../assets/images/icon.png')} />
+                <ThemedText type="title" style={commonStyles.text_header}>Let's define your business!</ThemedText>
             </View>
-            {loading ?
-            <ActivityIndicator style={commonStyles.button} size="large" />
-            :
-            <View style={commonStyles.footer}>    
+            <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
+                {loading ?
+                <ActivityIndicator style={commonStyles.button} color={color} size="large" />
+                :
                 <ScrollView>
-                <Text style={commonStyles.text_footer}>Name</Text>
+                <ThemedText type="subtitle">Name</ThemedText>
                 <View style={commonStyles.action}>
-                    <Ionicons name="business"/>
+                    <Ionicons name="business" color={darkTheme ? darkTtextColor: lightTextColor}/>
                     <TextInput 
                         autoFocus={false} 
                         onChangeText={setNewName} 
                         placeholder='Type your business name...'
+                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
                         value={newName} 
-                        style={commonStyles.textInput}/>
+                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
                     { newName !== 'Business Name' ?
-                    <Ionicons name="checkmark-circle-outline" />
+                    <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                     : null}
                 </View>
-                <Text style={[commonStyles.text_footer, { marginTop: 35 }]}>Logo</Text>
-                {businessLogo && <Image source={{ uri: businessLogo.uri }} style={{ width: 100, height: 100, alignSelf: 'center' }} />}
-                <TouchableOpacity style={[commonStyles.button, {backgroundColor: color, marginTop: 10}]} onPress={() => handleImage()}>
-                    <Text style={commonStyles.buttonText}>Select Image</Text>
+                <ThemedText type="subtitle">Logo</ThemedText>
+                {businessLogo && <Image source={{ uri: baseImageURL + business.business_logo }} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />}
+                <TouchableOpacity style={[commonStyles.button, {backgroundColor: color, marginBottom: 20, marginTop: 10}]} onPress={() => handleImage()}>
+                    <Text style={commonStyles.buttonText}>Select Logo</Text>
                 </TouchableOpacity>
-                <ThemedText style={[commonStyles.text_footer, { marginTop: 35 }]}>Change color</ThemedText>
-                <View style={commonStyles.colorsContainer}>
-                    <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#009d93'}]} onPress={() => dispatch(setColor('#009d93'))}></TouchableOpacity>
-                    <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#694fad'}]} onPress={() => dispatch(setColor('#694fad'))}></TouchableOpacity>
-                    <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#09dd'}]} onPress={() => dispatch(setColor('#09dd'))}></TouchableOpacity>
-                    <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
+                <ThemedText type='subtitle'>Change color</ThemedText>
+                <View style={commonStyles.action}>
+                    <View style={commonStyles.colorsContainer}>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#009d93'}]} onPress={() => dispatch(setColor('#009d93'))}></TouchableOpacity>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#694fad'}]} onPress={() => dispatch(setColor('#694fad'))}></TouchableOpacity>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#09dd'}]} onPress={() => dispatch(setColor('#09dd'))}></TouchableOpacity>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
+                    </View>
                 </View>
                 <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={handleSubmit}>
                     <Text style={commonStyles.buttonText}>Save</Text>
                 </TouchableOpacity>
-                <Text style={[commonStyles.text_footer, { marginTop: 60, textAlign: 'center' }]}>you can change this settings later</Text>
+                    <ThemedText style={[commonStyles.text_footer, { marginTop: 60, textAlign: 'center' }]}>you can change this settings later</ThemedText>
                 </ScrollView>
+                }
             </View>
-            }
-        </View>
+        </ThemedView>
     )
 };

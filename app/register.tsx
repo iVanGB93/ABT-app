@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { Text, View, TouchableOpacity, TextInput, ActivityIndicator, ScrollView } from "react-native";
+import { Text, View, TouchableOpacity, TextInput, ActivityIndicator, ScrollView, Image } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from 'expo-router';
 import { useAppDispatch, RootState } from './(redux)/store';
@@ -9,6 +9,9 @@ import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
 import { authSetMessage, authSuccess } from './(redux)/authSlice';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import { darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from "@/settings";
 
 interface Errors {
   username?: string;
@@ -18,7 +21,7 @@ interface Errors {
 
 export default function Register() {
   const {token} = useSelector((state: RootState) => state.auth);
-  const {color} = useSelector((state: RootState) => state.settings);
+  const {color, darkTheme} = useSelector((state: RootState) => state.settings);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -106,68 +109,79 @@ export default function Register() {
   };
 
   return (
-    <View style={[commonStyles.container, {backgroundColor: color}]}>
+    <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Text style={commonStyles.text_header}>Advance Business Tools</Text>
-        <Text style={commonStyles.text_header}>Hello, please register!</Text>
+        <Image style={commonStyles.image} source={require('../assets/images/icon.png')} />
+        <ThemedText type="title"  style={commonStyles.text_header}>Hello, please register!</ThemedText>
+        <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     
-      <View style={commonStyles.footer}>   
+      <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
         <ScrollView>  
-        <Text style={commonStyles.text_footer}>User</Text>
-        <View style={commonStyles.action}>
-          <Ionicons name="person"/>
-          <TextInput 
-            onChangeText={setUsername} 
-            placeholder='type your username...' 
-            style={commonStyles.textInput} autoCapitalize='none'/>
-          { username ?
-          <Ionicons name="checkmark-circle-outline" />
-          : null}
-        </View>
-        {errors.username ? (
-            <Text style={{color: 'red'}}>{errors.username}</Text>
-        ) : null}
-        <Text style={[commonStyles.text_footer, { marginTop: 35 }]}>Email</Text>
-        <View style={commonStyles.action}>
-          <Ionicons name="mail"/>
-          <TextInput 
-            onChangeText={setEmail} 
-            placeholder='type your email...' 
-            style={commonStyles.textInput} autoCapitalize='none'/>
-          { username ?
-          <Ionicons name="checkmark-circle-outline" />
-          : null}
-        </View>
-        {errors.email ? (
-            <Text style={{color: 'red'}}>{errors.email}</Text>
-        ) : null}
-        <Text style={[commonStyles.text_footer, { marginTop: 35 }]}>Password</Text>
-        <View style={commonStyles.action}>
-          <Ionicons name="lock-closed"/>
-          <TextInput 
-            onChangeText={setPassword} 
-            placeholder='type your password...' 
-            secureTextEntry={secureTextEntry ? true : false} 
-            style={commonStyles.textInput} autoCapitalize='none'
-            />
-          <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
-            {secureTextEntry ? <Ionicons size={15} name="eye-off-outline"/> : <Ionicons size={15} name="eye-outline"/>}
+          <ThemedText type="subtitle">User</ThemedText>
+          <View style={commonStyles.action}>
+            <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <TextInput 
+              onChangeText={setUsername} 
+              placeholder='type your username...' 
+              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
+            { username ?
+            <Ionicons name="checkmark-circle-outline" color={color} />
+            : null}
+          </View>
+          {errors.username ? (
+              <Text style={{color: 'red'}}>{errors.username}</Text>
+          ) : null}
+          <ThemedText type="subtitle">Email</ThemedText>
+          <View style={commonStyles.action}>
+            <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <TextInput 
+              onChangeText={setEmail} 
+              placeholder='type your email...' 
+              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'
+              />
+            { email ?
+            <Ionicons name="checkmark-circle-outline" color={color}/>
+            : null}
+          </View>
+          {errors.email ? (
+              <Text style={{color: 'red'}}>{errors.email}</Text>
+          ) : null}
+          <ThemedText type="subtitle">Password</ThemedText>
+          <View style={commonStyles.action}>
+            <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <TextInput 
+              onChangeText={setPassword} 
+              placeholder='type your password...' 
+              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              secureTextEntry={secureTextEntry ? true : false} 
+              style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'
+              />
+            <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
+              {secureTextEntry ? 
+                <Ionicons size={15} name="eye-off-outline" color={darkTheme ? darkTtextColor: lightTextColor} /> 
+                : 
+                <Ionicons size={15} name="eye-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
+              }
+            </TouchableOpacity>
+          </View>
+          {errors.password ? (
+              <Text style={{color: 'red'}}>{errors.password}</Text>
+          ) : null}
+          {loading ?
+          <ActivityIndicator style={commonStyles.button} size="large" color={color} />
+          :
+          <>
+          <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={handleSubmit}>
+            <Text style={commonStyles.buttonText}>Register</Text> 
           </TouchableOpacity>
-        </View>
-        {errors.password ? (
-            <Text style={{color: 'red'}}>{errors.password}</Text>
-        ) : null}
-        {loading ?
-        <ActivityIndicator style={commonStyles.button} size="large" color={color} />
-        :
-        <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={handleSubmit}>
-          <Text style={commonStyles.buttonText}>Register</Text> 
-        </TouchableOpacity>
-        }
-        <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]}
-          onPress={() => router.push('/')}>
-          <Text style={commonStyles.buttonText}>Go to Login!!</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]}
+            onPress={() => router.push('/')}>
+            <Text style={commonStyles.buttonText}>Go to Login!!</Text>
+          </TouchableOpacity>
+          </>
+          }
         </ScrollView>
       </View>
       <CustomAlert
@@ -176,6 +190,6 @@ export default function Register() {
         message={error}
         onClose={() => setAlertVisible(false)}
       />
-    </View>
+    </ThemedView>
   );
 };

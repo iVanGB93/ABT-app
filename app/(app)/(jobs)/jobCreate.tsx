@@ -19,6 +19,10 @@ import { useRouter } from "expo-router";
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import axiosInstance from '@/axios';
 import { ThemedView } from "@/components/ThemedView";
+import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
+import { ThemedText } from "@/components/ThemedText";
+import { commonStyles } from "@/constants/commonStyles";
+import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
 
 
 interface Errors {
@@ -29,7 +33,7 @@ interface Errors {
 };
 
 export default function JobCreate() {
-    const {color } = useSelector((state: RootState) => state.settings);
+    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const { clients } = useSelector((state: RootState) => state.client);
     const [client, setClient] = useState("");
@@ -117,12 +121,12 @@ export default function JobCreate() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} color={color} size="large" />
             :
-            <ThemedView style={styles.form}>
+            <ThemedSecondaryView style={styles.form}>
                 <ScrollView>
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
-                    <Text style={styles.label}>Client</Text>
+                    <ThemedText type="subtitle">Client</ThemedText>
                     <SelectDropdown
                         data={clientsNames}
                         onSelect={(selectedItem: string, index: number) => {
@@ -130,7 +134,7 @@ export default function JobCreate() {
                         }}
                         renderButton={(selectedItem, isOpened) => {
                             return (
-                            <View style={styles.dropdownButtonStyle}>
+                            <View style={[styles.dropdownButtonStyle, {borderColor: color}]}>
                                 <Text style={styles.dropdownButtonTxtStyle}>
                                 {(selectedItem ) || 'Select the client'}
                                 </Text>
@@ -151,40 +155,46 @@ export default function JobCreate() {
                         searchPlaceHolder={"Type to search"}
                     />
                     <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}}>
-                        <Text style={[styles.label, {verticalAlign: 'middle'}]}>is a new client?</Text>
+                        <ThemedText style={[styles.label, {verticalAlign: 'middle'}]}>is a new client?</ThemedText>
                         <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('(app)/(clients)/clientCreate')}><Text style={{color: 'white'}}>Create client</Text></TouchableOpacity>
                     </View>
                     {errors.client ? (
                         <Text style={styles.errorText}>{errors.client}</Text>
                     ) : null}
 
-                    <Text style={styles.label}>Description</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder={description ? description : "Enter job's description"}
-                        value={description}
-                        onChangeText={setDescription}
-                    />
+                    <ThemedText type="subtitle">Description</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder={description ? description : "Enter job's description"}
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={description}
+                            onChangeText={setDescription}
+                        />
+                    </View>
                     {errors.description ? (
                         <Text style={styles.errorText}>{errors.description}</Text>
                     ) : null}
 
-                    <Text style={styles.label}>Address</Text>
+                    <ThemedText type="subtitle">Address</ThemedText>
                     {isEnabled ?
-                    <Text style={styles.label}>{clientAddress()}</Text>
+                    <ThemedText style={styles.label}>{clientAddress()}</ThemedText>
                     :
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter job's address"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter job's address"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={address}
+                            onChangeText={setAddress}
+                        />
+                    </View>
                     }
                     {errors.address ? (
                         <Text style={styles.errorText}>{errors.address}</Text>
                     ) : null}
 
-                    <View style={[styles.label, {flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}]}>
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center',}}>
                         <Switch
                             trackColor={{false: '#767577', true: color}}
                             thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
@@ -192,24 +202,29 @@ export default function JobCreate() {
                             onValueChange={toggleSwitch}
                             value={isEnabled}
                         />
-                        <Text style={[styles.label, {flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}]}>use client's address</Text>
+                        <ThemedText style={[styles.label, {flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}]}>use client's address</ThemedText>
                     </View>
                     
-                    <Text style={styles.label}>Price</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter job's price"
-                        value={price}
-                        onChangeText={setPrice}
-                        keyboardType="numeric"
-                    />
+                    <ThemedText type="subtitle">Price</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter job's price"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={price}
+                            onChangeText={setPrice}
+                            keyboardType="numeric"
+                        />
+                    </View>
                     {errors.price ? (
                         <Text style={styles.errorText}>{errors.price}</Text>
                     ) : null}
-                    
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
+                    <View style={{flexDirection: 'row',justifyContent: 'space-evenly'}}>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Create</Text></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.back()}><Text style={[styles.headerText, {color: 'white'}]}>Cancel</Text></TouchableOpacity>
+                    </View>
                 </ScrollView>
-            </ThemedView>
+            </ThemedSecondaryView>
             }
         </KeyboardAvoidingView>
     )
@@ -222,10 +237,9 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
     },
     form: {
-      backgroundColor: "#ffffff",
       padding: 20,
       borderRadius: 10,
-      shadowColor: "#000",
+      shadowColor: "#fff",
       shadowOffset: {
         width: 0,
         height: 2,
@@ -259,7 +273,8 @@ const styles = StyleSheet.create({
     button: {
         backgroundColor: '#694fad',
         padding: 10,
-        borderRadius: 16,
+        borderRadius: 10,
+        width: 100,
         margin: 5,
         ...Platform.select({
             ios: {
@@ -277,34 +292,38 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         alignSelf: "center",
-        marginTop: 5,
     },
     dropdownButtonStyle: {
         height: 40,
-        borderColor: "#ddd",
-        borderWidth: 1,
+        borderBottomWidth: 1,
         borderRadius: 5,
+        backgroundColor: '#000',
+        borderTopStartRadius: 15,
+        borderTopEndRadius: 15,
         marginBottom: 5,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 12,
+        color: '#fff',
     },
       dropdownButtonTxtStyle: {
         flex: 1,
         fontSize: 18,
         fontWeight: '500',
-        color: '#151E26',
+        color: '#fff',
       },
       dropdownButtonArrowStyle: {
         fontSize: 28,
+        color: '#fff',
       },
       dropdownButtonIconStyle: {
         fontSize: 28,
         marginRight: 8,
+        color: '#fff',
       },
       dropdownMenuStyle: {
-        backgroundColor: '#E9ECEF',
+        backgroundColor: '#000',
         borderRadius: 8,
       },
       dropdownItemStyle: {
@@ -319,7 +338,9 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 18,
         fontWeight: '500',
-        color: '#151E26',
+        color: '#fff',
+        borderColor: "#ddd",
+        borderBottomWidth: 1,
       },
       dropdownItemIconStyle: {
         fontSize: 28,

@@ -18,6 +18,10 @@ import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { useRouter } from "expo-router";
 import { ImagePickerAsset } from 'expo-image-picker';
 import { ThemedView } from "@/components/ThemedView";
+import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
+import { ThemedText } from "@/components/ThemedText";
+import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
+import { commonStyles } from "@/constants/commonStyles";
 
 interface Errors {
     name?: string;
@@ -37,7 +41,7 @@ export default function ClientCreate() {
     const [error, setError] = useState("");
     const [errors, setErrors] = useState<Errors>({});
     const [isLoading, setIsLoading] = useState(false);
-    const {color } = useSelector((state: RootState) => state.settings);
+    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const dispatch = useAppDispatch()
     const router = useRouter();
@@ -130,70 +134,90 @@ export default function ClientCreate() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ThemedView style={styles.form}>
+            <ThemedSecondaryView style={styles.form}>
                 {error ? (
                     <Text style={styles.errorText}>{error}</Text>
                 ) : null}
                 <ScrollView>
-                    <Text style={styles.label}>Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder={name ? name : "Enter client's name"}
-                        value={name}
-                        onChangeText={setName}
-                    />
+                    <ThemedText type="subtitle">Name</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder={name ? name : "Enter client's name"}
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={name}
+                            onChangeText={setName}
+                        />
+                    </View>
                     {errors.name ? (
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
-                    <Text style={styles.label}>Last Name (optional)</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder={lastName ? lastName : "Enter client's last name"}
-                        value={lastName}
-                        onChangeText={setLastName}
-                    />
+                    <ThemedText type="subtitle">Last Name (optional)</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder={lastName ? lastName : "Enter client's last name"}
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={lastName}
+                            onChangeText={setLastName}
+                        />
+                    </View>
                     {errors.lastName ? (
                         <Text style={styles.errorText}>{errors.lastName}</Text>
                     ) : null}
-                    <Text style={styles.label}>Phone (optional)</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter client's phone"
-                        value={phone}
-                        onChangeText={setPhone}
-                    />
+                    <ThemedText type="subtitle">Phone (optional)</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter client's phone"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={phone}
+                            onChangeText={setPhone}
+                        />
+                    </View>
                     {errors.phone ? (
                         <Text style={styles.errorText}>{errors.phone}</Text>
                     ) : null}
 
-                    <Text style={styles.label}>Email (optional)</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter client's email"
-                        value={email}
-                        onChangeText={setEmail}
-                    />
+                    <ThemedText type="subtitle">Email (optional)</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter client's email"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={email}
+                            onChangeText={setEmail}
+                        />
+                    </View>
                     {errors.email ? (
                         <Text style={styles.errorText}>{errors.email}</Text>
                     ) : null}
                     
-                    <Text style={styles.label}>Address (optional)</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter client's address"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
+                    <ThemedText type="subtitle">Address (optional)</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter client's address"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={address}
+                            onChangeText={setAddress}
+                        />
+                    </View>
                     {errors.address ? (
                         <Text style={styles.errorText}>{errors.address}</Text>
                     ) : null}
                     
                     {image && <Image source={{ uri: image.uri }} style={styles.image} />}
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Add image</Text></TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
+                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly'}}>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Add image</Text></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Create</Text></TouchableOpacity>
+                    </View>
+                    <View style={{flexDirection: 'row',justifyContent: 'flex-end'}}>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.back()}><Text style={[styles.headerText, {color: 'white'}]}>Cancel</Text></TouchableOpacity>
+                    </View>
                 </ScrollView>
-            </ThemedView>
+            </ThemedSecondaryView>
             }
         </KeyboardAvoidingView>
     )
@@ -206,10 +230,9 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
     },
     form: {
-      backgroundColor: "#f0f0f0",
       padding: 20,
       borderRadius: 10,
-      shadowColor: "#ffffff",
+      shadowColor: "#fff",
       shadowOffset: {
         width: 0,
         height: 2,
@@ -247,9 +270,13 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     button: {
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: 10,
-        borderRadius: 16,
+        borderRadius: 10,
         margin: 5,
+        width: 100,
+        shadowColor: '#fff',
         ...Platform.select({
             ios: {
             shadowOffset: { width: 2, height: 2 },
@@ -266,6 +293,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         alignSelf: "center",
-        marginTop: 5,
     },
 });

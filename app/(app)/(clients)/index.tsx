@@ -94,7 +94,7 @@ export default function Clients() {
           );
         }}
         ItemSeparatorComponent={<View style={{ height: 10}}/>}
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientError ? clientError.toString() + ", pull to refresh" : "No clients found"}</ThemedText>}
+        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientError ? clientError.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={

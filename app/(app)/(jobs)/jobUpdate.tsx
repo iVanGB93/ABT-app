@@ -17,8 +17,11 @@ import { useRouter } from "expo-router";
 
 import axiosInstance from '@/axios';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { baseImageURL } from "@/settings.js";
+import { baseImageURL, darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings.js";
 import { ThemedView } from "@/components/ThemedView";
+import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
+import { commonStyles } from "@/constants/commonStyles";
+import { ThemedText } from "@/components/ThemedText";
 
 
 interface Errors {
@@ -29,7 +32,7 @@ interface Errors {
 };
 
 export default function JobUpdate() {
-    const {color } = useSelector((state: RootState) => state.settings);
+    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const { job, jobs } = useSelector((state: RootState) => state.job);
     const [description, setDescription] = useState(job.description);
@@ -55,7 +58,7 @@ export default function JobUpdate() {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1],
+            aspect: [4, 3],
             quality: 1,
         });
         console.log(result);
@@ -74,7 +77,7 @@ export default function JobUpdate() {
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1],
+            aspect: [4, 3],
             quality: 1,
         });
         console.log(result);
@@ -132,53 +135,67 @@ export default function JobUpdate() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ThemedView style={styles.form}>
+            <ThemedSecondaryView style={styles.form}>
                 <ScrollView>
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
-                    <Text style={[styles.label, {marginBottom: 5}]}>Job for {job.client}</Text>
+                    <ThemedText style={[styles.label, {marginBottom: 5}]}>Job for {job.client}</ThemedText>
 
-                    <Text style={styles.label}>Description</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder={description ? description : "Enter job's description"}
-                        value={description}
-                        onChangeText={setDescription}
-                    />
+                    <ThemedText type="subtitle">Description</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder={description ? description : "Enter job's description"}
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={description}
+                            onChangeText={setDescription}
+                        />
+                    </View>
                     {errors.description ? (
                         <Text style={styles.errorText}>{errors.description}</Text>
                     ) : null}
 
-                    <Text style={styles.label}>Address</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter job's address"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
+                    <ThemedText type="subtitle">Address</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter job's address"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={address}
+                            onChangeText={setAddress}
+                        />
+                    </View>
                     {errors.address ? (
                         <Text style={styles.errorText}>{errors.address}</Text>
                     ) : null}
                     
-                    <Text style={styles.label}>Price</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder={price ? price.toString() : "Enter job's price"}
-                        value={price ? price.toString() : "0"}
-                        onChangeText={setPrice}
-                        keyboardType="numeric"
-                    />
+                    <ThemedText type="subtitle">Price</ThemedText>
+                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder={price ? price.toString() : "Enter job's price"}
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={price ? price.toString() : "0"}
+                            onChangeText={setPrice}
+                            keyboardType="numeric"
+                        />
+                    </View>
                     {errors.price ? (
                         <Text style={styles.errorText}>{errors.price}</Text>
                     ) : null}
                     
                     {image && <Image source={{ uri: image.uri }} style={styles.image} />}
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Add image</Text></TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
+                    <View style={{flexDirection: 'row',justifyContent: 'space-evenly'}}>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Add image</Text></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
+                    </View>
+                    <View style={{flexDirection: 'row',justifyContent: 'space-evenly'}}>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Update</Text></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.back()}><Text style={[styles.headerText, {color: 'white'}]}>Cancel</Text></TouchableOpacity>
+                    </View>
                 </ScrollView>
-            </ThemedView>
+            </ThemedSecondaryView>
             }
         </KeyboardAvoidingView>
     )
@@ -191,7 +208,6 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
     },
     form: {
-      backgroundColor: "#ffffff",
       padding: 20,
       borderRadius: 10,
       shadowColor: "#000",
@@ -235,6 +251,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#694fad',
         padding: 10,
         borderRadius: 16,
+        width: 100,
         margin: 5,
         ...Platform.select({
             ios: {

@@ -13,7 +13,7 @@ import { darkMainColor } from '@/settings';
 
 export default function JobDetail() {
     const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-    const {client} = useSelector((state: RootState) => state.client);
+    const {clients} = useSelector((state: RootState) => state.client);
     const {jobs, jobLoading, jobError, job} = useSelector((state: RootState) => state.job);
 /*     const spents = useSelector(state => state.spents.spents);
     const isLoadingSpents = useSelector(state => state.spents.loading);
@@ -21,7 +21,6 @@ export default function JobDetail() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const router = useRouter();
-    const dispatch = useAppDispatch();
 
     const fetchJob = () => {
         /* let job = jobs.find((job: { id: any; }) => job.id === job.id)

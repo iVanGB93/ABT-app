@@ -2,34 +2,50 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, Platform, Image } from 'react-native';
 import { useSelector } from "react-redux";
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import { setBusinessLogo, setBusinessName } from '@/app/(redux)/settingSlice';
+import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
 import axiosInstance from '@/axios';
-import { baseImageURL } from '@/settings';
+import { baseImageURL, darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from '@/settings';
+import { router } from 'expo-router';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import { commonStyles } from '@/constants/commonStyles';
 
 
 export default function Profile () {
-    const { color, darkTheme, businessName, businessLogo } = useSelector((state: RootState) => state.settings);
+    const { color, darkTheme, business, businessLogo } = useSelector((state: RootState) => state.settings);
     const { userName } = useSelector((state: RootState) => state.auth);
-    const [newName, setNewName] = useState(businessName);
+    const [newName, setNewName] = useState(business.business_name);
     const [newLogo, setNewLogo] = useState<any>(businessLogo);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch();
 
+    const downloadLogo = async () => {
+        try {
+            const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory!);
+            console.log('Archivos en documentDirectory:', files);
+            const oldLogo = FileSystem.documentDirectory + 'logo.jpeg';
+            await FileSystem.deleteAsync(oldLogo);
+            const fileUrl = baseImageURL + business.business_logo;
+            const fileUri = FileSystem.documentDirectory + 'logo.jpeg';
+            const { uri } = await FileSystem.downloadAsync(fileUrl, fileUri);
+            dispatch(setBusinessLogo(uri));
+        } catch (error) {
+            console.error('Error al listar archivos:', error);
+        }
+    };
+
     const getAccount = async () => {
         await axiosInstance
         .get(`user/account/${userName}/`)
         .then(function(response) {
-            console.log('====================================');
-            console.log(response.data);
-            console.log('====================================');
             if (response.data) {
-                dispatch(setBusinessName(response.data.business_name));
-                let logo = baseImageURL + response.data.business_logo;
-                setNewLogo(logo);
+                dispatch(setBusiness(response.data));
                 setLoading(false);
             } else {
                 setError(response.data.message);
@@ -57,11 +73,11 @@ export default function Profile () {
         setLoading(true);
         const formData = new FormData();
         formData.append('business_name', newName);
-        const uriParts = newLogo.uri.split('.');
+        const uriParts = newLogo.split('.');
         const fileType = uriParts[uriParts.length - 1];
         const fileName = `${userName}BusinessLogo.${fileType}`;
         formData.append('business_logo', {
-            uri: newLogo.uri,
+            uri: newLogo,
             name: fileName,
             type: `image/${fileType}`,
         } as unknown as Blob)
@@ -71,13 +87,11 @@ export default function Profile () {
             'content-Type': 'multipart/form-data',
         }})
         .then(function(response) {
-            console.log('====================================');
-            console.log(response.data);
-            console.log('====================================');
             if (response.data) {
                 dispatch(setBusinessName(newName));
-                let logo = baseImageURL + response.data.business_logo;
-                dispatch(setBusinessLogo(logo));
+                dispatch(setBusiness(response.data));
+                dispatch(setBusinessLogo(newLogo));
+                //downloadLogo();
                 setLoading(false);
             } else {
                 setError(response.data.message);
@@ -105,42 +119,82 @@ export default function Profile () {
             quality: 1,
         });
         if (!result.canceled) {
-            setNewLogo(result.assets[0]);
+            setNewLogo(result.assets[0].uri);
         }
     };
 
     return (
-        loading ?
-        <ActivityIndicator size="large" color={color} />
-        :
-        <View style={[styles.container, {backgroundColor:darkTheme ? 'black': 'white'}]}>
-            <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? '#333': '#9999'}]}>
-                <Text style={[styles.header, {color:darkTheme ? 'white': 'black'}]}>Hello, {userName}</Text>
-                {businessLogo && <Image source={{ uri: newLogo.uri }} style={{ width: 150, height: 150 }} />}
-                <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Change Logo</Text></TouchableOpacity>
+        <ThemedView style={styles.container}>
+            {loading ?
+            <ActivityIndicator size="large" color={color} />
+            : <>
+            <View style={styles.rowContainerLast}>
+                <Image source={{ uri: baseImageURL + business.image }} style={[styles.image, { borderColor: color }]} />
+                <View style={styles.info}>
+                    <ThemedText type='title'>{userName}</ThemedText>
+                    <ThemedText type='subtitle'>{business.business_name}</ThemedText>
+                </View>
             </View>
-            <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? '#333': '#9999'}]}>
-                <Text style={[styles.header, {color:darkTheme ? 'white': 'black'}]}>Change Bussiness Name</Text>
-                <TextInput autoFocus={false} onChangeText={setNewName} value={newName} style={[styles.textInput, {color:darkTheme ? 'white': 'black'}]}/>
-                <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleBN()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
+            <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+                <View style={styles.rowContainer}>
+                    <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person-circle-outline"/> Username</Text>
+                    <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{userName}</Text>
+                </View>
+                <View style={styles.rowContainer}>
+                    <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="mail-outline"/> Email</Text>
+                    <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.email ? business.email : 'no email saved'}</Text>
+                </View>
+                <View style={styles.rowContainer}>
+                    <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="call-outline"/> Phone</Text>
+                    <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.phone ? business.phone : 'no phone saved'}</Text>
+                </View>
+                <View style={styles.rowContainerLast}>
+                    <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="location-outline"/> Address</Text>
+                    <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.address ? business.address : 'no address saved'}</Text>
+                </View>
             </View>
-            <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => dispatch(authLogout())}><Text style={[styles.headerText, {color: 'white'}]}>Logout</Text></TouchableOpacity>
-          </View>
+            <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+                <View style={styles.rowContainer}>
+                    <Image source={{ uri: newLogo }} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
+                    <TouchableOpacity style={[styles.button, {backgroundColor: color, height: 40, marginVertical: 'auto'}]} onPress={() => handleImage()}><Text style={{color: 'white'}}>Select Logo</Text></TouchableOpacity>
+                </View>
+                <View style={styles.rowContainer}>
+                    <TextInput autoFocus={false} onChangeText={setNewName} value={newName} style={[styles.textInput, {color:darkTheme ? 'white': 'black', width: 200, margin: 'auto'}]}/>
+                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleBN()}><Text style={{color: 'white'}}>Save</Text></TouchableOpacity>
+                </View>
+                <View style={styles.rowContainerLast}>
+                    <View style={commonStyles.colorsContainer}>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#009d93'}]} onPress={() => dispatch(setColor('#009d93'))}></TouchableOpacity>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#694fad'}]} onPress={() => dispatch(setColor('#694fad'))}></TouchableOpacity>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#09dd'}]} onPress={() => dispatch(setColor('#09dd'))}></TouchableOpacity>
+                        <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+            <TouchableOpacity style={[styles.button, {backgroundColor: color, alignSelf: 'center', margin: 'auto'}]} onPress={() => dispatch(authLogout())}><Text style={{color: 'white'}}>Logout</Text></TouchableOpacity>
+            </>}
+        </ThemedView>
     )
 };
 
 const styles = StyleSheet.create ({
     container: {
         flex: 1, 
-        justifyContent: 'center',
-        alignItems: 'center',
+    },
+    image: {
+        width: 100, 
+        height: 100, 
+        borderWidth: 2,
+        margin: 2,
+        borderRadius: 15,
     },
     sectionContainer: {
         padding: 10,
         margin: 5,
         borderRadius: 15,
         width: '90%',
-        alignItems: 'center'
+        alignItems: 'center',
+        alignSelf: 'center'
     },
     header: {
         justifyContent: 'flex-end',
@@ -175,5 +229,32 @@ const styles = StyleSheet.create ({
             elevation: 5,
             },
         }),
+    },
+    rowContainerLast: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+    },
+    info: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        marginRight: 10,
+    },
+    rowContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+        paddingVertical: 5,
+        borderBottomWidth: 1,
+    },
+    infoText: {
+        fontSize: 25,
+    },
+    optionText: {
+        fontSize: 22,
+    },
+    optionTextRight: {
+        fontSize: 18,
     },
 });

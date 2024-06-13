@@ -129,19 +129,21 @@ export default function ClientCard({image, id, name, address, phone, email, inDe
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 10,
     marginHorizontal: 10,
+    borderBottomWidth: 1,
+      borderRightWidth: 1,
+      shadowColor: "#fff",
     padding: 10,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 2, height: 2 },
-        shadowColor: "#333",
+        shadowColor: "#fff",
         shadowOpacity: 0.3,
         shadowRadius: 4,
       },
       android: {
-        elevation: 5,
+        elevation: 8,
       },
     }),
   },

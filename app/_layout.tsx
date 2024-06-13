@@ -6,9 +6,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { persistor, store } from './(redux)/store';
 
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
