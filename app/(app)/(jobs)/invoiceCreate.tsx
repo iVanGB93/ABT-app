@@ -38,10 +38,10 @@ export default function InvoiceCreate() {
     const { color, darkTheme } = useSelector((state: RootState) => state.settings);
     const {job, invoice} = useSelector((state: RootState) => state.job);
     const [modalVisible, setModalVisible] = useState(false);
-    const [paid, setPaid] = useState<number>(0);
-    const [price, setPrice] = useState<number>(0);
+    const [paid, setPaid] = useState<any>(0);
+    const [price, setPrice] = useState<any>(0);
     const [description, setDescription] = useState<string>("");
-    const [amount, setAmount] = useState<number>(0);
+    const [amount, setAmount] = useState<any>(0);
     const [charges, setCharges] = useState<Charge[]>([]);
     const [errors, setErrors] = useState<Errors>({});
     const [loading, setLoading] = useState(false);
@@ -123,7 +123,6 @@ export default function InvoiceCreate() {
             <ThemedSecondaryView style={styles.form}>
                 <ThemedText style={[styles.label, {marginBottom: 5}]}>{job.description}</ThemedText>
                 <ThemedText style={[styles.label, {marginBottom: 5, textAlign: 'right'}]}>for {job.client}</ThemedText>
-
                 <FlatList 
                 data={charges}
                 renderItem={({item}) => {
@@ -134,17 +133,20 @@ export default function InvoiceCreate() {
                     </View>
                     )
                 }}
-                ItemSeparatorComponent={<View style={{ height: 10, borderTopColor: 'black', borderTopWidth: 1}}/>}
+                ItemSeparatorComponent={<View style={{ height: 10, borderTopColor: 'white', borderTopWidth: 1}}/>}
                 ListEmptyComponent={<ThemedText style={[styles.label, {marginBottom: 5}]}>No charges added yet</ThemedText>}
-                ListFooterComponent={<View style={{ height: 10, borderTopColor: 'black', borderTopWidth: 1}} />}
+                ListFooterComponent={<View style={{ height: 10, borderTopColor: 'white', borderTopWidth: 1}} />}
                 />
-                <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => setModalVisible(true)}><Text style={{color: 'white', margin: 'auto'}}>+ Charge</Text></TouchableOpacity>
-                <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color, justifyContent: 'space-between'}]}>
-                    <ThemedText style={styles.label}>Price</ThemedText>
+                <TouchableOpacity style={[styles.button, {borderColor: color, alignSelf: 'center'}]} onPress={() => setModalVisible(true)}>
+                    <ThemedText type="subtitle" style={{color: color}}>+ Charge</ThemedText>
+                </TouchableOpacity>
+                <View style={[commonStyles.action, {justifyContent: 'space-between'}]}>
+                    <ThemedText style={[commonStyles.text_action, {marginTop: 0}]} type="subtitle">Price</ThemedText>
                     <ThemedText style={styles.label}>${price}</ThemedText>
                 </View>
-                <ThemedText type="subtitle">Paid</ThemedText>
-                <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                <ThemedText style={commonStyles.text_action} type="subtitle">Paid</ThemedText>
+                <View style={commonStyles.action}>
+                    <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                     <TextInput
                         style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                         placeholder="Enter amount paid"
@@ -157,9 +159,13 @@ export default function InvoiceCreate() {
                 {errors.paid ? (
                     <Text style={styles.errorText}>{errors.paid}</Text>
                 ) : null}
-                <View style={{flexDirection: 'row',justifyContent: 'space-evenly'}}>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Save</Text></TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.back()}><Text style={[styles.headerText, {color: 'white'}]}>Cancel</Text></TouchableOpacity>
+                <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                    <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
+                        <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => router.back()}>
+                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                    </TouchableOpacity>
                 </View>
                 <Modal
                     animationType="slide"
@@ -169,8 +175,9 @@ export default function InvoiceCreate() {
                     <View style={styles.centeredView}>
                         <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
                             <ThemedText type="subtitle" style={{textAlign: 'center', margin: 5}}>New Charge</ThemedText>
-                            <ThemedText type="subtitle">Description</ThemedText>
-                            <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                            <ThemedText style={commonStyles.text_action} type="subtitle">Description</ThemedText>
+                            <View style={commonStyles.action}>
+                                <Ionicons name="text" color={darkTheme ? darkTtextColor: lightTextColor} />
                                 <TextInput
                                     style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                                     placeholder="Enter description"
@@ -182,8 +189,9 @@ export default function InvoiceCreate() {
                             {errors.description ? (
                                 <Text style={styles.errorText}>{errors.description}</Text>
                             ) : null}
-                            <ThemedText type="subtitle">How much?</ThemedText>
-                            <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                            <ThemedText style={commonStyles.text_action} type="subtitle">How much?</ThemedText>
+                            <View style={commonStyles.action}>
+                                <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                                 <TextInput
                                     style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                                     placeholder="Enter amount"
@@ -198,14 +206,14 @@ export default function InvoiceCreate() {
                             ) : null}
                             <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
                             <TouchableOpacity
-                                style={[styles.button, {backgroundColor: color, marginHorizontal: 5, flex: 1}]}
-                                onPress={() => setModalVisible(!modalVisible)}>
-                                <Text style={{color:'white', textAlign: 'center'}}>Cancel</Text>
+                                style={[styles.button, {borderColor: color, marginHorizontal: 5, flex: 1}]}
+                                onPress={() => handleCharge()}>
+                                <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[[styles.button, {backgroundColor: color, marginHorizontal: 5, flex: 1}]]}
-                                onPress={() => handleCharge()}>
-                                <Text style={{color:'white', textAlign: 'center'}}>Add</Text>
+                                style={[[styles.button, {borderColor: 'red', marginHorizontal: 5, flex: 1}]]}
+                                onPress={() => setModalVisible(!modalVisible)}>
+                                <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                             </TouchableOpacity>
                             </View>
                         </ThemedSecondaryView>
@@ -244,6 +252,7 @@ const styles = StyleSheet.create({
     label: {
       fontSize: 16,
       fontWeight: "bold",
+      marginVertical: 'auto'
     },
     input: {
       height: 40,
@@ -264,22 +273,13 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     button: {
-        padding: 10,
-        borderRadius: 10,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 40,
         width: 100,
-        ...Platform.select({
-            ios: {
-            shadowOffset: { width: 2, height: 2 },
-            shadowColor: "#fff",
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            },
-            android: {
-            elevation: 5,
-            },
-        }),
+        borderRadius: 10,
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
     },
     headerText: {
         fontSize: 16,

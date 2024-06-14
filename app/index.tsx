@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { View, TouchableOpacity, Text, TextInput, StyleSheet, Platform, ActivityIndicator, StatusBar, Image, ScrollView } from "react-native";
-import { Link, Redirect, useRouter } from 'expo-router';
+import { View, TouchableOpacity, Text, TextInput, ActivityIndicator, Image, ScrollView } from "react-native";
+import { Redirect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as SplashScreen from 'expo-splash-screen';
+import { useTheme } from '@react-navigation/native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { RootState, useAppDispatch } from "./(redux)/store";
 import { authSuccess } from "./(redux)/authSlice";
 import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
 import { darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from "@/settings";
-import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
-import { useTheme } from '@react-navigation/native';
 import { setDarkTheme } from "./(redux)/settingSlice";
 
 
@@ -48,16 +48,6 @@ export default function Login() {
     SplashScreen.hideAsync();
   }, []);
 
-  /* useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-      SplashScreen.hideAsync();
-    }, 1000);
-    if (token != null) {
-      router.push('/(app)/(clients)');
-    }
-  }, [token]); */
-
   const validateForm = () => {
     let errors: Errors = {};
     if (!username) errors.username = "Username is required!";
@@ -74,29 +64,27 @@ export default function Login() {
       .then(function(response) {
           if (response.data.access !== undefined) {
             dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
+            setLoading(false);
             router.push('(app)/(clients)');
           } else {
             setError(response.data.message);
-            setLoading(false);
             setAlertVisible(true);
+            setLoading(false);
           }
       })
       .catch(function(error) {
           console.error('Error logging in:', error.response, error.message);
           if (typeof error.response === 'undefined') {
-            setError("Error logging in, undefinded");
-            setLoading(false);
+            setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
           } else {
             if (error.response.status === 401) {
               setError("Username or Password incorrect");
-              setLoading(false);
-              setAlertVisible(true);
             } else {
               setError(error.message);
-              setLoading(false);
-              setAlertVisible(true);
             };
           };
+          setAlertVisible(true);
+          setLoading(false);
       });
     }
   };
@@ -113,7 +101,7 @@ export default function Login() {
       </View>
       <ThemedSecondaryView style={[commonStyles.footer, {borderColor: color}]}>
         <ScrollView>       
-          <ThemedText type="subtitle">User</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
           <View style={commonStyles.action}>
             <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
@@ -127,9 +115,9 @@ export default function Login() {
             : null}
           </View>
           {errors.username ? (
-            <Text style={{color: 'red'}}>{errors.username}</Text>
+            <Text style={commonStyles.errorMsg}>{errors.username}</Text>
           ) : null}
-          <ThemedText type="subtitle">Password</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">Password</ThemedText>
           <View style={commonStyles.action}>
             <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
@@ -148,18 +136,21 @@ export default function Login() {
             </TouchableOpacity>
           </View>
           {errors.password ? (
-            <Text style={{color: 'red'}}>{errors.password}</Text>
+            <Text style={commonStyles.errorMsg}>{errors.password}</Text>
           ) : null}
           {loading ?
           <ActivityIndicator style={commonStyles.button} size="large" color={color} />
           : 
           <>
-          <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={handleSubmit}>
-            <Text style={commonStyles.buttonText}>Login</Text> 
+          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50}]} onPress={handleSubmit}>
+            <ThemedText type="title" style={{color: color}}>Login</ThemedText> 
           </TouchableOpacity>
-          <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={() => router.push('register')}>
-            <Text style={commonStyles.buttonText}>I'm new, create account!!</Text>
-          </TouchableOpacity>
+          <View style={commonStyles.linkSection}>
+            <ThemedText type="subtitle">I'm new, </ThemedText>
+            <TouchableOpacity onPress={() => router.push('register')}>
+              <ThemedText type="subtitle" style={{color: color}}> create account!!</ThemedText>
+            </TouchableOpacity>
+          </View>
           </>
           }
         </ScrollView>

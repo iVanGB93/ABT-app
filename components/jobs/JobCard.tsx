@@ -136,7 +136,7 @@ export default function JobCard({id, status, client, address, description, price
         : null }
         <View style={styles.dataContainer}>
             <ThemedText style={styles.LabelText}>Address: </ThemedText>
-            <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{address}</ThemedText></Pressable>
+            <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText type='link'>{address}</ThemedText></Pressable>
         </View>
         <View style={styles.dataContainer}>
             <ThemedText style={styles.LabelText}>Price: </ThemedText>
@@ -150,7 +150,7 @@ export default function JobCard({id, status, client, address, description, price
         :
         ( inDetail ?
         (<View>
-          <View style={{textAlign: 'center'}}>
+          <View>
             {imageError ?
             <ThemedText style={[styles.LabelText, { alignSelf: 'center'}]}>image not found </ThemedText>
             :

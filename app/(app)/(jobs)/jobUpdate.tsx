@@ -14,6 +14,7 @@ import {
 import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import axiosInstance from '@/axios';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
@@ -141,9 +142,9 @@ export default function JobUpdate() {
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
                     <ThemedText style={[styles.label, {marginBottom: 5}]}>Job for {job.client}</ThemedText>
-
-                    <ThemedText type="subtitle">Description</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={[commonStyles.text_action, {marginTop: 5}]} type="subtitle">Description</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="text" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder={description ? description : "Enter job's description"}
@@ -156,8 +157,9 @@ export default function JobUpdate() {
                         <Text style={styles.errorText}>{errors.description}</Text>
                     ) : null}
 
-                    <ThemedText type="subtitle">Address</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder="Enter job's address"
@@ -170,8 +172,9 @@ export default function JobUpdate() {
                         <Text style={styles.errorText}>{errors.address}</Text>
                     ) : null}
                     
-                    <ThemedText type="subtitle">Price</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Price</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder={price ? price.toString() : "Enter job's price"}
@@ -186,13 +189,21 @@ export default function JobUpdate() {
                     ) : null}
                     
                     {image && <Image source={{ uri: image.uri }} style={styles.image} />}
-                    <View style={{flexDirection: 'row',justifyContent: 'space-evenly'}}>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Add image</Text></TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
+                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleImage()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => takePhoto()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
+                        </TouchableOpacity>
                     </View>
-                    <View style={{flexDirection: 'row',justifyContent: 'space-evenly'}}>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Update</Text></TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.back()}><Text style={[styles.headerText, {color: 'white'}]}>Cancel</Text></TouchableOpacity>
+                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Update</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => router.back()}>
+                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </ThemedSecondaryView>
@@ -243,27 +254,19 @@ const styles = StyleSheet.create({
     },
     image: {
         width: 200,
-        height: 150,
-        borderRadius: 15,
+        height: 115,
+        borderRadius: 10,
+        marginVertical: 10,
         alignSelf: 'center',
     },
     button: {
-        backgroundColor: '#694fad',
-        padding: 10,
-        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 40,
         width: 100,
-        margin: 5,
-        ...Platform.select({
-            ios: {
-            shadowOffset: { width: 2, height: 2 },
-            shadowColor: "#333",
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            },
-            android: {
-            elevation: 5,
-            },
-        }),
+        borderRadius: 10,
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
     },
     headerText: {
         fontSize: 16,

@@ -26,53 +26,53 @@ export const commonStyles = StyleSheet.create({
     },
     footer: {
         flex: 3,
-        borderRadius: 30,
-        borderWidth: 2,
+        borderTopStartRadius: 15,
+        borderTopEndRadius: 15,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
         marginHorizontal: 15,
         paddingHorizontal: 20,
         paddingTop: 30
     },
-    text_footer: {
-        fontSize: 18
+    text_action: {
+        marginTop: 15,
     },
     action: {
         flexDirection: 'row',
-        marginVertical: 10,
+        marginTop: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#f2f2f2',
-        borderTopLeftRadius: 15,
-        borderTopEndRadius: 15,
-    },
-    actionError: {
-        flexDirection: 'row',
-        marginTop: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#FF0000',
-        paddingBottom: 5
     },
     textInput: {
         flex: 1,
         marginTop: Platform.OS === 'ios' ? 0 : -12,
         paddingLeft: 10,
-        color: '#05375a',
     },
     errorMsg: {
         color: '#FF0000',
         fontSize: 14,
+        paddingLeft: 20,
     },
     button: {
         alignItems: 'center',
         justifyContent: 'center',
         height: 50,
-        marginTop: 50,
-        width: '100%',
+        width: 150,
+        alignSelf: 'center',
         borderRadius: 10,
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
     },
     buttonText: {
         fontSize: 18,
         color: '#fff',
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    linkSection: {
+        flexDirection: 'row',
+        marginTop: 50,
+        marginHorizontal: 'auto',
     },
     colorsContainer: {
         flexDirection: 'row',

@@ -33,12 +33,6 @@ export default function Register() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  useEffect(() => {
-    if (token != null) {
-      router.push('initialSettings');
-    }
-  }, [token]);
-
   const validateForm = () => {
     let errors: Errors = {};
     if (!username) errors.username = "Username is required!";
@@ -56,26 +50,28 @@ export default function Register() {
     .then(function(response) {
       if (response.data.access !== undefined) {
         dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
+        setAlertVisible(false);
+        setLoading(false);
         router.push('initialSettings');
       } else {
         setError(response.data.message);
-        setAlertVisible(true);
+        setLoading(false);
       }
     })
     .catch(function(error) {
       console.error('Error logging in:', error.response, error.message);
       if (typeof error.response === 'undefined') {
-        setError("Error logging in, undefinded");
-        setAlertVisible(true);
+        setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
       } else {
         if (error.response.status === 401) {
           setError("Username or Password incorrect");
-          setAlertVisible(true);
         } else {
           setError(error.message);
-          setAlertVisible(true);
         };
       };
+      setAlertVisible(false);
+      setLoading(false);
+      router.push('/');
     });
   };
 
@@ -85,25 +81,25 @@ export default function Register() {
       await axiosInstance
       .post("user/register/", {username: username, password: password, email: email})
       .then(function(response) {
-          if (response.status === 201) {
-            dispatch(authSetMessage("Account created!!!"));
-            loginUser();
-          } 
-          if (response.status === 203) {
-            setLoading(false);
-            setError(response.data.message);
-            setAlertVisible(true);
-          }
+        if (response.status === 201) {
+          dispatch(authSetMessage("Account created!!!"));
+          loginUser();
+        } 
+        if (response.status === 203) {
+          setError(response.data.message);
+          setAlertVisible(true);
+          setLoading(false);
+        }
       })
       .catch(function(error) {
-          console.error('Error registering:', error.response, error.message);
-          setLoading(false);
-          if (typeof error.response === 'undefined') {
-            setError("Error registering, undefinded");
-          } else {
-            setError(error.message);
-          };
-          setAlertVisible(true);
+        console.error('Error registering:', error.response, error.message);
+        if (typeof error.response === 'undefined') {
+          setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
+        } else {
+          setError(error.message);
+        };
+        setAlertVisible(true);
+        setLoading(false);
       });
     }
   };
@@ -117,7 +113,7 @@ export default function Register() {
       </View>     
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
         <ScrollView>  
-          <ThemedText type="subtitle">User</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
           <View style={commonStyles.action}>
             <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
@@ -130,9 +126,9 @@ export default function Register() {
             : null}
           </View>
           {errors.username ? (
-              <Text style={{color: 'red'}}>{errors.username}</Text>
+              <Text style={commonStyles.errorMsg}>{errors.username}</Text>
           ) : null}
-          <ThemedText type="subtitle">Email</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
           <View style={commonStyles.action}>
             <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
@@ -146,9 +142,9 @@ export default function Register() {
             : null}
           </View>
           {errors.email ? (
-              <Text style={{color: 'red'}}>{errors.email}</Text>
+              <Text style={commonStyles.errorMsg}>{errors.email}</Text>
           ) : null}
-          <ThemedText type="subtitle">Password</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">Password</ThemedText>
           <View style={commonStyles.action}>
             <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
@@ -167,19 +163,22 @@ export default function Register() {
             </TouchableOpacity>
           </View>
           {errors.password ? (
-              <Text style={{color: 'red'}}>{errors.password}</Text>
+              <Text style={commonStyles.errorMsg}>{errors.password}</Text>
           ) : null}
           {loading ?
           <ActivityIndicator style={commonStyles.button} size="large" color={color} />
           :
           <>
-          <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={handleSubmit}>
-            <Text style={commonStyles.buttonText}>Register</Text> 
+          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50}]} onPress={handleSubmit}>
+            <ThemedText type="subtitle" style={{color: color}}>Register</ThemedText> 
           </TouchableOpacity>
-          <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]}
-            onPress={() => router.push('/')}>
-            <Text style={commonStyles.buttonText}>Go to Login!!</Text>
-          </TouchableOpacity>
+          <View style={commonStyles.linkSection}>
+            <ThemedText type="subtitle">Go to </ThemedText>
+            <TouchableOpacity
+              onPress={() => router.push('/')}>
+              <ThemedText type="subtitle" style={{color: color}}>Login!!</ThemedText>
+            </TouchableOpacity>
+          </View>
           </>
           }
         </ScrollView>

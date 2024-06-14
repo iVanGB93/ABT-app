@@ -15,48 +15,26 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 
+interface Errors {
+    newName?: string;
+    address?: string;
+    phone?: string;
+    businessLogo?: string;
+}
+
 export default function InitialSettings () {
     const {token} = useSelector((state: RootState) => state.auth);
     const { authMessage, userName } = useSelector((state: RootState) => state.auth);
     const { color, businessName, darkTheme, business } = useSelector((state: RootState) => state.settings);
-    const [businessLogo, setNewBusinessLogo] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [newName, setNewName] = useState(businessName);
+    const [newBusinessLogo, setNewBusinessLogo] = useState<any>(null);
+    const [phone, setPhone] = useState("");
+    const [address, setAddress] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [newName, setNewName] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Errors>({});
     const router = useRouter();
     const dispatch = useAppDispatch();
-
-    const getAccount = async () => {
-        await axiosInstance
-        .get(`user/account/${userName}/`)
-        .then(function(response) {
-            if (response.data) {
-                dispatch(setBusinessName(response.data.business_name));
-                let logo = {'uri': baseImageURL + response.data.business_logo};
-                setNewBusinessLogo(logo);
-                dispatch(setBusinessLogo(logo));
-                dispatch(setBusiness(response.data));
-                setLoading(false);
-            } else {
-                setError(response.data.message);
-                setLoading(false);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error fetching jobs:', error);
-            if (typeof error.response === 'undefined') {
-                setError("Error undefinded");
-                setLoading(false);
-            } else {
-                if (error.response.status === 401) {
-                    router.push('/')
-                } else {
-                  setError(error.message);
-                    setLoading(false);
-                };
-            };
-        });
-    };
 
     useEffect(() => {
         if (authMessage) {
@@ -65,7 +43,6 @@ export default function InitialSettings () {
             console.log('====================================');
             dispatch(authSetMessage(null));
         }
-        getAccount();
     }, [authMessage]);
 
     const handleImage = async () => {
@@ -76,55 +53,68 @@ export default function InitialSettings () {
             quality: 1,
         });
         if (!result.canceled) {
-            setNewBusinessLogo(result.assets[0]);
+            setNewBusinessLogo(result.assets[0].uri);
         }
     };
 
+    const validateForm = () => {
+        let errors: Errors = {};
+        if (!newName) errors.newName = "Name is required!";
+        if (!address) errors.address = "Address is required!";
+        if (!phone) errors.phone = "Phone is required!";
+        if (!newBusinessLogo) errors.businessLogo = "Logo is required!";
+        setErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async () => {
-        setLoading(true);
-        const formData = new FormData();
-        formData.append('business_name', newName);
-        if (businessLogo !== null) {
-            const uriParts = businessLogo.uri.split('.');
-            const fileType = uriParts[uriParts.length - 1];
-            const fileName = `${userName}BusinessLogo.${fileType}`;
-            formData.append('business_logo', {
-                uri: businessLogo.uri,
-                name: fileName,
-                type: `image/${fileType}`,
-            } as unknown as Blob)
-        };
-        await axiosInstance
-        .post(`user/account/${userName}/`, formData,
-        { headers: {
-            'content-Type': 'multipart/form-data',
-        }})
-        .then(function(response) {
-            if (response.data) {
-                dispatch(setBusinessName(newName));
-                let logo = {'uri': baseImageURL + response.data.business_logo}
-                dispatch(setBusinessLogo(logo));
-                setLoading(false);
-                router.push('(app)/(clients)')
-            } else {
-                setError(response.data.message);
-                setLoading(false);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error sending settings:', error);
-            if (typeof error.response === 'undefined') {
-                setError("Error logging in, undefinded");
-              } else {
-                if (error.response.status === 401) {
-                    setError("Username or Password incorrect");
-                    router.push('/');
+        if (validateForm()) {
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('business_name', newName);
+            formData.append('phone', phone);
+            formData.append('address', address);
+            if (newBusinessLogo !== null) {
+                const uriParts = newBusinessLogo.split('.');
+                const fileType = uriParts[uriParts.length - 1];
+                const fileName = `${userName}BusinessLogo.${fileType}`;
+                formData.append('business_logo', {
+                    uri: newBusinessLogo,
+                    name: fileName,
+                    type: `image/${fileType}`,
+                } as unknown as Blob)
+            };
+            await axiosInstance
+            .post(`user/account/${userName}/`, formData,
+            { headers: {
+                'content-Type': 'multipart/form-data',
+            }})
+            .then(function(response) {
+                if (response.data) {
+                    dispatch(setBusinessName(newName));
+                    dispatch(setBusinessLogo(newBusinessLogo));
+                    dispatch(setBusiness(response.data));
+                    setLoading(false);
+                    router.push('(app)/(clients)');
                 } else {
-                  setError(error.message);
-                  setLoading(false);
+                    setError(response.data.message);
+                    setLoading(false);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error sending settings:', error);
+                if (typeof error.response === 'undefined') {
+                    setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
+                } else {
+                    if (error.response.status === 401) {
+                      setError("Username or Password incorrect");
+                    } else {
+                      setError(error.message);
+                    };
                 };
-              };
-        });
+                setLoading(false);
+            });
+        }
     };
 
     return (
@@ -133,7 +123,7 @@ export default function InitialSettings () {
                 <Image style={commonStyles.image} source={require('../assets/images/icon.png')} />
                 <ThemedText type="title" style={commonStyles.text_header}>Let's define your business!</ThemedText>
             </View>
-            <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
+            <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color, flex: 4}]}>
                 {loading ?
                 <ActivityIndicator style={commonStyles.button} color={color} size="large" />
                 :
@@ -152,10 +142,55 @@ export default function InitialSettings () {
                     <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                     : null}
                 </View>
+                {errors.newName ? (
+                    <Text style={commonStyles.errorMsg}>{errors.newName}</Text>
+                ) : null}
+                <ThemedText type="subtitle">Address</ThemedText>
+                <View style={commonStyles.action}>
+                    <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor}/>
+                    <TextInput 
+                        autoFocus={false} 
+                        onChangeText={setAddress} 
+                        placeholder='Type your business address...'
+                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                        value={address} 
+                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
+                    { newName !== 'Business Name' ?
+                    <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
+                    : null}
+                </View>
+                {errors.address ? (
+                    <Text style={commonStyles.errorMsg}>{errors.address}</Text>
+                ) : null}
+                <ThemedText type="subtitle">Phone</ThemedText>
+                <View style={commonStyles.action}>
+                    <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor}/>
+                    <TextInput 
+                        autoFocus={false}
+                        onChangeText={setPhone} 
+                        placeholder='Type your business phone...'
+                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                        value={phone} 
+                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
+                    { newName !== 'Business Name' ?
+                    <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
+                    : null}
+                </View>
+                {errors.phone ? (
+                    <Text style={commonStyles.errorMsg}>{errors.phone}</Text>
+                ) : null}
                 <ThemedText type="subtitle">Logo</ThemedText>
-                {businessLogo && <Image source={{ uri: baseImageURL + business.business_logo }} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />}
-                <TouchableOpacity style={[commonStyles.button, {backgroundColor: color, marginBottom: 20, marginTop: 10}]} onPress={() => handleImage()}>
-                    <Text style={commonStyles.buttonText}>Select Logo</Text>
+                {errors.businessLogo ? (
+                    <Text style={commonStyles.errorMsg}>{errors.businessLogo}</Text>
+                ) : null}
+                {newBusinessLogo ? 
+                <Image source={{ uri : newBusinessLogo }} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />
+                :
+                <Image source={require('../assets/images/logoDefault.png')} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />
+                }
+                
+                <TouchableOpacity style={[commonStyles.button, {borderColor: color, marginBottom: 20, marginTop: 10}]} onPress={() => handleImage()}>
+                    <ThemedText type="subtitle" style={{color: color}}>Select Logo</ThemedText>
                 </TouchableOpacity>
                 <ThemedText type='subtitle'>Change color</ThemedText>
                 <View style={commonStyles.action}>
@@ -166,10 +201,10 @@ export default function InitialSettings () {
                         <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
                     </View>
                 </View>
-                <TouchableOpacity style={[commonStyles.button, { backgroundColor: color}]} onPress={handleSubmit}>
-                    <Text style={commonStyles.buttonText}>Save</Text>
+                <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 30}]} onPress={handleSubmit}>
+                    <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                 </TouchableOpacity>
-                    <ThemedText style={[commonStyles.text_footer, { marginTop: 60, textAlign: 'center' }]}>you can change this settings later</ThemedText>
+                    <ThemedText style={{ marginTop: 60, textAlign: 'center' }}>you can change this settings later</ThemedText>
                 </ScrollView>
                 }
             </View>

@@ -1,6 +1,6 @@
-export const baseURL = 'http://192.168.1.137:8000/api/';
+//export const baseURL = 'http://192.168.1.137:8000/api/';
 
-//export const baseURL = 'https://abt.qbared.com/api/';
+export const baseURL = 'https://abt.qbared.com/api/';
 
 //export const baseImageURL = 'http://192.168.1.137:8000';
 

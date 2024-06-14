@@ -21,12 +21,13 @@ export default function Invoice() {
     const { client } = useSelector((state: RootState) => state.client);
     const {job, invoice, charges} = useSelector((state: RootState) => state.job);
     const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch();
     const router = useRouter();
     
     const getInvoice = async () => {
+        setLoading(true);
         await axiosInstance
         .get(`jobs/invoice/${job.id}/`)
         .then(function(response) {
@@ -65,12 +66,16 @@ export default function Invoice() {
                 .header { display: flex; justify-content: space-between; }
                 .invoice-title { font-size: 24px; font-weight: bold; }
                 .invoice-number { font-size: 20px; font-weight: bold; }
+                .business-section { text-align: end; }
+                .business-details { font-size: 16px; }
                 .details { display: flex; justify-content: space-between; margin-top: 20px; }
                 .details p { margin: 5px 0; }
                 .table { width: 100%; margin-top: 20px; border-collapse: collapse; }
                 .table th, .table td { border: 1px solid #ddd; padding: 8px; }
                 .table th { background-color: #f2f2f2; text-align: left; }
                 .footer { margin-top: 20px; text-align: end; }
+                hr {border: none;border-top: 2px solid black;margin: 20px 0;}
+                a {text-decoration: none; border-radius: 5px; background-color: blue; padding: 10px; color: #ddd;}
             </style>
             </head>
             <body>
@@ -78,10 +83,14 @@ export default function Invoice() {
                 <img src=${base64Image} alt="logo-image" style="width: 150px; height: 150px"/>
                 <div>
                     <p class="invoice-title">${businessName}</p>
+                    <p class="business-details">${business.address}</p>
+                    <p class="business-details">${business.phone}</p>
+                    <p class="business-details">${business.email}</p>
                     <p class="invoice-number">Invoice #${invoice.number}</p>
-                    <p>${formatDate(new Date(invoice.date))}</p>
+                    <p class="business-details">${formatDate(new Date(invoice.date))}</p>
                 </div>
             </div>
+            <hr>
             <div class="details">
                 <p><strong>Bill to:</strong></p>
                 <div>
@@ -103,10 +112,14 @@ export default function Invoice() {
                 </tr>
                 `).join('')}
             </table>
+            <hr>
             <div class="footer">
                 <p><strong>Total:</strong> $ ${invoice.total}</p>
                 <p><strong>PAID:</strong> $ ${invoice.paid}</p>
                 <p><strong>Balance Due:</strong> $ ${invoice.due}</p>
+            </div>
+            <div class="footer">
+                <a href="https://abt.qbared.com/jobs/invoice/${invoice.number}/">Pay Now</a>
             </div>
             </body>
         </html>
@@ -190,7 +203,7 @@ export default function Invoice() {
 
     return (
         loading ?
-        <ActivityIndicator style={styles.loading} size="large" />
+        <ActivityIndicator style={styles.loading} color={color} size="large" />
         :
         invoice ? 
         <ThemedView style={styles.container}>
@@ -236,9 +249,13 @@ export default function Invoice() {
                         { invoice.closed ?
                         <Button  title='Closed'/>
                         :
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => router.push('invoiceUpdate')}><ThemedText style={{color: 'white', textAlign: 'center'}}>Change</ThemedText></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, margin: 'auto'}]} onPress={() => router.push('invoiceUpdate')}>
+                            <ThemedText type="subtitle" style={{color: color}}>Change</ThemedText>
+                        </TouchableOpacity>
                         }
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => createAndSendInvoice()}><ThemedText style={{color: 'white', textAlign: 'center'}}>Send Invoice</ThemedText></TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, width: 120, margin: 'auto'}]} onPress={() => createAndSendInvoice()}>
+                        <ThemedText type="subtitle" style={{color: color}}>Send Invoice</ThemedText>
+                        </TouchableOpacity>
                     </View>
                     {/* <Modal
                         animationType="slide"
@@ -275,7 +292,9 @@ export default function Invoice() {
         :
         <ThemedView style={styles.container}>
             <ThemedText style={[styles.invoiceTitle, {textAlign: 'center', margin: 'auto'}]}>{error}</ThemedText> 
-            <TouchableOpacity style={[styles.button, {backgroundColor: color, width: 150, margin: 'auto'}]} onPress={() => router.push('invoiceCreate')}><ThemedText style={{color: 'white', textAlign: 'center'}}>Create</ThemedText></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, {borderColor: color, margin: 'auto'}]} onPress={() => router.push('invoiceCreate')}>
+                <ThemedText type="subtitle" style={{color: color, textAlign: 'center'}}>Create</ThemedText>
+            </TouchableOpacity>
         </ThemedView>
     );
 };
@@ -332,21 +351,13 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     button: {
-        backgroundColor: '#694fad',
-        padding: 10,
-        borderRadius: 16,
-        margin: 5,
-        ...Platform.select({
-            ios: {
-            shadowOffset: { width: 2, height: 2 },
-            shadowColor: "#333",
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            },
-            android: {
-            elevation: 5,
-            },
-        }),
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 40,
+        width: 100,
+        borderRadius: 10,
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
     },
     loading: {
         flex: 1,

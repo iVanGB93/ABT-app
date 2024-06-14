@@ -24,13 +24,13 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ visible, title, message, onCl
         onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <View style={[styles.alertBox, {borderColor: color}]}>
-                    <Text style={styles.alertTitle}>{title}</Text>
-                    <Text style={styles.alertMessage}>{message}</Text>
+                <ThemedView style={[styles.alertBox, {borderColor: color}]}>
+                    <ThemedText style={[styles.alertTitle, {borderBottomColor: color}]}>{title}</ThemedText>
+                    <ThemedText style={styles.alertMessage}>{message}</ThemedText>
                     <TouchableOpacity style={[styles.okButton, {backgroundColor: color}]} onPress={onClose}>
                         <Text style={styles.okButtonText}>OK</Text>
                     </TouchableOpacity>
-                </View>
+                </ThemedView>
             </View>
         </Modal>
   );
@@ -46,16 +46,15 @@ const styles = StyleSheet.create({
     alertBox: {
       width: 300,
       padding: 20,
-      borderWidth: 1,
+      borderBottomWidth: 1,
+      borderRightWidth: 1,
       borderRadius: 10,
       alignItems: 'center',
-      backgroundColor: '#f5f5f5',
     },
     alertTitle: {
       fontSize: 20,
       fontWeight: 'bold',
       marginBottom: 10,
-      borderBottomColor: 'black',
       borderBottomWidth: 1,
       width: '100%'
     },

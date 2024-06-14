@@ -9,6 +9,7 @@ import { setTokensAction } from './app/(redux)/authSlice';
 
 
 const dispatch = (action:any) => store.dispatch(action)
+let count:number = 0;
 
 const axiosInstance = axios.create({
 	baseURL: baseURL,
@@ -40,10 +41,10 @@ axiosInstance.interceptors.response.use(
 	async function (error) {
 		const originalRequest = error.config;
 		if (typeof error.response === 'undefined') {
-			Alert.alert(
+			/* Alert.alert(
 				'A server/network error occurred. ' +
 				'Sorry about this - we will get it fixed shortly.'
-			);
+			); */
 			return Promise.reject(error);
 		}
 		if ( error.response.status === 401 && originalRequest.url === baseURL + 'token/refresh/') {
@@ -55,6 +56,8 @@ axiosInstance.interceptors.response.use(
 		}
 		if (error.response.data.code === 'token_not_valid' && error.response.status === 401) {
 			console.log("Getting new token...");
+			console.log('==============BEFORE================');
+			console.log(count);
 			const state = store.getState();
 			const refreshToken = state.auth.refreshToken;
 			if (refreshToken) {
@@ -62,10 +65,15 @@ axiosInstance.interceptors.response.use(
 				// exp date in token is expressed in seconds, while now() returns milliseconds:
 				const now = Math.ceil(Date.now() / 1000);
 				if (tokenParts.exp > now) {
-					return axiosInstance
+					if (count < 1) {
+						count += 1;
+						console.log('===========AFTER==============');
+						console.log(count);
+						return axiosInstance
 						.post('/token/refresh/', { refresh: refreshToken })
 						.then((response) => {
 							if (response.data.access) {
+								count = 0;
 								if (response.data.refresh) {
 									dispatch(setTokensAction({token: response.data.access, refreshToken: response.data.refresh}))
 								} else {
@@ -78,6 +86,12 @@ axiosInstance.interceptors.response.use(
 						.catch((err) => {
 							console.log(err);
 						});
+					} else {
+						console.log('Refresh token is wrong');
+						dispatch(setTokensAction({token: null, refreshToken: null}))
+						//redirect here
+						return <Redirect href={'/'}/>;
+					}
 				} else {
 					console.log('Refresh token is expired', tokenParts.exp, now);
 					dispatch(setTokensAction({token: null, refreshToken: null}))

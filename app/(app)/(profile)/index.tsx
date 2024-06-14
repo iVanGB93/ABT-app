@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, Platform, Image } from 'react-native';
+import { Text, View, ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, Platform, Image, ScrollView } from 'react-native';
 import { useSelector } from "react-redux";
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +10,6 @@ import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(
 import { authLogout } from '@/app/(redux)/authSlice';
 import axiosInstance from '@/axios';
 import { baseImageURL, darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from '@/settings';
-import { router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
@@ -24,6 +23,7 @@ export default function Profile () {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch();
+
 
     const downloadLogo = async () => {
         try {
@@ -53,15 +53,13 @@ export default function Profile () {
             }
         })
         .catch(function(error) {
-            console.error('Error fetching jobs:', error);
-            try {
-                const message = error.data.message;
-                setError(message);
-                setLoading(false);
-            } catch(e) {
-                setError("Error getting your jobs.");
-                setLoading(false);
-            }
+            console.error('Error getting account:', error);
+            if (typeof error.response === 'undefined') {
+                setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
+            } else {
+                setError(error.message);
+            };
+            setLoading(false);
         });
     };
 
@@ -127,7 +125,8 @@ export default function Profile () {
         <ThemedView style={styles.container}>
             {loading ?
             <ActivityIndicator size="large" color={color} />
-            : <>
+            :
+            <ScrollView>
             <View style={styles.rowContainerLast}>
                 <Image source={{ uri: baseImageURL + business.image }} style={[styles.image, { borderColor: color }]} />
                 <View style={styles.info}>
@@ -155,12 +154,21 @@ export default function Profile () {
             </View>
             <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
                 <View style={styles.rowContainer}>
+                    { newLogo ?
                     <Image source={{ uri: newLogo }} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color, height: 40, marginVertical: 'auto'}]} onPress={() => handleImage()}><Text style={{color: 'white'}}>Select Logo</Text></TouchableOpacity>
+                    :
+                    <ThemedText type='subtitle'>Logo Image</ThemedText>
+                    //<Image source={require(businessLogo) } style={[styles.image, { borderColor: color, margin: 'auto' }]} />
+                    }
+                    <TouchableOpacity style={[commonStyles.button, {borderColor: color, height: 40, marginVertical: 'auto'}]} onPress={() => handleImage()}>
+                        <ThemedText type="subtitle" style={{color: color}}>Select Logo</ThemedText>
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.rowContainer}>
                     <TextInput autoFocus={false} onChangeText={setNewName} value={newName} style={[styles.textInput, {color:darkTheme ? 'white': 'black', width: 200, margin: 'auto'}]}/>
-                    <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleBN()}><Text style={{color: 'white'}}>Save</Text></TouchableOpacity>
+                    <TouchableOpacity style={[commonStyles.button, {borderColor: color, width: 100}]} onPress={() => handleBN()}>
+                        <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.rowContainerLast}>
                     <View style={commonStyles.colorsContainer}>
@@ -171,8 +179,19 @@ export default function Profile () {
                     </View>
                 </View>
             </View>
-            <TouchableOpacity style={[styles.button, {backgroundColor: color, alignSelf: 'center', margin: 'auto'}]} onPress={() => dispatch(authLogout())}><Text style={{color: 'white'}}>Logout</Text></TouchableOpacity>
-            </>}
+            <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+                <View style={styles.rowContainer}>
+                    <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person"/> Contact</Text>
+                </View>
+                <View style={styles.rowContainerLast}>
+                    <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person"/> Privacy Policy</Text>
+                </View>
+            </View>
+            <TouchableOpacity style={[commonStyles.button, {borderColor: color, alignSelf: 'center', margin: 15}]} onPress={() => dispatch(authLogout())}>
+                <ThemedText type="subtitle" style={{color: color}}>Logout</ThemedText>
+            </TouchableOpacity>
+            </ScrollView>
+            }
         </ThemedView>
     )
 };

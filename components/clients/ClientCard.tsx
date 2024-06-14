@@ -18,13 +18,14 @@ interface ClientCardProps {
   image: any;
   id: any;
   name: any;
+  last_name: any;
   address: any;
   phone: any;
   email: any;
   inDetail?: boolean;
 };
 
-export default function ClientCard({image, id, name, address, phone, email, inDetail}: ClientCardProps) {
+export default function ClientCard({image, id, name, last_name, address, phone, email, inDetail}: ClientCardProps) {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const [modalVisible, setModalVisible] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -57,7 +58,7 @@ export default function ClientCard({image, id, name, address, phone, email, inDe
   return (
     <View style={[styles.card, {borderColor: color, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
       <View style={[styles.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
-          <Text style={[styles.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name}</Text>
+          <Text style={[styles.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name} {last_name ? last_name  : null}</Text>
           { inDetail ?
           <Pressable onPress={() => router.push('/(app)/(clients)/clientUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
           :
@@ -70,15 +71,15 @@ export default function ClientCard({image, id, name, address, phone, email, inDe
       </View>
       <View style={styles.dataContainer}>
           <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
-          <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{address ? address : 'No address saved'}</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText type='link'>{address ? address : 'No address saved'}</ThemedText></Pressable>
       </View>
       <View style={styles.dataContainer}>
           <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
-          <Pressable onPress={() => Linking.openURL(`tel:${phone}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{phone ? phone : 'No phone saved'}</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(`tel:${phone}`)}><ThemedText type='link'>{phone ? phone : 'No phone saved'}</ThemedText></Pressable>
       </View>
       <View style={styles.dataContainer}>
           <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
-          <Pressable onPress={() => Linking.openURL(`mailto:${email}`)}><Text style={[styles.dataText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{email ? email : 'No email saved'}</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(`mailto:${email}`)}><ThemedText type='link'>{email ? email : 'No email saved'}</ThemedText></Pressable>
       </View>
       {inDetail ?
       <View style={styles.dataContainer}>

@@ -17,6 +17,8 @@ import { useSelector } from "react-redux";
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { useRouter } from "expo-router";
 import { ImagePickerAsset } from 'expo-image-picker';
+import { Ionicons } from "@expo/vector-icons";
+
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
@@ -89,7 +91,7 @@ export default function ClientCreate() {
             const formData = new FormData();
             formData.append('action', 'new');
             formData.append('name', name);
-            formData.append('last_name', name);
+            formData.append('last_name', lastName);
             formData.append('phone', phone);
             formData.append('email', email);
             formData.append('address', address);
@@ -139,8 +141,9 @@ export default function ClientCreate() {
                     <Text style={styles.errorText}>{error}</Text>
                 ) : null}
                 <ScrollView>
-                    <ThemedText type="subtitle">Name</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Name</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder={name ? name : "Enter client's name"}
@@ -152,8 +155,9 @@ export default function ClientCreate() {
                     {errors.name ? (
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
-                    <ThemedText type="subtitle">Last Name (optional)</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="person-add" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder={lastName ? lastName : "Enter client's last name"}
@@ -165,8 +169,9 @@ export default function ClientCreate() {
                     {errors.lastName ? (
                         <Text style={styles.errorText}>{errors.lastName}</Text>
                     ) : null}
-                    <ThemedText type="subtitle">Phone (optional)</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder="Enter client's phone"
@@ -178,9 +183,9 @@ export default function ClientCreate() {
                     {errors.phone ? (
                         <Text style={styles.errorText}>{errors.phone}</Text>
                     ) : null}
-
-                    <ThemedText type="subtitle">Email (optional)</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder="Enter client's email"
@@ -192,9 +197,9 @@ export default function ClientCreate() {
                     {errors.email ? (
                         <Text style={styles.errorText}>{errors.email}</Text>
                     ) : null}
-                    
-                    <ThemedText type="subtitle">Address (optional)</ThemedText>
-                    <View style={[commonStyles.action, {backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderBottomColor: color}]}>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
+                    <View style={commonStyles.action}>
+                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder="Enter client's address"
@@ -208,13 +213,21 @@ export default function ClientCreate() {
                     ) : null}
                     
                     {image && <Image source={{ uri: image.uri }} style={styles.image} />}
-                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly'}}>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleImage()}><Text style={[styles.headerText, {color: 'white'}]}>Add image</Text></TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => takePhoto()}><Text style={[styles.headerText, {color: 'white'}]}>Take Photo</Text></TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => handleSubmit()}><Text style={[styles.headerText, {color: 'white'}]}>Create</Text></TouchableOpacity>
+                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleImage()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => takePhoto()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
+                        </TouchableOpacity>
                     </View>
-                    <View style={{flexDirection: 'row',justifyContent: 'flex-end'}}>
-                        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.back()}><Text style={[styles.headerText, {color: 'white'}]}>Cancel</Text></TouchableOpacity>
+                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => router.back()}>
+                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </ThemedSecondaryView>
@@ -230,7 +243,8 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
     },
     form: {
-      padding: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 20,
       borderRadius: 10,
       shadowColor: "#fff",
       shadowOffset: {
@@ -264,30 +278,20 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     image: {
-        width: 150,
-        height: 150,
+        width: 100,
+        height: 100,
+        margin: 10,
         borderRadius: 75,
         alignSelf: 'center',
     },
     button: {
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 10,
-        borderRadius: 10,
-        margin: 5,
+        height: 40,
         width: 100,
-        shadowColor: '#fff',
-        ...Platform.select({
-            ios: {
-            shadowOffset: { width: 2, height: 2 },
-            shadowColor: "#333",
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            },
-            android: {
-            elevation: 5,
-            },
-        }),
+        borderRadius: 10,
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
     },
     headerText: {
         fontSize: 16,

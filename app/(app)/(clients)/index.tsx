@@ -42,12 +42,15 @@ export default function Clients() {
     })
     .catch(function(error) {
         console.error('Error fetching clients:', error);
-        try {
-            const message = error.data.message;
-            dispatch(clientFail(message));
-        } catch(e) {
+        if (typeof error.response === 'undefined') {
+          dispatch(clientFail('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.'));
+        } else {
+          if (error.status === 401) {
+            router.push('/');
+          } else {
             dispatch(clientFail("Error getting your clients."));
-        }
+          }
+        };
     });
   };
   
@@ -89,7 +92,7 @@ export default function Clients() {
         renderItem={({ item }) => {
           return (
             <TouchableOpacity onPress={() => handlePressable(item.id)}>
-              <ClientCard id={item.id} name={item.name} address={item.address} phone={item.phone} email={item.email} image={item.image}/>
+              <ClientCard id={item.id} name={item.name} last_name={item.last_name} address={item.address} phone={item.phone} email={item.email} image={item.image}/>
             </TouchableOpacity>
           );
         }}

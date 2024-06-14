@@ -11,6 +11,7 @@ import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { setJobs, jobSetLoading, jobFail, setJob } from '@/app/(redux)/jobSlice';
 import axiosInstance from '@/axios';
 import { darkMainColor } from '@/settings';
+import { commonStyles } from '@/constants/commonStyles';
 
 
 export default function ClientDetail() {
@@ -51,15 +52,17 @@ export default function ClientDetail() {
     const fetchJobs = async () => {
         getJobs();
         let jobList = jobs.filter((jobs: { client: any; }) => jobs.client === client.name)
+        console.log(jobs);
         setStateJobs(jobList);
     };
 
     useEffect(() => {
         if (jobs.length === 0) {
-            getJobs();
+            fetchJobs();
+        } else {
+            let jobList = jobs.filter((jobs: { client: any; }) => jobs.client === client.name)
+            setStateJobs(jobList);
         };
-        let jobList = jobs.filter((jobs: { client: any; }) => jobs.client === client.user)
-        setStateJobs(jobList);
     }, []);
 
     const handlePressable = (id: string) => {
@@ -94,11 +97,11 @@ export default function ClientDetail() {
                 ItemSeparatorComponent={<View style={{height: 16,}}/>}
                 ListEmptyComponent={
                     <View>
-                        <ThemedText style={styles.headerText}>No jobs found</ThemedText>
+                        <ThemedText style={styles.headerText}>No jobs found, pull to refresh</ThemedText>
                     </View>
                 }
                 ListHeaderComponent={<View style={{margin: 5}} />}
-                ListFooterComponent={<TouchableOpacity style={[styles.button, {margin: 15, backgroundColor: color}]} onPress={() => router.push('(app)/(jobs)/jobCreate')}><Text style={[styles.headerText, {color: 'white'}]}>Add new Job</Text></TouchableOpacity>}
+                ListFooterComponent={<TouchableOpacity style={[commonStyles.button, {margin: 15, borderColor: color}]} onPress={() => router.push('(app)/(jobs)/jobCreate')}><ThemedText type="subtitle" style={{color: color}}>Add new Job</ThemedText></TouchableOpacity>}
                 refreshControl={
                     <RefreshControl
                       refreshing={jobLoading}
