@@ -32,8 +32,8 @@ export default function JobCard({id, status, client, address, description, price
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleFinish, setModalVisibleFinish] = useState(false);
   const clients = useSelector((state: RootState) => state.client.clients);
-  const {job, jobLoading} = useSelector((state: RootState) => state.job);
   const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const imageObj = {'uri': baseImageURL + image};
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -59,7 +59,7 @@ export default function JobCard({id, status, client, address, description, price
   });
 
   const deleteJob = async () => {
-    //dispatch(changeLoading(true));
+    setIsLoading(true);
     await axiosInstance
     .post(`jobs/delete/${id}/`, { action: 'delete'},
     { headers: {
@@ -67,21 +67,20 @@ export default function JobCard({id, status, client, address, description, price
     }})
     .then(function(response) {
       if (response.data.OK) {
-        //dispatch(changeLoading(false));
-        //dispatch(getJobs());
+        setIsLoading(false);
         router.push('/(app)/(jobs)');
         Alert.alert(response.data.message);
       }
     })
     .catch(function(error) {
-        //dispatch(changeLoading(false));
+        setIsLoading(false);
         console.error('Error deleting a job:', error.message);
         Alert.alert(`Error deleting a job: ${error.message}`);
     });
   };
 
   const closeJob = async () => {
-    //dispatch(changeLoading(true));
+    setIsLoading(true);
     await axiosInstance
     .post(`jobs/update/${id}/`, { action: 'close'},
     { headers: {
@@ -89,14 +88,13 @@ export default function JobCard({id, status, client, address, description, price
     }})
     .then(function(response) {
       if (response.data.OK) {
-        //dispatch(changeLoading(false));
-        /* dispatch(getJob(id)); */
+        setIsLoading(false);
         router.push('/(app)/(jobs)');
         Alert.alert(response.data.message);
       }
     })
     .catch(function(error) {
-        //dispatch(changeLoading(false));
+        setIsLoading(false);
         setModalVisible(false);
         console.error('Error closing a job:', error.message);
         Alert.alert(`Error closing a job: ${error.message}`);
@@ -182,7 +180,7 @@ export default function JobCard({id, status, client, address, description, price
           setModalVisible(!modalVisible);
         }}>
         <View style={styles.centeredView}>
-          { jobLoading ?
+          { isLoading ?
           <ActivityIndicator style={styles.loading} size="large" />
           :
           <View style={[styles.card, {padding: 10, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
@@ -212,7 +210,7 @@ export default function JobCard({id, status, client, address, description, price
           setModalVisibleFinish(!modalVisibleFinish);
         }}>
         <ThemedView style={styles.centeredView}>
-          { jobLoading ?
+          { isLoading ?
           <ActivityIndicator style={styles.loading} size="large" />
           :
           <View style={[styles.card, {padding: 10, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>

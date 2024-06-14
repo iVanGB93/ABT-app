@@ -30,7 +30,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
   const [modalVisible, setModalVisible] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const imageObj = {'uri': baseImageURL + image};
+  const imageObj = baseImageURL + image;
   const router = useRouter();
 
   const deleteClient = async () => {
@@ -64,7 +64,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
           :
           <Image 
           style={{width: 30, height: 30, borderRadius: 75}} 
-          source={{ uri: imageObj.uri }}
+          source={{ uri: imageObj }}
           onError={() => setImageError(true)}
           />
           }
@@ -89,7 +89,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
         :
         <Image 
         style={styles.image} 
-        source={{ uri: imageObj.uri }}
+        source={{ uri: imageObj }}
         onError={() => setImageError(true)}
         />
         }

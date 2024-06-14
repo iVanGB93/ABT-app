@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 import JobCard from '@/components/jobs/JobCard';
 import { jobFail, jobSetLoading, setJobs, setJob } from '@/app/(redux)/jobSlice';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import { darkMainColor, darkSecondColor } from '@/settings';
+import { darkMainColor, darkSecondColor, lightMainColor } from '@/settings';
 import axiosInstance from '@/axios';
 
 
@@ -62,7 +62,7 @@ export default function Jobs() {
   };
 
   return (
-    <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: color}]}>
+    <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
       { jobError ? 
       <>
         <ThemedText>{jobError}</ThemedText>

@@ -1,14 +1,18 @@
 import { Stack } from "expo-router";
+import { useSelector } from 'react-redux';
+import { RootState } from '../../(redux)/store';
 
-import { darkSecondColor } from "@/settings";
+import { darkSecondColor, lightSecondColor } from "@/settings";
 
 
 export default function ClientLayout() {
+  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
+  
   return (
     <Stack 
       screenOptions={{
         headerStyle: {
-          backgroundColor: darkSecondColor,
+          backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
         },
       }}
     >

@@ -22,6 +22,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
+import { setBusiness } from "@/app/(redux)/settingSlice";
 
 
 interface Errors {
@@ -32,15 +33,15 @@ interface Errors {
     address?: string;
 }
 
-export default function ClientUpdate() {
-    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
+export default function businessSettings() {
+    const {color, darkTheme, business } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const { client } = useSelector((state: RootState) => state.client);
     const [name, setName] = useState(client.name);
     const [lastName, setLastName] = useState(client.last_name);
-    const [phone, setPhone] = useState(client.phone);
-    const [email, setEmail] = useState(client.email);
-    const [address, setAddress] = useState(client.address);
+    const [phone, setPhone] = useState(business.phone);
+    const [email, setEmail] = useState(business.email);
+    const [address, setAddress] = useState(business.address);
     const [image, setImage] = useState<string | null>(null);
     const [error, setError] = useState("");
     const [errors, setErrors] = useState<Errors>({});
@@ -50,7 +51,7 @@ export default function ClientUpdate() {
 
     const validateForm = () => {
         let errors: Errors = {};
-        if (!name) errors.name = "Name is required";
+        //if (!name) errors.name = "Name is required";
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -88,13 +89,10 @@ export default function ClientUpdate() {
         if (validateForm()) {
             const formData = new FormData();
             formData.append('action', 'update');
-            formData.append('id', client.id);
-            formData.append('name', name);
-            formData.append('last_name', lastName);
             formData.append('phone', phone);
             formData.append('email', email);
             formData.append('address', address);
-            if (image !== null) {
+            /* if (image !== null) {
                 const uriParts = image.split('.');
                 const fileType = uriParts[uriParts.length - 1];
                 const fileName = `${name}ProfilePicture.${fileType}`;
@@ -103,26 +101,23 @@ export default function ClientUpdate() {
                     name: fileName,
                     type: `image/${fileType}`,
                 } as unknown as Blob)
-            };
+            }; */
             setIsLoading(true);
-            console.log('====================================');
-            console.log(userName, formData);
-            console.log('====================================');
             await axiosInstance
-            .post(`clients/update/${userName}/`, formData,
+            .post(`user/account/update/${userName}/`, formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
             .then(function(response) {
-                let data = response.data;
-                if (data.OK) {
-                    router.push('/(app)/(clients)');
+                if (response.status === 200) {
+                    dispatch(setBusiness(response.data));
+                    router.push('/(app)/(profile)/');
                 }
                 setError(response.data.message)
                 setIsLoading(false);
             })
             .catch(function(error) {
-                console.error('Error updating a client:', error.config);
+                console.error('Error updating account:', error.config);
                 setIsLoading(false);
                 setError(error.message);
             });
@@ -143,7 +138,7 @@ export default function ClientUpdate() {
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
-                    <ThemedText type="subtitle">Name</ThemedText>
+                    {/* <ThemedText type="subtitle">Name</ThemedText>
                     <View style={commonStyles.action}>
                         <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
@@ -170,7 +165,7 @@ export default function ClientUpdate() {
                     </View>
                     {errors.lastName ? (
                         <Text style={styles.errorText}>{errors.lastName}</Text>
-                    ) : null}
+                    ) : null} */}
                     <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
                     <View style={commonStyles.action}>
                         <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
@@ -190,6 +185,7 @@ export default function ClientUpdate() {
                     <View style={commonStyles.action}>
                         <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
+                            autoCapitalize='none'
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
                             placeholder="Enter client's email"
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
@@ -216,7 +212,7 @@ export default function ClientUpdate() {
                         <Text style={styles.errorText}>{errors.address}</Text>
                     ) : null}
 
-                    {image ?
+                    {/* {image ?
                     <Image source={{ uri: image }} style={styles.image} />
                     :
                     <Image source={{ uri: baseImageURL + client.image }} style={styles.image} />
@@ -228,7 +224,7 @@ export default function ClientUpdate() {
                         <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => takePhoto()}>
                             <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Update</ThemedText>

@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { clientFail, clientSetLoading, setClient, setClients } from "@/app/(redux)/clientSlice";
 import ClientCard from '@/components/clients/ClientCard';
-import { darkMainColor, darkSecondColor } from '@/settings';
+import { darkMainColor, darkSecondColor, lightMainColor } from '@/settings';
 import axiosInstance from '@/axios';
 
 
@@ -74,7 +74,7 @@ export default function Clients() {
   };
 
   return (
-    <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: color}]}>
+    <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
       {clientError ?
       <>
         <ThemedText>{clientError}</ThemedText>

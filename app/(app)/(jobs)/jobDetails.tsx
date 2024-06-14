@@ -8,7 +8,7 @@ import { ThemedView } from '@/components/ThemedView';
 import JobCard from '@/components/jobs/JobCard';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setJob } from '@/app/(redux)/jobSlice';
-import { darkMainColor } from '@/settings';
+import { darkMainColor, lightMainColor } from '@/settings';
 
 
 export default function JobDetail() {
@@ -34,7 +34,7 @@ export default function JobDetail() {
     }, []);
 
     return (
-        <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: color}]}>
+        <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
             { isLoading ? 
             <ActivityIndicator size="large" />
             :

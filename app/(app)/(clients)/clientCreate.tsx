@@ -39,7 +39,7 @@ export default function ClientCreate() {
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
-    const [image, setImage] = useState<ImagePickerAsset | null>(null);
+    const [image, setImage] = useState<string | null>(null);
     const [error, setError] = useState("");
     const [errors, setErrors] = useState<Errors>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +63,7 @@ export default function ClientCreate() {
             quality: 1,
         });
         if (!result.canceled) {
-            setImage(result.assets[0]);
+            setImage(result.assets[0].uri);
         }
     };
 
@@ -82,7 +82,7 @@ export default function ClientCreate() {
         });
         console.log(result);
         if (!result.canceled) {
-            setImage(result.assets[0]);
+            setImage(result.assets[0].uri);
         }
     };
 
@@ -96,11 +96,11 @@ export default function ClientCreate() {
             formData.append('email', email);
             formData.append('address', address);
             if (image !== null) {
-                const uriParts = image.uri.split('.');
+                const uriParts = image.split('.');
                 const fileType = uriParts[uriParts.length - 1];
                 const fileName = `${name}ProfilePicture.${fileType}`;
                 formData.append('image', {
-                    uri: image.uri,
+                    uri: image,
                     name: fileName,
                     type: `image/${fileType}`,
                 } as unknown as Blob)
@@ -212,7 +212,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.address}</Text>
                     ) : null}
                     
-                    {image && <Image source={{ uri: image.uri }} style={styles.image} />}
+                    {image && <Image source={{ uri: image }} style={styles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleImage()}>
                             <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>

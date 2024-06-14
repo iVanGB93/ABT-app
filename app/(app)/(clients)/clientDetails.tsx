@@ -10,7 +10,7 @@ import JobCard from '@/components/jobs/JobCard';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { setJobs, jobSetLoading, jobFail, setJob } from '@/app/(redux)/jobSlice';
 import axiosInstance from '@/axios';
-import { darkMainColor } from '@/settings';
+import { darkMainColor, lightMainColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 
 
@@ -72,14 +72,14 @@ export default function ClientDetail() {
       };
 
     return (
-        <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: color}]}>
+        <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
             {clientError ? (
                 <ThemedText style={styles.errorText}>{clientError}</ThemedText>
             ) : null}
             { clientLoading ? 
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ClientCard id={client.id} image={client.image} name={client.name} address={client.address} phone={client.phone} email={client.email}  inDetail={true}/>
+            <ClientCard id={client.id} image={client.image} name={client.name} last_name={client.last_name} address={client.address} phone={client.phone} email={client.email}  inDetail={true}/>
             }
             <ThemedText style={styles.headerText}>Jobs</ThemedText>
             { jobLoading ?

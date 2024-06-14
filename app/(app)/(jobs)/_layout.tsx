@@ -1,13 +1,18 @@
-import { darkSecondColor } from "@/settings";
 import { Stack } from "expo-router";
+import { useSelector } from 'react-redux';
+import { RootState } from '../../(redux)/store';
+
+import { darkSecondColor, lightSecondColor } from "@/settings";
 
 
 export default function JobLayout() {
+  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
+
   return (
     <Stack 
       screenOptions={{
         headerStyle: {
-          backgroundColor: darkSecondColor,
+          backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
         },
       }}
     >
