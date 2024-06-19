@@ -2,6 +2,7 @@ import { StyleSheet, View, ActivityIndicator, Text, FlatList, TouchableOpacity, 
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -12,13 +13,14 @@ import { setJobs, jobSetLoading, jobFail, setJob } from '@/app/(redux)/jobSlice'
 import axiosInstance from '@/axios';
 import { darkMainColor, lightMainColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
+import { clientSetMessage } from '@/app/(redux)/clientSlice';
 
 
 export default function ClientDetail() {
     const { color, darkTheme } = useSelector((state: RootState) => state.settings);
     const { userName } = useSelector((state: RootState) => state.auth);
-    const {clients, clientLoading, clientError, client} = useSelector((state: RootState) => state.client);
-    const {jobs, jobLoading, jobError} = useSelector((state: RootState) => state.job);
+    const {clientMessage, client} = useSelector((state: RootState) => state.client);
+    const {jobs, jobLoading} = useSelector((state: RootState) => state.job);
     const [ stateJobs, setStateJobs ] = useState<any>([]);
     const [error, setError] = useState<string>('');
     const dispatch = useAppDispatch()
@@ -57,6 +59,14 @@ export default function ClientDetail() {
     };
 
     useEffect(() => {
+        if ( clientMessage) {
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: clientMessage
+            });
+            dispatch(clientSetMessage(null))
+        };
         if (jobs.length === 0) {
             fetchJobs();
         } else {
@@ -73,14 +83,7 @@ export default function ClientDetail() {
 
     return (
         <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
-            {clientError ? (
-                <ThemedText style={styles.errorText}>{clientError}</ThemedText>
-            ) : null}
-            { clientLoading ? 
-            <ActivityIndicator style={styles.loading} size="large" />
-            :
             <ClientCard id={client.id} image={client.image} name={client.name} last_name={client.last_name} address={client.address} phone={client.phone} email={client.email}  inDetail={true}/>
-            }
             <ThemedText style={styles.headerText}>Jobs</ThemedText>
             { jobLoading ?
                 <ActivityIndicator color={color} size="large" />

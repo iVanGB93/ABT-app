@@ -24,6 +24,7 @@ import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
 import { commonStyles } from "@/constants/commonStyles";
+import { clientSetMessage } from "@/app/(redux)/clientSlice";
 
 interface Errors {
     name?: string;
@@ -113,16 +114,24 @@ export default function ClientCreate() {
             }})
             .then(function(response) {
                 let data = response.data;
+                dispatch(clientSetMessage(data.message));
                 if (data.OK) {
                     router.push('/(app)/(clients)');
                 }
-                setError(response.data.message)
                 setIsLoading(false);
             })
             .catch(function(error) {
-                console.error('Error creating a client:', error.message);
+                console.error('Error creating a client:', error);
+                if (typeof error.response === 'undefined') {
+                    setError("Error creating a client, undefinded");
+                  } else {
+                    if (error.response.status === 401) {
+                        router.push('/');
+                    } else {
+                      setError(error.message);
+                    };
+                };
                 setIsLoading(false);
-                setError(error.message);
             });
         };
     };

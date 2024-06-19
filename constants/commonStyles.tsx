@@ -85,4 +85,9 @@ export const commonStyles = StyleSheet.create({
         marginHorizontal: 15,
         borderRadius: 25,
     },
+    loading: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 50,
+    },
 });

@@ -1,54 +1,54 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, RefreshControl, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSelector } from "react-redux";
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { clientFail, clientSetLoading, setClient, setClients } from "@/app/(redux)/clientSlice";
+import { clientSetMessage, setClient, setClients } from "@/app/(redux)/clientSlice";
 import ClientCard from '@/components/clients/ClientCard';
-import { darkMainColor, darkSecondColor, lightMainColor } from '@/settings';
 import axiosInstance from '@/axios';
+import { setMessage } from '@/app/(redux)/settingSlice';
 
-
-interface Client {
-  id: string;
-  user: string;
-  address: string;
-  phone: string;
-  email: string;
-  image: string;
-};
 
 export default function Clients() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
-  const {clients, clientLoading, clientError} = useSelector((state: RootState) => state.client);
+  const {clients, clientMessage} = useSelector((state: RootState) => state.client);
+  const [isLoading, setIsLoading] = useState(false);
+  const [ error, setError ] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const getClients = async() => {
-    dispatch(clientSetLoading(true));
+    setIsLoading(true);
     await axiosInstance
     .get(`clients/${userName}/`)
     .then(function(response) {
         if (response.data) {
           dispatch(setClients(response.data));
+          setIsLoading(false);
         } else {
-          dispatch(clientFail(response.data.message));
+          dispatch(clientSetMessage(response.data.message));
+          setIsLoading(false);
         }
     })
     .catch(function(error) {
         console.error('Error fetching clients:', error);
         if (typeof error.response === 'undefined') {
-          dispatch(clientFail('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.'));
+          setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
+          setIsLoading(false);
         } else {
           if (error.status === 401) {
+            setIsLoading(false);
+            dispatch(setMessage('Unauthorized, please login againg'))
             router.push('/');
           } else {
-            dispatch(clientFail("Error getting your clients."));
+            setError("Error getting your clients.");
+            setIsLoading(false);
           }
         };
     });
@@ -64,6 +64,14 @@ export default function Clients() {
   };
   
   useEffect(() => {
+    if ( clientMessage) {
+      Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: clientMessage
+      });
+      dispatch(clientSetMessage(null))
+    };
     fetchClients();
   }, []);
 
@@ -74,16 +82,16 @@ export default function Clients() {
   };
 
   return (
-    <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
-      {clientError ?
+    <ThemedView style={styles.container}>
+      {error ?
       <>
-        <ThemedText>{clientError}</ThemedText>
+        <ThemedText>{error}</ThemedText>
         <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchClients()}>
         <ThemedText>Try againg</ThemedText>
         </TouchableOpacity>
       </>
       :
-      clientLoading ? 
+      isLoading ? 
       <ActivityIndicator color={color} size="large" />
       :
       <>
@@ -97,12 +105,12 @@ export default function Clients() {
           );
         }}
         ItemSeparatorComponent={<View style={{ height: 10}}/>}
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientError ? clientError.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
+        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientMessage ? clientMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={
           <RefreshControl
-            refreshing={clientLoading}
+            refreshing={isLoading}
             onRefresh={() => getClients()}
             colors={[color]} // Colores del indicador de carga
             tintColor={color} // Color del indicador de carga en iOS

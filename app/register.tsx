@@ -33,11 +33,17 @@ export default function Register() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  useEffect(() => {
+    if ( token) {
+        router.push('(app)/(clients)/')
+    };
+  }, [token]);
+
   const validateForm = () => {
     let errors: Errors = {};
     if (!username) errors.username = "Username is required!";
-    if (!password) errors.password = "Password is required!";
-    if (!email) errors.email = "Email is required!";
+    if (password.length < 8 ) errors.password = "Password must be at least 8 characters!";
+    if (!email) {errors.email = "Email is required!"} else if (!/\S+@\S+\.\S+/.test(email)) {errors.email = "Email is invalid!"};
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -54,21 +60,15 @@ export default function Register() {
         setLoading(false);
         router.push('initialSettings');
       } else {
-        setError(response.data.message);
+        dispatch(authSetMessage("Account created but error loggin in."));
+        setAlertVisible(false);
         setLoading(false);
+        router.push('/');
       }
     })
     .catch(function(error) {
       console.error('Error logging in:', error.response, error.message);
-      if (typeof error.response === 'undefined') {
-        setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
-      } else {
-        if (error.response.status === 401) {
-          setError("Username or Password incorrect");
-        } else {
-          setError(error.message);
-        };
-      };
+      dispatch(authSetMessage("Account created but error loggin in."));
       setAlertVisible(false);
       setLoading(false);
       router.push('/');
@@ -107,7 +107,7 @@ export default function Register() {
   return (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Image style={commonStyles.image} source={require('../assets/images/icon.png')} />
+        <Image style={commonStyles.image} source={require('../assets/images/logo.png')} />
         <ThemedText type="title"  style={commonStyles.text_header}>Hello, please register!</ThemedText>
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     
@@ -166,7 +166,7 @@ export default function Register() {
               <Text style={commonStyles.errorMsg}>{errors.password}</Text>
           ) : null}
           {loading ?
-          <ActivityIndicator style={commonStyles.button} size="large" color={color} />
+          <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
           :
           <>
           <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50}]} onPress={handleSubmit}>

@@ -189,6 +189,7 @@ export default function InvoiceUpdate() {
                                     placeholder="Enter description"
                                     placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
                                     value={description}
+                                    autoFocus={true}
                                     onChangeText={setDescription}
                                 />
                             </View>

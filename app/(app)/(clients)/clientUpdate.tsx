@@ -22,6 +22,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
+import { clientSetMessage, setClient } from "@/app/(redux)/clientSlice";
 
 
 interface Errors {
@@ -105,9 +106,6 @@ export default function ClientUpdate() {
                 } as unknown as Blob)
             };
             setIsLoading(true);
-            console.log('====================================');
-            console.log(userName, formData);
-            console.log('====================================');
             await axiosInstance
             .post(`clients/update/${userName}/`, formData,
             { headers: {
@@ -116,7 +114,9 @@ export default function ClientUpdate() {
             .then(function(response) {
                 let data = response.data;
                 if (data.OK) {
-                    router.push('/(app)/(clients)');
+                    dispatch(setClient(data.client));
+                    dispatch(clientSetMessage(data.message));
+                    router.push('/(app)/(clients)/clientDetails');
                 }
                 setError(response.data.message)
                 setIsLoading(false);
@@ -140,9 +140,6 @@ export default function ClientUpdate() {
             :
             <ThemedSecondaryView style={styles.form}>
                 <ScrollView>
-                    {error ? (
-                        <Text style={styles.errorText}>{error}</Text>
-                    ) : null}
                     <ThemedText type="subtitle">Name</ThemedText>
                     <View style={commonStyles.action}>
                         <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
@@ -195,6 +192,7 @@ export default function ClientUpdate() {
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
                             value={email}
                             onChangeText={setEmail}
+                            autoCapitalize="none"
                         />
                     </View>
                     {errors.email ? (

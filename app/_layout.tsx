@@ -1,10 +1,13 @@
 import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 import { Provider } from 'react-redux';
+import Toast from 'react-native-toast-message';
+
 import { PersistGate } from 'redux-persist/integration/react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { persistor, store } from './(redux)/store';
+
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -24,6 +27,7 @@ export default function RootLayout() {
           <Stack.Screen name="(app)" />
           <Stack.Screen name="+not-found" />
           </Stack>
+          <Toast />
         </ThemeProvider>
       </PersistGate>
     </Provider>

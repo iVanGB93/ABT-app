@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
@@ -38,11 +39,13 @@ export default function InitialSettings () {
 
     useEffect(() => {
         if (authMessage) {
-            console.log('====================================');
-            console.log("TOAS HERE");
-            console.log('====================================');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: authMessage
+            })
             dispatch(authSetMessage(null));
-        }
+        };
     }, [authMessage]);
 
     const handleImage = async () => {
@@ -108,6 +111,7 @@ export default function InitialSettings () {
                 } else {
                     if (error.response.status === 401) {
                       setError("Username or Password incorrect");
+                      router.push('/');
                     } else {
                       setError(error.message);
                     };
@@ -120,12 +124,12 @@ export default function InitialSettings () {
     return (
         <ThemedView style={commonStyles.container}>
             <View style={commonStyles.header}>
-                <Image style={commonStyles.image} source={require('../assets/images/icon.png')} />
+                <Image style={commonStyles.image} source={require('../assets/images/logo.png')} />
                 <ThemedText type="title" style={commonStyles.text_header}>Let's define your business!</ThemedText>
             </View>
             <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color, flex: 4}]}>
                 {loading ?
-                <ActivityIndicator style={commonStyles.button} color={color} size="large" />
+                <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
                 :
                 <ScrollView>
                 <ThemedText type="subtitle">Name</ThemedText>

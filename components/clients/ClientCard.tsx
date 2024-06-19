@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform, Pressable, Linking, Image, ActivityIndicator, Modal, Alert } from "react-native";
+import { View, Text, StyleSheet, Platform, Pressable, Linking, Image, ActivityIndicator, Modal, Alert, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -8,10 +8,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { baseImageURL } from "@/settings";
 import axiosInstance from "../../axios";
-import { setClient } from '../../app/(redux)/clientSlice';
+import { clientSetMessage, setClient } from '../../app/(redux)/clientSlice';
 import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '../../settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { FontAwesome } from '@expo/vector-icons';
+import { ThemedSecondaryView } from '../ThemedSecondaryView';
 
 
 interface ClientCardProps {
@@ -32,6 +33,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
   const [loading, setLoading] = useState(false);
   const imageObj = baseImageURL + image;
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const deleteClient = async () => {
     setLoading(true);
@@ -42,6 +44,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
     }})
     .then(function(response) {
       if (response.data.OK) {
+        dispatch(clientSetMessage(response.data.message));
         router.push('/(app)/(clients)');
       }
     })
@@ -106,21 +109,21 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
           { loading ?
           <ActivityIndicator color={color} size="large" />
           :
-          <View style={[styles.card, {padding: 10, backgroundColor: darkMainColor}]}>
+          <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
             <ThemedText style={[styles.name, {padding: 10}]}>Do you want to delete {name}?</ThemedText>
             <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
-              <Pressable
-                style={[styles.button, {marginHorizontal: 5, flex: 1, backgroundColor: color}]}
+              <TouchableOpacity
+                style={[styles.button, {borderColor: color}]}
                 onPress={() => setModalVisible(!modalVisible)}>
                 <Text style={{color:'white', textAlign: 'center'}}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[[styles.button, {backgroundColor: 'red', marginHorizontal: 5, flex: 1}]]}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, {borderColor: 'red'}]}
                 onPress={() => deleteClient()}>
                 <Text style={{color:'white', textAlign: 'center'}}>DELETE</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
-          </View>
+          </ThemedSecondaryView>
           }
         </View>
       </Modal>
@@ -183,21 +186,13 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },    
   button: {
-    backgroundColor: '#694fad',
-    borderRadius: 16,
-    padding: 10,
-    margin: 5,
-    ...Platform.select({
-      ios: {
-      shadowOffset: { width: 2, height: 2 },
-      shadowColor: "#333",
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      },
-      android: {
-      elevation: 5,
-      },
-    }),
+    alignItems: 'center',
+      justifyContent: 'center',
+      height: 40,
+      width: 100,
+      borderRadius: 10,
+      borderBottomWidth: 1,
+      borderRightWidth: 1,
   },
   loading: {
     flex: 1,

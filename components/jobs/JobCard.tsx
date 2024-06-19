@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform, Pressable, Linking, Image, Modal, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Platform, Pressable, Linking, Image, Modal, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -11,6 +11,8 @@ import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
 import { setClient } from '@/app/(redux)/clientSlice';
+import { commonStyles } from '@/constants/commonStyles';
+import { ThemedSecondaryView } from '../ThemedSecondaryView';
 
 
 interface JobCardProps {
@@ -120,7 +122,7 @@ export default function JobCard({id, status, client, address, description, price
         <View style={[styles.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
             <ThemedText style={styles.name}>
             { inDetail ? 
-            <ThemedText>{statusIcon(status)} - {client}</ThemedText>
+            <ThemedText style={styles.name}>{statusIcon(status)} - {client}</ThemedText>
             : 
             description
             }
@@ -129,7 +131,7 @@ export default function JobCard({id, status, client, address, description, price
         </View>
         { inDetail ?
         <View style={styles.dataContainer}>
-            <ThemedText style={[styles.LabelText, {fontSize: 22, margin: 5}]}>{description}</ThemedText>
+            <ThemedText style={[styles.LabelText, {fontSize: 20, marginTop: 5}]}>{description}</ThemedText>
         </View>
         : null }
         <View style={styles.dataContainer}>
@@ -147,7 +149,7 @@ export default function JobCard({id, status, client, address, description, price
         { isList ? null
         :
         ( inDetail ?
-        (<View>
+        (<View style={styles.dataContainer}>
           <View>
             {imageError ?
             <ThemedText style={[styles.LabelText, { alignSelf: 'center'}]}>image not found </ThemedText>
@@ -159,14 +161,16 @@ export default function JobCard({id, status, client, address, description, price
             />
             }
           </View>
-          <View style={[styles.dataContainer, { justifyContent: 'space-between'}]}>
-            { (status === 'finished') ?
-              (<ThemedText style={{color: 'red'}}>Closed</ThemedText>)
-            :
-              <Pressable style={{alignSelf: 'flex-start'}} onPress={() => handleClose()}><ThemedText style={{flex: 1, verticalAlign: 'middle', alignSelf: 'center', fontSize: 18, fontWeight: 'bold', color: 'red'}}><Ionicons name="close" color='red' size={30} /></ThemedText></Pressable>
-            }
-            <Pressable onPress={() => handleInvoice()}><ThemedText style={styles.LabelText}>Invoice</ThemedText></Pressable>
-            <Pressable style={{alignSelf: 'flex-end'}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></Pressable>
+          <View style={{flexDirection: 'column',}}>
+            <View style={styles.dataContainer}>
+              { (status === 'finished') ?
+                (<ThemedText style={{color: color}}>Job finished</ThemedText>)
+              :
+                <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => handleClose()}><ThemedText style={{color: 'red'}}>Close</ThemedText></TouchableOpacity>
+              }
+              <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleInvoice()}><ThemedText style={styles.LabelText}>Invoice</ThemedText></TouchableOpacity>
+            </View>
+            <TouchableOpacity style={{alignSelf: 'flex-end', marginBottom: 0, marginTop: 10}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></TouchableOpacity>
           </View>
         </View>)
         : null)
@@ -176,28 +180,27 @@ export default function JobCard({id, status, client, address, description, price
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-          Alert.alert('Action canceled.');
           setModalVisible(!modalVisible);
         }}>
         <View style={styles.centeredView}>
           { isLoading ?
           <ActivityIndicator style={styles.loading} size="large" />
           :
-          <View style={[styles.card, {padding: 10, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+          <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
             <ThemedText style={[styles.name, {padding: 10}]}>Do you want to delete this job?</ThemedText>
             <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
-              <Pressable
-                style={[styles.button, {marginHorizontal: 5, flex: 1, backgroundColor: color}]}
+              <TouchableOpacity
+                style={[styles.button, {borderColor: color}]}
                 onPress={() => setModalVisible(!modalVisible)}>
                 <ThemedText style={{color:'white', textAlign: 'center'}}>Cancel</ThemedText>
-              </Pressable>
-              <Pressable
-                style={[[styles.button, {backgroundColor: 'red', marginHorizontal: 5, flex: 1}]]}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, {borderColor: 'red'}]}
                 onPress={() => deleteJob()}>
-                <ThemedText style={{color:'white', textAlign: 'center'}}>DELETE</ThemedText>
-              </Pressable>
+                <ThemedText style={{color:'red', textAlign: 'center'}}>DELETE</ThemedText>
+              </TouchableOpacity>
             </View>
-          </View>
+          </ThemedSecondaryView>
           }
         </View>
       </Modal>
@@ -206,30 +209,29 @@ export default function JobCard({id, status, client, address, description, price
         transparent={true}
         visible={modalVisibleFinish}
         onRequestClose={() => {
-          Alert.alert('Action canceled.');
           setModalVisibleFinish(!modalVisibleFinish);
         }}>
-        <ThemedView style={styles.centeredView}>
+        <View style={styles.centeredView}>
           { isLoading ?
           <ActivityIndicator style={styles.loading} size="large" />
           :
-          <View style={[styles.card, {padding: 10, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+          <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
             <ThemedText style={[styles.name, {padding: 10, }]}>Did you finish this job?</ThemedText>
             <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
-              <Pressable
-                style={[styles.button, {marginHorizontal: 5, flex: 1, backgroundColor: color}]}
+              <TouchableOpacity
+                style={[styles.button, {borderColor: color}]}
                 onPress={() => setModalVisibleFinish(!modalVisibleFinish)}>
                 <ThemedText style={{color:'white', textAlign: 'center'}}>No</ThemedText>
-              </Pressable>
-              <Pressable
-                style={[[styles.button, {backgroundColor: 'red', marginHorizontal: 5, flex: 1}]]}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, {borderColor: 'red'}]}
                 onPress={() => closeJob()}>
-                <ThemedText style={{color:'white', textAlign: 'center'}}>Yes, close it</ThemedText>
-              </Pressable>
+                <ThemedText style={{color:'red', textAlign: 'center'}}>Yes, close it</ThemedText>
+              </TouchableOpacity>
             </View>
-          </View>
+          </ThemedSecondaryView>
           }
-        </ThemedView>
+        </View>
       </Modal>
     </ThemedView>
   )
@@ -291,20 +293,13 @@ const styles = StyleSheet.create({
       marginTop: 22,
     },    
     button: {
-      borderRadius: 16,
-      padding: 10,
-      margin: 5,
-      ...Platform.select({
-        ios: {
-        shadowOffset: { width: 2, height: 2 },
-        shadowColor: "#333",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        },
-        android: {
-        elevation: 5,
-        },
-      }),
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 40,
+      width: 100,
+      borderRadius: 10,
+      borderBottomWidth: 1,
+      borderRightWidth: 1,
     },
     loading: {
       flex: 1,

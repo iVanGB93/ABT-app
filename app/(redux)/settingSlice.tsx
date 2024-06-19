@@ -7,6 +7,7 @@ export interface SettingState {
     businessName: string,
     businessLogo: any,
     business: any,
+    message: string | null,
 };
 
 const initialState: SettingState = {
@@ -15,6 +16,7 @@ const initialState: SettingState = {
     businessName: 'Business Name',
     businessLogo: null,
     business: {},
+    message: null,
 };
 
 export const settingSlice = createSlice({
@@ -36,9 +38,12 @@ export const settingSlice = createSlice({
         setDarkTheme: (state, action: PayloadAction<boolean>) => {
             state.darkTheme = action.payload
         },
+        setMessage: (state, action: PayloadAction<string | null>) => {
+            state.message = action.payload
+        },
     }
 });
 
-export const {setBusiness, setBusinessName, setBusinessLogo, setColor, setDarkTheme} = settingSlice.actions;
+export const {setBusiness, setBusinessName, setBusinessLogo, setColor, setDarkTheme, setMessage} = settingSlice.actions;
 
 export const settingReducer = settingSlice.reducer;

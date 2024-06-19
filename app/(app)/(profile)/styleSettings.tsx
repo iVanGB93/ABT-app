@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, Platform, Image, ScrollView } from 'react-native';
+import { Text, View, ActivityIndicator, StyleSheet, KeyboardAvoidingView, TextInput, TouchableOpacity, Platform, Image, ScrollView } from 'react-native';
 import { useSelector } from "react-redux";
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,11 +21,10 @@ export default function Profile () {
     const { userName } = useSelector((state: RootState) => state.auth);
     const [newName, setNewName] = useState(business.business_name);
     const [newLogo, setNewLogo] = useState<any>(businessLogo);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
-
 
     const downloadLogo = async () => {
         try {
@@ -41,33 +40,6 @@ export default function Profile () {
             console.error('Error al listar archivos:', error);
         }
     };
-
-    const getAccount = async () => {
-        await axiosInstance
-        .get(`user/account/${userName}/`)
-        .then(function(response) {
-            if (response.data) {
-                dispatch(setBusiness(response.data));
-                setLoading(false);
-            } else {
-                setError(response.data.message);
-                setLoading(false);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error getting account:', error);
-            if (typeof error.response === 'undefined') {
-                setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
-            } else {
-                setError(error.message);
-            };
-            setLoading(false);
-        });
-    };
-
-    useEffect(() => {
-        getAccount();
-    }, []);
     
     const handleBN = async () => {
         setLoading(true);
@@ -93,6 +65,7 @@ export default function Profile () {
                 dispatch(setBusinessLogo(newLogo));
                 //downloadLogo();
                 setLoading(false);
+                router.push('/(app)/(profile)/');
             } else {
                 setError(response.data.message);
                 setLoading(false);
@@ -124,60 +97,45 @@ export default function Profile () {
     };
 
     return (
-        <ThemedView style={styles.container}>
+        <KeyboardAvoidingView
+            behavior="padding"
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+            style={styles.container}
+        >
             {loading ?
             <ActivityIndicator size="large" color={color} />
             :
             <ScrollView>
-                <View style={styles.rowContainerLast}>
-                    <Image source={{ uri: baseImageURL + business.image }} style={[styles.image, { borderColor: color }]} />
-                    <View style={styles.info}>
-                        <ThemedText type='title'>{userName}</ThemedText>
-                        <ThemedText type='subtitle'>{business.business_name}</ThemedText>
-                    </View>
-                </View>
                 <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
                     <View style={styles.rowContainer}>
-                        <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person-circle-outline"/> Username</Text>
-                        <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{userName}</Text>
+                        { newLogo ?
+                        <Image source={{ uri: newLogo }} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
+                        :
+                        <ThemedText type='subtitle'>Logo Image</ThemedText>
+                        //<Image source={require(businessLogo) } style={[styles.image, { borderColor: color, margin: 'auto' }]} />
+                        }
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, height: 40, marginVertical: 'auto'}]} onPress={() => handleImage()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Select Logo</ThemedText>
+                        </TouchableOpacity>
                     </View>
                     <View style={styles.rowContainer}>
-                        <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="mail-outline"/> Email</Text>
-                        <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.email ? business.email : 'no email saved'}</Text>
-                    </View>
-                    <View style={styles.rowContainer}>
-                        <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="call-outline"/> Phone</Text>
-                        <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.phone ? business.phone : 'no phone saved'}</Text>
-                    </View>
-                    <View style={styles.rowContainerLast}>
-                        <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="location-outline"/> Address</Text>
-                        <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.address ? business.address : 'no address saved'}</Text>
-                    </View>
-                </View>
-                <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
-                    <View style={styles.rowContainer}>
-                        <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person"/> Contact</Text>
-                    </View>
-                    <View style={styles.rowContainer}>
-                        <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="document-lock-outline"/> Privacy Policy</Text>
-                    </View>
-                    <View style={styles.rowContainer}>
-                        <TouchableOpacity onPress={() => router.push('/(app)/(profile)/styleSettings')}>
-                            <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="settings"/> Change Business settings</Text>
+                        <TextInput autoFocus={false} onChangeText={setNewName} value={newName} style={[styles.textInput, {color:darkTheme ? 'white': 'black', width: 200, margin: 'auto'}]}/>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, width: 100}]} onPress={() => handleBN()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                         </TouchableOpacity>
                     </View>
                     <View style={styles.rowContainerLast}>
-                        <TouchableOpacity onPress={() => router.push('/(app)/(profile)/businessSettings')}>
-                            <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="settings"/> Change Account settings</Text>
-                        </TouchableOpacity>
+                        <View style={commonStyles.colorsContainer}>
+                            <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#009d93'}]} onPress={() => dispatch(setColor('#009d93'))}></TouchableOpacity>
+                            <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#694fad'}]} onPress={() => dispatch(setColor('#694fad'))}></TouchableOpacity>
+                            <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#09dd'}]} onPress={() => dispatch(setColor('#09dd'))}></TouchableOpacity>
+                            <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
+                        </View>
                     </View>
                 </View>
-                <TouchableOpacity style={[commonStyles.button, {borderColor: color, alignSelf: 'center', margin: 15}]} onPress={() => dispatch(authLogout())}>
-                    <ThemedText type="subtitle" style={{color: color}}>Logout</ThemedText>
-                </TouchableOpacity>
             </ScrollView>
             }
-        </ThemedView>
+        </KeyboardAvoidingView>
     )
 };
 
@@ -194,7 +152,7 @@ const styles = StyleSheet.create ({
     },
     sectionContainer: {
         padding: 10,
-        margin: 5,
+        marginTop: 50,
         borderRadius: 15,
         width: '90%',
         alignItems: 'center',

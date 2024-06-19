@@ -95,7 +95,7 @@ export default function Login() {
     ) : (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Image style={commonStyles.image} source={require('../assets/images/icon.png')} />
+        <Image style={commonStyles.image} source={require('../assets/images/logo.png')} />
         <ThemedText type="title" style={commonStyles.text_header}>Welcome!</ThemedText>
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>
@@ -139,7 +139,7 @@ export default function Login() {
             <Text style={commonStyles.errorMsg}>{errors.password}</Text>
           ) : null}
           {loading ?
-          <ActivityIndicator style={commonStyles.button} size="large" color={color} />
+          <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
           : 
           <>
           <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50}]} onPress={handleSubmit}>
