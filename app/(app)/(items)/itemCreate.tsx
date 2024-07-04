@@ -2,56 +2,53 @@ import React, { useState } from "react";
 import {
   View,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Text,
   Platform,
-  ActivityIndicator, 
+  ActivityIndicator,
   Image,
   ScrollView,
+  TouchableOpacity
 } from "react-native";
 import axiosInstance from '@/axios';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from "@expo/vector-icons";
-import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { useSelector } from "react-redux";
-import { useRouter } from "expo-router";
-import { baseImageURL, darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
-import { ThemedView } from "@/components/ThemedView";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/app/(redux)/store";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
+import { useRouter } from "expo-router";
 import { commonStyles } from "@/constants/commonStyles";
-import { clientSetMessage, setClient } from "@/app/(redux)/clientSlice";
+import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
+import { Ionicons } from "@expo/vector-icons";
+import { setItemMessage } from "@/app/(redux)/itemSlice";
 
 
 interface Errors {
     name?: string;
-    lastName?: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-}
+    price?: string;
+    description?: string;
+    amount?: string;
+};
 
-export default function ClientUpdate() {
-    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
-    const {userName } = useSelector((state: RootState) => state.auth);
-    const { client } = useSelector((state: RootState) => state.client);
-    const [name, setName] = useState(client.name);
-    const [lastName, setLastName] = useState(client.last_name);
-    const [phone, setPhone] = useState(client.phone);
-    const [email, setEmail] = useState(client.email);
-    const [address, setAddress] = useState(client.address);
+export default function ItemCreate() {
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [amount, setAmount] = useState<any>(1);
+    const [price, setPrice] = useState("");
     const [image, setImage] = useState<string | null>(null);
     const [error, setError] = useState("");
     const [errors, setErrors] = useState<Errors>({});
+    const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+    const { userName } = useSelector((state: RootState) => state.auth);
     const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch();
     const router = useRouter();
-    const dispatch = useAppDispatch();
 
     const validateForm = () => {
         let errors: Errors = {};
         if (!name) errors.name = "Name is required";
+        if (!price) errors.price = "Price is required";
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -60,9 +57,10 @@ export default function ClientUpdate() {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1],
+            aspect: [4, 3],
             quality: 1,
         });
+        console.log(result);
         if (!result.canceled) {
             setImage(result.assets[0].uri);
         }
@@ -73,32 +71,32 @@ export default function ClientUpdate() {
         if (permissionResult.granted === false) {
           alert('Permission to access camera is required!');
           return;
-        };
+        }
+    
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
         });
+        console.log(result);
         if (!result.canceled) {
             setImage(result.assets[0].uri);
-        };
+        }
     };
 
     const handleSubmit = async () => {
         if (validateForm()) {
             const formData = new FormData();
-            formData.append('action', 'update');
-            formData.append('id', client.id);
+            formData.append('action', 'new');
             formData.append('name', name);
-            formData.append('last_name', lastName);
-            formData.append('phone', phone);
-            formData.append('email', email);
-            formData.append('address', address);
+            formData.append('description', description);
+            formData.append('amount', amount);
+            formData.append('price', price);
             if (image !== null) {
                 const uriParts = image.split('.');
                 const fileType = uriParts[uriParts.length - 1];
-                const fileName = `${name}ProfilePicture.${fileType}`;
+                const fileName = `${name}ItemPicture.${fileType}`;
                 formData.append('image', {
                     uri: image,
                     name: fileName,
@@ -107,26 +105,35 @@ export default function ClientUpdate() {
             };
             setIsLoading(true);
             await axiosInstance
-            .post(`clients/update/${userName}/`, formData,
+            .post(`items/create/${userName}/`, formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
             .then(function(response) {
                 let data = response.data;
                 if (data.OK) {
-                    dispatch(setClient(data.client));
-                    dispatch(clientSetMessage(data.message));
-                    router.push('/(app)/(clients)/clientDetails');
+                    dispatch(setItemMessage(data.message));
+                    router.push('/(app)/(items)');
+                    setIsLoading(false);
+                } else {
+                    setError(data.message);
                 }
-                setError(response.data.message)
                 setIsLoading(false);
             })
             .catch(function(error) {
-                console.error('Error updating a client:', error.config);
+                console.error('Error creating an item:', error);
+                if (typeof error.response === 'undefined') {
+                    setError("Error creating a client, undefinded");
+                } else {
+                    if (error.response.status === 401) {
+                        router.push('/');
+                    } else {
+                      setError(error.message);
+                    };
+                };
                 setIsLoading(false);
-                setError(error.message);
             });
-            };
+        };
     };
 
     return (
@@ -140,12 +147,15 @@ export default function ClientUpdate() {
             :
             <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 <ScrollView>
-                    <ThemedText type="subtitle">Name</ThemedText>
+                    {error ? (
+                        <Text style={styles.errorText}>{error}</Text>
+                    ) : null}
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Name</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={name ? name : "Enter client's name"}
+                            placeholder={name ? name : "Enter item's name"}
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
                             value={name}
                             onChangeText={setName}
@@ -154,71 +164,54 @@ export default function ClientUpdate() {
                     {errors.name ? (
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
+
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Description</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="person-add" color={darkTheme ? darkTtextColor: lightTextColor} />
+                        <Ionicons name="clipboard-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={lastName ? lastName : "Enter client's last name"}
+                            placeholder="Enter item's description (optional)"
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={lastName}
-                            onChangeText={setLastName}
+                            value={description}
+                            onChangeText={setDescription}
                         />
                     </View>
-                    {errors.lastName ? (
-                        <Text style={styles.errorText}>{errors.lastName}</Text>
-                    ) : null}
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's phone"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={phone}
-                            onChangeText={setPhone}
-                        />
-                    </View>
-                    {errors.phone ? (
-                        <Text style={styles.errorText}>{errors.phone}</Text>
+                    {errors.description ? (
+                        <Text style={styles.errorText}>{errors.description}</Text>
                     ) : null}
 
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Amount</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
+                        <Ionicons name="layers-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's email"
+                            placeholder="Enter item's amount"
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
+                            value={amount.toString()}
+                            onChangeText={setAmount}
+                            keyboardType="numeric"
                         />
                     </View>
-                    {errors.email ? (
-                        <Text style={styles.errorText}>{errors.email}</Text>
+                    {errors.amount ? (
+                        <Text style={styles.errorText}>{errors.amount}</Text>
                     ) : null}
                     
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Price</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's address"
+                            placeholder="Enter item's price"
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={address}
-                            onChangeText={setAddress}
+                            value={price}
+                            onChangeText={setPrice}
+                            keyboardType="numeric"
                         />
                     </View>
-                    {errors.address ? (
-                        <Text style={styles.errorText}>{errors.address}</Text>
+                    {errors.price ? (
+                        <Text style={styles.errorText}>{errors.price}</Text>
                     ) : null}
-
-                    {image ?
-                    <Image source={{ uri: image }} style={styles.image} />
-                    :
-                    <Image source={{ uri: baseImageURL + client.image }} style={styles.image} />
-                    }
+                    
+                    {image && <Image source={{ uri: image }} style={styles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
                             <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
@@ -229,7 +222,7 @@ export default function ClientUpdate() {
                     </View>
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Update</ThemedText>
+                            <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
                             <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
@@ -249,7 +242,8 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
     },
     form: {
-      padding: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 20,
       borderRadius: 10,
       shadowColor: "#fff",
       shadowOffset: {
@@ -285,8 +279,8 @@ const styles = StyleSheet.create({
     image: {
         width: 100,
         height: 100,
-        borderRadius: 75,
         margin: 10,
+        borderRadius: 75,
         alignSelf: 'center',
     },
     button: {
@@ -302,6 +296,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         alignSelf: "center",
-        marginTop: 5,
     },
 });

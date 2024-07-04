@@ -14,6 +14,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { useRouter } from 'expo-router';
+import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
+import { commonStylesDetails } from '@/constants/commonStylesDetails';
 
 
 export default function Profile () {
@@ -126,7 +128,7 @@ export default function Profile () {
     return (
         <ThemedView style={styles.container}>
             {loading ?
-            <ActivityIndicator size="large" color={color} />
+            <ActivityIndicator style={commonStylesDetails.loading} size="large" color={color} />
             :
             <ScrollView>
                 <View style={styles.rowContainerLast}>
@@ -136,7 +138,7 @@ export default function Profile () {
                         <ThemedText type='subtitle'>{business.business_name}</ThemedText>
                     </View>
                 </View>
-                <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+                <ThemedSecondaryView style={styles.sectionContainer}>
                     <View style={styles.rowContainer}>
                         <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person-circle-outline"/> Username</Text>
                         <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{userName}</Text>
@@ -153,8 +155,8 @@ export default function Profile () {
                         <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="location-outline"/> Address</Text>
                         <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.address ? business.address : 'no address saved'}</Text>
                     </View>
-                </View>
-                <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+                </ThemedSecondaryView>
+                <ThemedSecondaryView style={styles.sectionContainer}>
                     <View style={styles.rowContainer}>
                         <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="person"/> Contact</Text>
                     </View>
@@ -171,8 +173,8 @@ export default function Profile () {
                             <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="settings"/> Change Account settings</Text>
                         </TouchableOpacity>
                     </View>
-                </View>
-                <TouchableOpacity style={[commonStyles.button, {borderColor: color, alignSelf: 'center', margin: 15}]} onPress={() => dispatch(authLogout())}>
+                </ThemedSecondaryView>
+                <TouchableOpacity style={[commonStyles.button, {borderColor: color, alignSelf: 'center', margin: 15, backgroundColor: darkTheme ? darkSecondColor : lightSecondColor}]} onPress={() => dispatch(authLogout())}>
                     <ThemedText type="subtitle" style={{color: color}}>Logout</ThemedText>
                 </TouchableOpacity>
             </ScrollView>

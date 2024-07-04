@@ -13,6 +13,7 @@ import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSe
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { FontAwesome } from '@expo/vector-icons';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
+import { commonStylesCards } from '@/constants/commonStylesCard';
 
 
 interface ClientCardProps {
@@ -32,6 +33,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
   const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(false);
   const imageObj = baseImageURL + image;
+  const [isBig, setIsBig] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -58,10 +60,14 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
     setModalVisible(true)
   };
 
+  const toggleImageSize = () => {
+    setIsBig((prev) => !prev);
+  };
+
   return (
-    <View style={[styles.card, {borderColor: color, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
-      <View style={[styles.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
-          <Text style={[styles.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name} {last_name ? last_name  : null}</Text>
+    <ThemedSecondaryView style={[commonStylesCards.card, {borderColor: color, shadowColor: darkTheme ? '#fff' : '#000'}]}>
+      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
+          <Text style={[commonStylesCards.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name} {last_name ? last_name  : null}</Text>
           { inDetail ?
           <Pressable onPress={() => router.push('/(app)/(clients)/clientUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
           :
@@ -72,29 +78,31 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
           />
           }
       </View>
-      <View style={styles.dataContainer}>
-          <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
+      <View style={commonStylesCards.dataContainer}>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
           <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText type='link'>{address ? address : 'No address saved'}</ThemedText></Pressable>
       </View>
-      <View style={styles.dataContainer}>
-          <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
+      <View style={commonStylesCards.dataContainer}>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
           <Pressable onPress={() => Linking.openURL(`tel:${phone}`)}><ThemedText type='link'>{phone ? phone : 'No phone saved'}</ThemedText></Pressable>
       </View>
-      <View style={styles.dataContainer}>
-          <Text style={[styles.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
+      <View style={commonStylesCards.dataContainer}>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
           <Pressable onPress={() => Linking.openURL(`mailto:${email}`)}><ThemedText type='link'>{email ? email : 'No email saved'}</ThemedText></Pressable>
       </View>
       {inDetail ?
-      <View style={styles.dataContainer}>
+      <View style={commonStylesCards.dataContainer}>
         <View style={{width:30}}></View>
         {imageError ?
-        <ThemedText style={[styles.LabelText, { alignSelf: 'center'}]}>image not found </ThemedText>
+        <ThemedText style={[commonStylesCards.LabelText, { alignSelf: 'center'}]}>image not found </ThemedText>
         :
-        <Image 
-        style={styles.image} 
-        source={{ uri: imageObj }}
-        onError={() => setImageError(true)}
-        />
+        <TouchableOpacity onPress={toggleImageSize}>
+          <Image 
+          style={commonStylesCards.imageUser} 
+          source={{ uri: imageObj }}
+          onError={() => setImageError(true)}
+          />
+        </TouchableOpacity>
         }
         <Pressable style={{alignSelf: 'flex-end', width:30}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></Pressable>
       </View>
@@ -105,97 +113,47 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
         visible={modalVisible}
         onRequestClose={() => setModalVisible(!modalVisible)}
       >
-        <View style={styles.centeredView}>
+        <View style={commonStylesCards.centeredView}>
           { loading ?
           <ActivityIndicator color={color} size="large" />
           :
-          <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
-            <ThemedText style={[styles.name, {padding: 10}]}>Do you want to delete {name}?</ThemedText>
-            <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
+          <ThemedSecondaryView style={[commonStylesCards.card, {padding: 10}]}>
+            <ThemedText style={[commonStylesCards.name, {padding: 10}]}>Do you want to delete {name}?</ThemedText>
+            <View style={[commonStylesCards.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
               <TouchableOpacity
-                style={[styles.button, {borderColor: color}]}
+                style={[commonStylesCards.button, {borderColor: color}]}
                 onPress={() => setModalVisible(!modalVisible)}>
-                <Text style={{color:'white', textAlign: 'center'}}>Cancel</Text>
+                <ThemedText style={{color: color}}>Cancel</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, {borderColor: 'red'}]}
+                style={[commonStylesCards.button, {borderColor: 'red'}]}
                 onPress={() => deleteClient()}>
-                <Text style={{color:'white', textAlign: 'center'}}>DELETE</Text>
+                <Text style={{color:'red', textAlign: 'center'}}>DELETE</Text>
               </TouchableOpacity>
             </View>
           </ThemedSecondaryView>
           }
         </View>
       </Modal>
-    </View>
+      <Modal 
+        transparent={true} 
+        animationType="fade" 
+        visible={isBig}
+        >
+        <View style={commonStylesCards.modalContainer}>
+          <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
+            <Image
+              source={{ uri: imageObj }}
+              style={commonStylesCards.expandedImage}
+            />
+          </TouchableOpacity>
+          <Pressable
+          style={[commonStylesCards.button, {marginHorizontal: 5, flex: 1}]}
+          onPress={() => setIsBig(!isBig)}>
+            <Text style={{color:'white', textAlign: 'center', fontSize: 20}}>Close</Text>
+          </Pressable>
+        </View>
+      </Modal>
+    </ThemedSecondaryView>
   )
-}
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 10,
-    marginHorizontal: 10,
-    borderBottomWidth: 1,
-      borderRightWidth: 1,
-      shadowColor: "#fff",
-    padding: 10,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 2, height: 2 },
-        shadowColor: "#fff",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  nameContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    borderBottomWidth: 1,
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  dataContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },    
-  LabelText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },  
-  dataText: {
-      fontSize: 14,
-  },
-  image: {
-    width: 100, 
-    height: 100,
-    alignSelf: 'center',
-    borderRadius: 75,
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-  },    
-  button: {
-    alignItems: 'center',
-      justifyContent: 'center',
-      height: 40,
-      width: 100,
-      borderRadius: 10,
-      borderBottomWidth: 1,
-      borderRightWidth: 1,
-  },
-  loading: {
-    flex: 1,
-    verticalAlign: 'middle'
-  },
-});
+};

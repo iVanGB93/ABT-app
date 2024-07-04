@@ -65,6 +65,7 @@ export default function InvoiceCreate() {
             .then(function(response) {
                 dispatch(setInvoice(response.data));
                 router.push('(app)/(jobs)/invoice');
+                setLoading(false);
             })
             .catch(function(error) {
                 console.error('Error creating invoice:', error);

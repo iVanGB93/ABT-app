@@ -9,64 +9,103 @@ import {
   Platform,
   ActivityIndicator,
   Switch,
+  Image,
   ScrollView
 } from "react-native";
 import { useSelector } from 'react-redux';
 import SelectDropdown from 'react-native-select-dropdown';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from "expo-router";
-
+import * as ImagePicker from 'expo-image-picker';
+import { baseImageURL, darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import axiosInstance from '@/axios';
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
-import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
-import { setJobMessage } from "@/app/(redux)/jobSlice";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import axiosInstance from "@/axios";
 
 
 interface Errors {
     client?: string;
     description?: string;
-    address?: string;
-    price?: string;
+    amount?: string;
+    job?: string;
 };
 
-export default function JobCreate() {
+export default function SpentCreate() {
     const {color, darkTheme } = useSelector((state: RootState) => state.settings);
-    const {userName } = useSelector((state: RootState) => state.auth);
-    const { clients } = useSelector((state: RootState) => state.client);
-    const [client, setClient] = useState("");
+    const { job } = useSelector((state: RootState) => state.job);
+    const { items } = useSelector((state: RootState) => state.item);
+    const [item, setItem] = useState<any>({});
+    const [isEnabled, setIsEnabled] = useState<any>(false);
+    const [itemsName, setItemsName] = useState<any>("");
     const [description, setDescription] = useState("");
-    const [clientsNames, setClientsNames] = useState<any>([]);
-    const [address, setAddress] = useState("");
-    const [price, setPrice] = useState("");
-    const [isEnabled, setIsEnabled] = useState(false);
-    const [error, setError] = useState("");
+    const [amount, setAmount] = useState("");
+    const [image, setImage] = useState<any>(null);
     const [errors, setErrors] = useState<Errors>({});
+    const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
     const dispatch = useAppDispatch();
+    const router = useRouter();
 
     useEffect(() => {
-        const clientsList = clients.map((item: { name: string; }) => item.name);
-        setClientsNames(clientsList);
+        const itemsName = items.map((item: { name: string; }) => item.name);
+        setItemsName(itemsName);
     }, []);
 
     const toggleSwitch = () => {
-        setIsEnabled(previousState => !previousState);
+        setIsEnabled((previousState: any) => !previousState);
         if (!isEnabled) {
-            setAddress(clientAddress())
+            setDescription(item.name);
+            setAmount(item.price);
+        } else {
+            setDescription("");
+            setAmount("");
+        }
+    };
+
+    const handleSelect = (name: string) => {
+        const itemList= items.filter((item: { name: string; }) => item.name === name);
+        setItem(itemList[0]);
+        setAmount(itemList[0].price);
+        setDescription(itemList[0].name);
+        setImage({'uri': baseImageURL + itemList[0].image});
+    };
+
+    const handleImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        if (!result.canceled) {
+            setImage(result.assets[0]);
+        }
+    };
+
+    const takePhoto = async () => {
+        let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+        if (permissionResult.granted === false) {
+          alert('Permission to access camera is required!');
+          return;
+        }
+    
+        let result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        if (!result.canceled) {
+            setImage(result.assets[0]);
         }
     };
 
     const validateForm = () => {
         let errors: Errors = {};
-        if (!client) errors.client = "Client is required";
         if (!description) errors.description = "Description is required";
-        if (!address) errors.address = "Address is required";
-        if (!price) errors.price = "Price is required";
+        if (!amount) errors.amount = "Amount is required";
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -74,43 +113,42 @@ export default function JobCreate() {
     const handleSubmit = async () => {
         if (validateForm()) {
             setIsLoading(true);
+            const formData = new FormData();
+            formData.append('action', 'new');
+            formData.append('job_id', job.id);
+            formData.append('description', description);
+            formData.append('amount', amount);
+            formData.append('use_item', isEnabled);
+            if (image !== null) {
+                const uriParts = image.uri.split('.');
+                const fileType = uriParts[uriParts.length - 1];
+                const fileName = `${description}SpentPicture.${fileType}`;
+                formData.append('image', {
+                    uri: image.uri,
+                    name: fileName,
+                    type: `image/${fileType}`,
+                } as unknown as Blob)
+            };
             await axiosInstance
-            .post(`jobs/create/${userName}/`, {
-                action: 'new',
-                name: client,
-                description: description,
-                price: price,
-                address: address,
-            },
+            .post('jobs/spents/create/new/', formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
             .then(function(response) {
                 let data = response.data;
                 if (data.OK) {
-                    dispatch(setJobMessage(response.data.message));
-                    router.push('/(app)/(jobs)');
+                    router.push('/(app)/(jobs)/jobDetails');
                 }
-                setError(response.data.message)
                 setIsLoading(false);
             })
             .catch(function(error) {
-                console.error('Error creating a job:', error);
+                console.error('Error creating a spent:', error);
+                /* dispatch({
+                    type: CHANGE_ERROR,
+                    payload: error.message
+                }) */
                 setIsLoading(false);
-                setError(error.message);
             });
-        }
-    };
-
-    const clientAddress = () => {
-        let clientA = clients.find((clientA: { user: string; }) => clientA.user === client);
-        if (clientA !== undefined) {
-            if ( clientA.address === "") {
-                return "no address saved"
-            }
-            return clientA.address
-        } else {
-            return "no address submitted"
         }
     };
 
@@ -121,24 +159,38 @@ export default function JobCreate() {
             style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
-            <ActivityIndicator style={styles.loading} color={color} size="large" />
+            <ActivityIndicator style={styles.loading} size="large" />
             :
             <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 <ScrollView>
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
-                    <ThemedText type="subtitle">Client</ThemedText>
+                    <ThemedText style={[styles.label, { marginBottom: 10}]}>Job: { job.description }</ThemedText>
+                    
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center'}}>
+                        <Switch
+                            trackColor={{false: '#767577', true: color}}
+                            thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+                            ios_backgroundColor="#3e3e3e"
+                            onValueChange={toggleSwitch}
+                            value={isEnabled}
+                        />
+                        <ThemedText style={[styles.label, {flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}]}>use an item</ThemedText>
+                    </View>
+
+                    { isEnabled ?
+                    <>
                     <SelectDropdown
-                        data={clientsNames}
+                        data={itemsName}
                         onSelect={(selectedItem: string, index: number) => {
-                            setClient(selectedItem);
+                            handleSelect(selectedItem);
                         }}
                         renderButton={(selectedItem, isOpened) => {
                             return (
                             <View style={[styles.dropdownButtonStyle, {borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                                 <ThemedText style={styles.dropdownButtonTxtStyle}>
-                                {(selectedItem ) || 'Select the client'}
+                                {(selectedItem ) || 'Select the item'}
                                 </ThemedText>
                                 <Ionicons name={isOpened ? 'chevron-up' : 'chevron-down'} size={26} color={darkTheme ? '#fff' : '#000'} />
                             </View>
@@ -156,16 +208,11 @@ export default function JobCreate() {
                         search={true}
                         searchPlaceHolder={"Type to search"}
                     />
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center'}}>
-                        <ThemedText style={[styles.label, {verticalAlign: 'middle'}]}>is a new client?</ThemedText>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, marginLeft: 5, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.push('(app)/(clients)/clientCreate')}>
-                            <ThemedText type="subtitle" style={{color: color}}>Add client</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-                    {errors.client ? (
-                        <Text style={styles.errorText}>{errors.client}</Text>
-                    ) : null}
-
+                    {errors.job ? (
+                        <Text style={styles.errorText}>{errors.job}</Text>
+                    ) : null}</>
+                    : 
+                    <>
                     <ThemedText style={commonStyles.text_action} type="subtitle">Description</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="text" color={darkTheme ? darkTtextColor: lightTextColor} />
@@ -179,53 +226,40 @@ export default function JobCreate() {
                     </View>
                     {errors.description ? (
                         <Text style={styles.errorText}>{errors.description}</Text>
-                    ) : null}
-
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    {isEnabled ?
-                    <ThemedText style={styles.label}>{clientAddress()}</ThemedText>
-                    :
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter job's address"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={address}
-                            onChangeText={setAddress}
-                        />
-                    </View>
+                    ) : null}</>
                     }
-                    {errors.address ? (
-                        <Text style={styles.errorText}>{errors.address}</Text>
-                    ) : null}
-
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center',}}>
-                        <Switch
-                            trackColor={{false: '#767577', true: color}}
-                            thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={toggleSwitch}
-                            value={isEnabled}
-                        />
-                        <ThemedText style={[styles.label, {flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}]}>use client's address</ThemedText>
-                    </View>
-                    
-                    <ThemedText style={[commonStyles.text_action, {marginTop: 5}]} type="subtitle">Price</ThemedText>
+                    <ThemedText style={commonStyles.text_action} type="subtitle">Amount</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
+                        { isEnabled ? 
+                        <ThemedText> $ {amount}</ThemedText>
+                        :
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter job's price"
+                            placeholder={amount ? amount.toString() : "Enter spent's amount"}
                             placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={price}
-                            onChangeText={setPrice}
+                            value={amount ? amount.toString() : ""}
+                            onChangeText={setAmount}
                             keyboardType="numeric"
                         />
+                        }
                     </View>
-                    {errors.price ? (
-                        <Text style={styles.errorText}>{errors.price}</Text>
+                    {errors.amount ? (
+                        <Text style={styles.errorText}>{errors.amount}</Text>
                     ) : null}
+                    { image ? 
+                    <Image source={{ uri: image.uri }} style={styles.image} onError={() => setImage(null)} />
+                    :
+                    <ThemedText style={{ alignSelf: 'center'}}>image not found </ThemedText>
+                    }
+                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
+                            <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
+                        </TouchableOpacity>
+                    </View>
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
@@ -250,7 +284,7 @@ const styles = StyleSheet.create({
     form: {
       padding: 20,
       borderRadius: 10,
-      shadowColor: "#fff",
+      shadowColor: "#000",
       shadowOffset: {
         width: 0,
         height: 2,
@@ -281,6 +315,13 @@ const styles = StyleSheet.create({
         verticalAlign: 'middle',
         alignSelf: 'center',
     },
+    image: {
+        width: 100,
+        height: 80,
+        marginTop: 10,
+        borderRadius: 15,
+        alignSelf: 'center',
+    },
     button: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -294,6 +335,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         alignSelf: "center",
+        marginTop: 5,
     },
     dropdownButtonStyle: {
         height: 40,

@@ -128,7 +128,7 @@ export default function businessSettings() {
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={styles.container}
+            style={[styles.container, {backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
@@ -167,7 +167,7 @@ export default function businessSettings() {
                         <Text style={styles.errorText}>{errors.lastName}</Text>
                     ) : null} */}
                     <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -182,7 +182,7 @@ export default function businessSettings() {
                     ) : null}
 
                     <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             autoCapitalize='none'
@@ -198,7 +198,7 @@ export default function businessSettings() {
                     ) : null}
                     
                     <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}

@@ -23,6 +23,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { commonStyles } from "@/constants/commonStyles";
 import { ThemedText } from "@/components/ThemedText";
+import { setJobMessage } from "@/app/(redux)/jobSlice";
 
 
 interface Errors {
@@ -114,6 +115,7 @@ export default function JobUpdate() {
             .then(function(response) {
                 let data = response.data;
                 if (data.OK) {
+                    dispatch(setJobMessage(response.data.message));
                     router.push('/(app)/(jobs)');
                 }
                 setError(response.data.message)
@@ -131,19 +133,19 @@ export default function JobUpdate() {
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={styles.container}
+            style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ThemedSecondaryView style={styles.form}>
+            <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 <ScrollView>
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
                     <ThemedText style={[styles.label, {marginBottom: 5}]}>Job for {job.client}</ThemedText>
                     <ThemedText style={[commonStyles.text_action, {marginTop: 5}]} type="subtitle">Description</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="text" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -158,7 +160,7 @@ export default function JobUpdate() {
                     ) : null}
 
                     <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -173,7 +175,7 @@ export default function JobUpdate() {
                     ) : null}
                     
                     <ThemedText style={commonStyles.text_action} type="subtitle">Price</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -190,18 +192,18 @@ export default function JobUpdate() {
                     
                     {image && <Image source={{ uri: image.uri }} style={styles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleImage()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
                             <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => takePhoto()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
                             <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
                         </TouchableOpacity>
                     </View>
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Update</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => router.back()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
                             <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>

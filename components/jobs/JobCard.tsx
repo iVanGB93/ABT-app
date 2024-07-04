@@ -13,6 +13,8 @@ import { ThemedText } from '../ThemedText';
 import { setClient } from '@/app/(redux)/clientSlice';
 import { commonStyles } from '@/constants/commonStyles';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
+import { setJobMessage } from '@/app/(redux)/jobSlice';
+import { commonStylesCards } from '@/constants/commonStylesCard';
 
 
 interface JobCardProps {
@@ -37,16 +39,17 @@ export default function JobCard({id, status, client, address, description, price
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const imageObj = {'uri': baseImageURL + image};
+  const [isBig, setIsBig] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const statusIcon = (status:string) => {
     if (status === 'active') {
-      return <FontAwesome name="wrench" color='orange' size={30} />
+      return <FontAwesome name="wrench" color='orange' size={20} />
     } else if ( status === 'new') {
-      return <Text style={{color: 'red', fontSize: 20}}>New</Text>
+      return <FontAwesome style={{color: 'red', fontSize: 20}} name='exclamation'/>
     } else {
-      return <Text style={{color: 'green', fontSize: 20}}>Done</Text>
+      return <Ionicons style={{color: 'green', fontSize: 20}} name='checkmark-done-sharp'/>
     }
   };
 
@@ -70,8 +73,8 @@ export default function JobCard({id, status, client, address, description, price
     .then(function(response) {
       if (response.data.OK) {
         setIsLoading(false);
+        dispatch(setJobMessage(response.data.message));
         router.push('/(app)/(jobs)');
-        Alert.alert(response.data.message);
       }
     })
     .catch(function(error) {
@@ -91,8 +94,8 @@ export default function JobCard({id, status, client, address, description, price
     .then(function(response) {
       if (response.data.OK) {
         setIsLoading(false);
+        dispatch(setJobMessage(response.data.message));
         router.push('/(app)/(jobs)');
-        Alert.alert(response.data.message);
       }
     })
     .catch(function(error) {
@@ -117,12 +120,16 @@ export default function JobCard({id, status, client, address, description, price
     router.push('(app)/(jobs)/invoice');
   };
 
+  const toggleImageSize = () => {
+    setIsBig((prev) => !prev);
+  };
+
   return (
-    <ThemedView style={[styles.card, {borderColor: color, backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
-        <View style={[styles.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
-            <ThemedText style={styles.name}>
+    <ThemedSecondaryView style={[commonStylesCards.card, {borderColor: color, shadowColor: darkTheme ? '#fff' : '#000'}]}>
+        <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
+            <ThemedText style={commonStylesCards.name}>
             { inDetail ? 
-            <ThemedText style={styles.name}>{statusIcon(status)} - {client}</ThemedText>
+            <ThemedText style={commonStylesCards.name}>{statusIcon(status)} - {client}</ThemedText>
             : 
             description
             }
@@ -130,45 +137,47 @@ export default function JobCard({id, status, client, address, description, price
             <Pressable onPress={() => router.push('/(app)/(jobs)/jobUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
         </View>
         { inDetail ?
-        <View style={styles.dataContainer}>
-            <ThemedText style={[styles.LabelText, {fontSize: 20, marginTop: 5}]}>{description}</ThemedText>
+        <View style={commonStylesCards.dataContainer}>
+            <ThemedText style={[commonStylesCards.LabelText, {fontSize: 20, marginTop: 5}]}>{description}</ThemedText>
         </View>
         : null }
-        <View style={styles.dataContainer}>
-            <ThemedText style={styles.LabelText}>Address: </ThemedText>
+        <View style={commonStylesCards.dataContainer}>
+            <ThemedText style={commonStylesCards.LabelText}>Address: </ThemedText>
             <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText type='link'>{address}</ThemedText></Pressable>
         </View>
-        <View style={styles.dataContainer}>
-            <ThemedText style={styles.LabelText}>Price: </ThemedText>
+        <View style={commonStylesCards.dataContainer}>
+            <ThemedText style={commonStylesCards.LabelText}>Price: </ThemedText>
             <ThemedText>${price}</ThemedText>
         </View>
-        <View style={styles.dataContainer}>
-            <ThemedText style={styles.LabelText}>Date: </ThemedText>
+        <View style={commonStylesCards.dataContainer}>
+            <ThemedText style={commonStylesCards.LabelText}>Date: </ThemedText>
             <ThemedText>{formattedDate}</ThemedText>
         </View>
         { isList ? null
         :
         ( inDetail ?
-        (<View style={styles.dataContainer}>
+        (<View style={commonStylesCards.dataContainer}>
           <View>
             {imageError ?
-            <ThemedText style={[styles.LabelText, { alignSelf: 'center'}]}>image not found </ThemedText>
+            <ThemedText style={[commonStylesCards.LabelText, { alignSelf: 'center'}]}>image not found </ThemedText>
             :
-            <Image 
-            style={styles.image} 
-            source={{ uri: imageObj.uri }}
-            onError={() => setImageError(true)}
-            />
+            <TouchableOpacity onPress={toggleImageSize}>
+              <Image 
+              style={commonStylesCards.imageJob} 
+              source={{ uri: imageObj.uri }}
+              onError={() => setImageError(true)}
+              />
+            </TouchableOpacity>
             }
           </View>
           <View style={{flexDirection: 'column',}}>
-            <View style={styles.dataContainer}>
+            <View style={commonStylesCards.dataContainer}>
               { (status === 'finished') ?
                 (<ThemedText style={{color: color}}>Job finished</ThemedText>)
               :
-                <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => handleClose()}><ThemedText style={{color: 'red'}}>Close</ThemedText></TouchableOpacity>
+                <TouchableOpacity style={[commonStylesCards.button, {borderColor: 'red'}]} onPress={() => handleClose()}><ThemedText style={{color: 'red'}}>Close</ThemedText></TouchableOpacity>
               }
-              <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleInvoice()}><ThemedText style={styles.LabelText}>Invoice</ThemedText></TouchableOpacity>
+              <TouchableOpacity style={[commonStylesCards.button, {borderColor: color}]} onPress={() => handleInvoice()}><ThemedText style={commonStylesCards.LabelText}>Invoice</ThemedText></TouchableOpacity>
             </View>
             <TouchableOpacity style={{alignSelf: 'flex-end', marginBottom: 0, marginTop: 10}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></TouchableOpacity>
           </View>
@@ -182,20 +191,20 @@ export default function JobCard({id, status, client, address, description, price
         onRequestClose={() => {
           setModalVisible(!modalVisible);
         }}>
-        <View style={styles.centeredView}>
+        <View style={commonStylesCards.centeredView}>
           { isLoading ?
-          <ActivityIndicator style={styles.loading} size="large" />
+          <ActivityIndicator style={commonStylesCards.loading} size="large" />
           :
-          <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
-            <ThemedText style={[styles.name, {padding: 10}]}>Do you want to delete this job?</ThemedText>
-            <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
+          <ThemedSecondaryView style={[commonStylesCards.card, {padding: 10}]}>
+            <ThemedText style={[commonStylesCards.name, {padding: 10}]}>Do you want to delete this job?</ThemedText>
+            <View style={[commonStylesCards.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
               <TouchableOpacity
-                style={[styles.button, {borderColor: color}]}
+                style={[commonStylesCards.button, {borderColor: color}]}
                 onPress={() => setModalVisible(!modalVisible)}>
-                <ThemedText style={{color:'white', textAlign: 'center'}}>Cancel</ThemedText>
+                <ThemedText style={{color: color, textAlign: 'center'}}>Cancel</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, {borderColor: 'red'}]}
+                style={[commonStylesCards.button, {borderColor: 'red'}]}
                 onPress={() => deleteJob()}>
                 <ThemedText style={{color:'red', textAlign: 'center'}}>DELETE</ThemedText>
               </TouchableOpacity>
@@ -211,20 +220,20 @@ export default function JobCard({id, status, client, address, description, price
         onRequestClose={() => {
           setModalVisibleFinish(!modalVisibleFinish);
         }}>
-        <View style={styles.centeredView}>
+        <View style={commonStylesCards.centeredView}>
           { isLoading ?
-          <ActivityIndicator style={styles.loading} size="large" />
+          <ActivityIndicator style={commonStylesCards.loading} size="large" />
           :
-          <ThemedSecondaryView style={[styles.card, {padding: 10}]}>
-            <ThemedText style={[styles.name, {padding: 10, }]}>Did you finish this job?</ThemedText>
-            <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
+          <ThemedSecondaryView style={[commonStylesCards.card, {padding: 10}]}>
+            <ThemedText style={[commonStylesCards.name, {padding: 10, }]}>Did you finish this job?</ThemedText>
+            <View style={[commonStylesCards.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
               <TouchableOpacity
-                style={[styles.button, {borderColor: color}]}
+                style={[commonStylesCards.button, {borderColor: color}]}
                 onPress={() => setModalVisibleFinish(!modalVisibleFinish)}>
-                <ThemedText style={{color:'white', textAlign: 'center'}}>No</ThemedText>
+                <ThemedText style={{textAlign: 'center'}}>No</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, {borderColor: 'red'}]}
+                style={[commonStylesCards.button, {borderColor: 'red'}]}
                 onPress={() => closeJob()}>
                 <ThemedText style={{color:'red', textAlign: 'center'}}>Yes, close it</ThemedText>
               </TouchableOpacity>
@@ -233,76 +242,25 @@ export default function JobCard({id, status, client, address, description, price
           }
         </View>
       </Modal>
-    </ThemedView>
+      <Modal 
+        transparent={true} 
+        animationType="fade" 
+        visible={isBig}
+        >
+        <View style={commonStylesCards.modalContainer}>
+          <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
+            <Image
+              source={{ uri: imageObj.uri }}
+              style={commonStylesCards.expandedImage}
+            />
+          </TouchableOpacity>
+          <Pressable
+          style={[commonStylesCards.button, {marginHorizontal: 5, flex: 1}]}
+          onPress={() => setIsBig(!isBig)}>
+            <Text style={{color:'white', textAlign: 'center', fontSize: 20}}>Close</Text>
+          </Pressable>
+        </View>
+      </Modal>
+    </ThemedSecondaryView>
   )
-}
-
-const styles = StyleSheet.create({
-    card: {
-      borderRadius: 10,
-      marginHorizontal: 10,
-      borderBottomWidth: 1,
-      borderRightWidth: 1,
-      shadowColor: "#fff",
-      padding: 10,
-      ...Platform.select({
-        ios: {
-          shadowOffset: { width: 2, height: 2 },
-          shadowColor: "#fff",
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 8,
-        },
-      }),
-    },
-    nameContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "100%",
-      borderBottomWidth: 1,
-    },
-    name: {
-      fontSize: 20,
-      fontWeight: "bold",
-    },
-    dataContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },    
-    LabelText: {
-      fontSize: 16,
-      fontWeight: "bold",
-    },  
-    dataText: {
-        fontSize: 12,
-        color: "darkblue"
-    }, 
-    image: {
-      width: 150, 
-      height: 100,
-      alignSelf: 'center',
-      borderRadius: 15,
-    },
-    centeredView: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 22,
-    },    
-    button: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: 40,
-      width: 100,
-      borderRadius: 10,
-      borderBottomWidth: 1,
-      borderRightWidth: 1,
-    },
-    loading: {
-      flex: 1,
-      verticalAlign: 'middle'
-    },
-});
+};

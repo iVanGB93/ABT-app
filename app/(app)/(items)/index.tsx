@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, RefreshControl, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSelector } from "react-redux";
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -8,36 +8,35 @@ import Toast from 'react-native-toast-message';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { clientSetMessage, setClient, setClients } from "@/app/(redux)/clientSlice";
-import ClientCard from '@/components/clients/ClientCard';
 import axiosInstance from '@/axios';
 import { setMessage } from '@/app/(redux)/settingSlice';
+import { setItem, setItemMessage, setItems } from '@/app/(redux)/itemSlice';
+import ItemCard from '@/components/items/ItemCard';
 
 
-export default function Clients() {
+export default function Items() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
-  const {clients, clientMessage} = useSelector((state: RootState) => state.client);
+  const {items, itemMessage} = useSelector((state: RootState) => state.item);
   const [isLoading, setIsLoading] = useState(false);
   const [ error, setError ] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const getClients = async() => {
+  const getItems = async() => {
     setIsLoading(true);
     await axiosInstance
-    .get(`clients/${userName}/`)
+    .get(`items/list/${userName}/`)
     .then(function(response) {
         if (response.data) {
-          dispatch(setClients(response.data));
-          setIsLoading(false);
+          dispatch(setItems(response.data));
         } else {
-          dispatch(clientSetMessage(response.data.message));
-          setIsLoading(false);
+          dispatch(setItemMessage(response.data.message));
         }
+        setIsLoading(false);
     })
     .catch(function(error) {
-        console.error('Error fetching clients:', error);
+        console.error('Error fetching items:', error);
         if (typeof error.response === 'undefined') {
           setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
           setIsLoading(false);
@@ -54,8 +53,8 @@ export default function Clients() {
     });
   };
   
-  const fetchClients = () => {
-    getClients();
+  const fetchItems = () => {
+    getItems();
     /* if (clients.length !== 0) {
         console.log("SAME CLIENTS");
     } else {
@@ -64,21 +63,21 @@ export default function Clients() {
   };
   
   useEffect(() => {
-    if ( clientMessage) {
+    if ( itemMessage) {
       Toast.show({
           type: 'success',
           text1: 'Success',
-          text2: clientMessage
+          text2: itemMessage
       });
-      dispatch(clientSetMessage(null))
+      dispatch(setItemMessage(null))
     };
-    fetchClients();
+    fetchItems();
   }, []);
 
   const handlePressable = (id: string) => {
-    let client = clients.find((client: { id: string; }) => client.id === id);
-    dispatch(setClient(client));
-    router.push('/(app)/(clients)/clientDetails');
+    let item = items.find((item: { id: string; }) => item.id === id);
+    dispatch(setItem(item));
+    router.push('/(app)/(items)/itemDetails');
   };
 
   return (
@@ -86,7 +85,7 @@ export default function Clients() {
       {error ?
       <>
         <ThemedText>{error}</ThemedText>
-        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchClients()}>
+        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchItems()}>
         <ThemedText>Try againg</ThemedText>
         </TouchableOpacity>
       </>
@@ -96,27 +95,27 @@ export default function Clients() {
       :
       <>
       <FlatList
-        data={clients}
+        data={items}
         renderItem={({ item }) => {
           return (
             <TouchableOpacity onPress={() => handlePressable(item.id)}>
-              <ClientCard id={item.id} name={item.name} last_name={item.last_name} address={item.address} phone={item.phone} email={item.email} image={item.image}/>
+              <ItemCard id={item.id} name={item.name} amount={item.amount} price={item.price} description={item.description} date={item.date} image={item.image}/>
             </TouchableOpacity>
           );
         }}
         ItemSeparatorComponent={<View style={{ height: 10}}/>}
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientMessage ? clientMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
+        ListEmptyComponent={<ThemedText style={styles.loading}>{ itemMessage ? itemMessage.toString() + ", pull to refresh" : "No items found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
-            onRefresh={() => getClients()}
+            onRefresh={() => getItems()}
             colors={[color]} // Colores del indicador de carga
             tintColor={color} // Color del indicador de carga en iOS
         />}
       />
-      <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('/(app)/(clients)/clientCreate')}>
+      <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('/(app)/(items)/itemCreate')}>
         <Ionicons name="add" size={30} color="#FFF" />
       </TouchableOpacity>
       </>
@@ -149,7 +148,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
-    shadowRadius: 1,
+    shadowRadius: 2,
     elevation: 5,
   },
   updateButton: {

@@ -9,11 +9,12 @@ import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
 import axiosInstance from '@/axios';
-import { baseImageURL, darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from '@/settings';
+import { baseImageURL, darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '@/settings';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { useRouter } from 'expo-router';
+import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 
 
 export default function Profile () {
@@ -100,13 +101,13 @@ export default function Profile () {
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={styles.container}
+            style={[styles.container, {backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             {loading ?
             <ActivityIndicator size="large" color={color} />
             :
             <ScrollView>
-                <View style={[styles.sectionContainer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor}]}>
+                <ThemedSecondaryView style={styles.sectionContainer}>
                     <View style={styles.rowContainer}>
                         { newLogo ?
                         <Image source={{ uri: newLogo }} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
@@ -132,7 +133,7 @@ export default function Profile () {
                             <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </ThemedSecondaryView>
             </ScrollView>
             }
         </KeyboardAvoidingView>

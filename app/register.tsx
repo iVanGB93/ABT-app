@@ -11,7 +11,7 @@ import axiosInstance from "@/axios";
 import { authSetMessage, authSuccess } from './(redux)/authSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from "@/settings";
+import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
 
 interface Errors {
   username?: string;
@@ -114,7 +114,7 @@ export default function Register() {
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
         <ScrollView>  
           <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
-          <View style={commonStyles.action}>
+          <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
               onChangeText={setUsername} 
@@ -129,7 +129,7 @@ export default function Register() {
               <Text style={commonStyles.errorMsg}>{errors.username}</Text>
           ) : null}
           <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
-          <View style={commonStyles.action}>
+          <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
               onChangeText={setEmail} 
@@ -145,7 +145,7 @@ export default function Register() {
               <Text style={commonStyles.errorMsg}>{errors.email}</Text>
           ) : null}
           <ThemedText style={commonStyles.text_action} type="subtitle">Password</ThemedText>
-          <View style={commonStyles.action}>
+          <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
               onChangeText={setPassword} 
@@ -169,7 +169,7 @@ export default function Register() {
           <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
           :
           <>
-          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50}]} onPress={handleSubmit}>
+          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={handleSubmit}>
             <ThemedText type="subtitle" style={{color: color}}>Register</ThemedText> 
           </TouchableOpacity>
           <View style={commonStyles.linkSection}>

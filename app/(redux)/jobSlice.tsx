@@ -6,6 +6,7 @@ export interface JobState {
     job: any;
     jobs: any;
     jobError: string | null;
+    jobMessage: string | null;
     invoice: any,
     charges: any,
 };
@@ -15,6 +16,7 @@ const initialState: JobState = {
     job: {},
     jobs: [],
     jobError: null,
+    jobMessage: null,
     invoice: {},
     charges: [],
 };
@@ -23,9 +25,6 @@ export const jobSlice = createSlice({
     name: 'job',
     initialState,
     reducers: {
-        jobSetLoading: (state, action: PayloadAction<boolean>) => {
-            state.jobLoading = action.payload;
-        },
         setJob: (state, action: PayloadAction<any>) => {
             state.job = action.payload;
             state.jobLoading = false;
@@ -39,6 +38,9 @@ export const jobSlice = createSlice({
         jobFail: (state, action: PayloadAction<string>) => {
             state.jobLoading = false;
             state.jobError = action.payload;
+        },
+        setJobMessage: (state, action: PayloadAction<any>) => {
+            state.jobMessage = action.payload;
         },
         setInvoice: (state, action: PayloadAction<any>) => {
             state.invoice = action.payload;
@@ -54,6 +56,6 @@ export const jobSlice = createSlice({
 });
 
 
-export const { jobSetLoading, setJob, setJobs, jobFail, setInvoice, setCharges } = jobSlice.actions;
+export const { setJobMessage, setJob, setJobs, jobFail, setInvoice, setCharges } = jobSlice.actions;
 
 export const jobReducer = jobSlice.reducer;

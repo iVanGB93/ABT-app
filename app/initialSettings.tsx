@@ -11,7 +11,7 @@ import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(
 import { commonStyles } from '@/constants/commonStyles';
 import { authSetMessage } from './(redux)/authSlice';
 import axiosInstance from '@/axios';
-import { baseImageURL, darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from '@/settings';
+import { baseImageURL, darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '@/settings';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
@@ -133,7 +133,7 @@ export default function InitialSettings () {
                 :
                 <ScrollView>
                 <ThemedText type="subtitle">Name</ThemedText>
-                <View style={commonStyles.action}>
+                <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <Ionicons name="business" color={darkTheme ? darkTtextColor: lightTextColor}/>
                     <TextInput 
                         autoFocus={false} 
@@ -150,7 +150,7 @@ export default function InitialSettings () {
                     <Text style={commonStyles.errorMsg}>{errors.newName}</Text>
                 ) : null}
                 <ThemedText type="subtitle">Address</ThemedText>
-                <View style={commonStyles.action}>
+                <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor}/>
                     <TextInput 
                         autoFocus={false} 
@@ -167,7 +167,7 @@ export default function InitialSettings () {
                     <Text style={commonStyles.errorMsg}>{errors.address}</Text>
                 ) : null}
                 <ThemedText type="subtitle">Phone</ThemedText>
-                <View style={commonStyles.action}>
+                <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor}/>
                     <TextInput 
                         autoFocus={false}
@@ -193,11 +193,11 @@ export default function InitialSettings () {
                 <Image source={require('../assets/images/logoDefault.png')} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />
                 }
                 
-                <TouchableOpacity style={[commonStyles.button, {borderColor: color, marginBottom: 20, marginTop: 10}]} onPress={() => handleImage()}>
+                <TouchableOpacity style={[commonStyles.button, {borderColor: color, marginBottom: 20, marginTop: 10, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
                     <ThemedText type="subtitle" style={{color: color}}>Select Logo</ThemedText>
                 </TouchableOpacity>
                 <ThemedText type='subtitle'>Change color</ThemedText>
-                <View style={commonStyles.action}>
+                <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <View style={commonStyles.colorsContainer}>
                         <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#009d93'}]} onPress={() => dispatch(setColor('#009d93'))}></TouchableOpacity>
                         <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#694fad'}]} onPress={() => dispatch(setColor('#694fad'))}></TouchableOpacity>
@@ -205,7 +205,7 @@ export default function InitialSettings () {
                         <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
                     </View>
                 </View>
-                <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 30}]} onPress={handleSubmit}>
+                <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 30, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={handleSubmit}>
                     <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                 </TouchableOpacity>
                     <ThemedText style={{ marginTop: 60, textAlign: 'center' }}>you can change this settings later</ThemedText>

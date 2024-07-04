@@ -6,6 +6,7 @@ import { authReducer } from './authSlice';
 import { clientReducer } from './clientSlice';
 import { settingReducer } from './settingSlice';
 import { jobReducer } from './jobSlice';
+import { itemReducer } from './itemSlice';
 
 
 const persistConfig = {
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   client: clientReducer,
   job: jobReducer,
+  item: itemReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

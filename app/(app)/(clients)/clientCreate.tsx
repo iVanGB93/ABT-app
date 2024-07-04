@@ -140,18 +140,18 @@ export default function ClientCreate() {
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={styles.container}
+            style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ThemedSecondaryView style={styles.form}>
+            <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 {error ? (
                     <Text style={styles.errorText}>{error}</Text>
                 ) : null}
                 <ScrollView>
                     <ThemedText style={commonStyles.text_action} type="subtitle">Name</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -165,7 +165,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.name}</Text>
                     ) : null}
                     <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="person-add" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -179,7 +179,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.lastName}</Text>
                     ) : null}
                     <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -193,7 +193,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.phone}</Text>
                     ) : null}
                     <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -207,7 +207,7 @@ export default function ClientCreate() {
                         <Text style={styles.errorText}>{errors.email}</Text>
                     ) : null}
                     <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    <View style={commonStyles.action}>
+                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                         <TextInput
                             style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
@@ -223,18 +223,18 @@ export default function ClientCreate() {
                     
                     {image && <Image source={{ uri: image }} style={styles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleImage()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
                             <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => takePhoto()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
                             <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
                         </TouchableOpacity>
                     </View>
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => router.back()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
                             <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>
@@ -255,7 +255,6 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
       paddingBottom: 20,
       borderRadius: 10,
-      shadowColor: "#fff",
       shadowOffset: {
         width: 0,
         height: 2,

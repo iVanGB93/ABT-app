@@ -14,7 +14,7 @@ import { authSuccess } from "./(redux)/authSlice";
 import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
-import { darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from "@/settings";
+import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
 import { setDarkTheme } from "./(redux)/settingSlice";
 
 
@@ -102,7 +102,7 @@ export default function Login() {
       <ThemedSecondaryView style={[commonStyles.footer, {borderColor: color}]}>
         <ScrollView>       
           <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
-          <View style={commonStyles.action}>
+          <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
               onChangeText={setUsername}
@@ -118,7 +118,7 @@ export default function Login() {
             <Text style={commonStyles.errorMsg}>{errors.username}</Text>
           ) : null}
           <ThemedText style={commonStyles.text_action} type="subtitle">Password</ThemedText>
-          <View style={commonStyles.action}>
+          <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
             <TextInput 
               onChangeText={setPassword}
@@ -142,7 +142,7 @@ export default function Login() {
           <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
           : 
           <>
-          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50}]} onPress={handleSubmit}>
+          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={handleSubmit}>
             <ThemedText type="title" style={{color: color}}>Login</ThemedText> 
           </TouchableOpacity>
           <View style={commonStyles.linkSection}>

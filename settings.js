@@ -10,5 +10,5 @@ export const darkMainColor = '#000000';
 export const darkSecondColor = '#1e1e1e';
 export const darkTtextColor = '#e0e0e0';
 export const lightMainColor = '#edebeb';
-export const lightSecondColor = '#b5b5b5';
+export const lightSecondColor = '#f5f5f5';
 export const lightTextColor = '#333333';

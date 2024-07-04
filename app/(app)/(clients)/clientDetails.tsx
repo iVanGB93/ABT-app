@@ -9,25 +9,27 @@ import { ThemedView } from '@/components/ThemedView';
 import ClientCard from '@/components/clients/ClientCard';
 import JobCard from '@/components/jobs/JobCard';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { setJobs, jobSetLoading, jobFail, setJob } from '@/app/(redux)/jobSlice';
+import { setJobs, jobFail, setJob } from '@/app/(redux)/jobSlice';
 import axiosInstance from '@/axios';
-import { darkMainColor, lightMainColor } from '@/settings';
+import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage } from '@/app/(redux)/clientSlice';
+import { commonStylesDetails } from '@/constants/commonStylesDetails';
 
 
 export default function ClientDetail() {
     const { color, darkTheme } = useSelector((state: RootState) => state.settings);
     const { userName } = useSelector((state: RootState) => state.auth);
     const {clientMessage, client} = useSelector((state: RootState) => state.client);
-    const {jobs, jobLoading} = useSelector((state: RootState) => state.job);
+    const {jobs } = useSelector((state: RootState) => state.job);
     const [ stateJobs, setStateJobs ] = useState<any>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
-    const dispatch = useAppDispatch()
+    const dispatch = useAppDispatch();
     const router = useRouter();
 
     const getJobs = async () => {
-        dispatch(jobSetLoading(true));
+        setIsLoading(true);
         await axiosInstance
         .get(`jobs/list/${userName}/`)
         .then(function(response) {
@@ -36,6 +38,7 @@ export default function ClientDetail() {
             } else {
                 dispatch(jobFail(response.data.message));
             }
+            setIsLoading(false);
         })
         .catch(function(error) {
             console.error('Error fetching jobs:', error);
@@ -48,13 +51,13 @@ export default function ClientDetail() {
                   setError(error.message);
                 };
             };
+            setIsLoading(false);
         });
     };
 
     const fetchJobs = async () => {
         getJobs();
         let jobList = jobs.filter((jobs: { client: any; }) => jobs.client === client.name)
-        console.log(jobs);
         setStateJobs(jobList);
     };
 
@@ -82,79 +85,46 @@ export default function ClientDetail() {
       };
 
     return (
-        <ThemedView style={[styles.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
+        <ThemedView style={[commonStylesDetails.container, {backgroundColor:darkTheme ? darkMainColor: lightMainColor}]}>
             <ClientCard id={client.id} image={client.image} name={client.name} last_name={client.last_name} address={client.address} phone={client.phone} email={client.email}  inDetail={true}/>
-            <ThemedText style={styles.headerText}>Jobs</ThemedText>
-            { jobLoading ?
-                <ActivityIndicator color={color} size="large" />
-                :
-                <FlatList
-                data={stateJobs}
-                renderItem={({ item }) => {
-                    return (
-                        <TouchableOpacity onPress={() => handlePressable(item.id)}>
-                            <JobCard id={item.id} status={item.status} client={item.client} address={item.address} description={item.description} price={item.price} inDetail={false} image={item.image} date={item.date} isList={false} />
-                        </TouchableOpacity>
-                    );
-                }}
-                ItemSeparatorComponent={<View style={{height: 16,}}/>}
-                ListEmptyComponent={
-                    <View>
-                        <ThemedText style={styles.headerText}>No jobs found, pull to refresh</ThemedText>
+            <View style={commonStylesDetails.bottom}>
+                <ThemedText type='subtitle'>Jobs</ThemedText>
+                { isLoading ?
+                    <ActivityIndicator style={commonStylesDetails.loading} color={color} size="large" />
+                    :
+                <View style={commonStylesDetails.list}>
+                    <FlatList
+                    data={stateJobs}
+                    renderItem={({ item }) => {
+                        return (
+                            <TouchableOpacity onPress={() => handlePressable(item.id)}>
+                                <JobCard id={item.id} status={item.status} client={item.client} address={item.address} description={item.description} price={item.price} inDetail={false} image={item.image} date={item.date} isList={false} />
+                            </TouchableOpacity>
+                        );
+                    }}
+                    ItemSeparatorComponent={<View style={{height: 16}}/>}
+                    ListEmptyComponent={
+                        <View>
+                            <ThemedText style={[commonStylesDetails.headerText, {marginTop: 50}]}>No jobs found, pull to refresh</ThemedText>
+                        </View>
+                    }
+                    ListHeaderComponent={<View style={{margin: 5}} />}
+                    ListFooterComponent={<TouchableOpacity style={[commonStyles.button, {margin: 15, borderColor: color, backgroundColor: darkTheme ? darkSecondColor : lightSecondColor}]} onPress={() => router.push('(app)/(jobs)/jobCreate')}><ThemedText type="subtitle" style={{color: color}}>Add new Job</ThemedText></TouchableOpacity>}
+                    refreshControl={
+                        <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={() => fetchJobs()}
+                        colors={[color]} // Colores del indicador de carga
+                        tintColor={color} // Color del indicador de carga en iOS
+                        />}
+                    />
                     </View>
                 }
-                ListHeaderComponent={<View style={{margin: 5}} />}
-                ListFooterComponent={<TouchableOpacity style={[commonStyles.button, {margin: 15, borderColor: color}]} onPress={() => router.push('(app)/(jobs)/jobCreate')}><ThemedText type="subtitle" style={{color: color}}>Add new Job</ThemedText></TouchableOpacity>}
-                refreshControl={
-                    <RefreshControl
-                      refreshing={jobLoading}
-                      onRefresh={() => fetchJobs()}
-                      colors={[color]} // Colores del indicador de carga
-                      tintColor={color} // Color del indicador de carga en iOS
-                    />}
-                />
-            }
-           {/*  {errorJobs ? (
-                <Text style={styles.errorText}>{errorJobs}</Text>
-            ) : null} */}
+                {/*  {errorJobs ? (
+                    <Text style={styles.errorText}>{errorJobs}</Text>
+                ) : null} */}
+            </View>
         </ThemedView>
     )
 };
 
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingTop: 10,
-    },
-    headerText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        alignSelf: "center",
-        marginTop: 5,
-    },
-    loading: {
-        flex: 1,
-        verticalAlign: 'middle'
-    },
-    button: {
-        backgroundColor: '#694fad',
-        padding: 10,
-        borderRadius: 16,
-        margin: 5,
-        ...Platform.select({
-            ios: {
-            shadowOffset: { width: 2, height: 2 },
-            shadowColor: "#333",
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            },
-            android: {
-            elevation: 5,
-            },
-        }),
-    },
-    errorText: {
-        color: "red",
-        marginBottom: 5,
-    },
-});

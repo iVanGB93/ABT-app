@@ -56,7 +56,6 @@ axiosInstance.interceptors.response.use(
 		}
 		if (error.response.data.code === 'token_not_valid' && error.response.status === 401) {
 			console.log("Getting new token...");
-			console.log('==============BEFORE================');
 			console.log(count);
 			const state = store.getState();
 			const refreshToken = state.auth.refreshToken;
@@ -88,20 +87,20 @@ axiosInstance.interceptors.response.use(
 						});
 					} else {
 						console.log('Refresh token is wrong');
-						dispatch(setTokensAction({token: null, refreshToken: null}))
+						dispatch(setTokensAction({token: null, refreshToken: null}));
 						//redirect here
 						return <Redirect href={'/'}/>;
 					}
 				} else {
 					console.log('Refresh token is expired', tokenParts.exp, now);
-					dispatch(setTokensAction({token: null, refreshToken: null}))
+					dispatch(setTokensAction({token: null, refreshToken: null}));
 					//redirect here
 					return <Redirect href={'/'}/>;
 					//router.push('/');
 				}
 			} else {
 				console.log('Refresh token not available.');
-				dispatch(setTokensAction({token: null, refreshToken: null}))
+				dispatch(setTokensAction({token: null, refreshToken: null}));
 				//redirect here
 				return <Redirect href={'/'}/>;
 				//router.push('/');
