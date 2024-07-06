@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform, Pressable, Linking, Image, ActivityIndicator, Modal, Alert, TouchableOpacity } from "react-native";
-import { useDispatch, useSelector } from 'react-redux';
+import { View, Text, Linking, Image, ActivityIndicator, Modal, TouchableOpacity } from "react-native";
+import { useSelector } from 'react-redux';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { baseImageURL } from "@/settings";
 import axiosInstance from "../../axios";
-import { clientSetMessage, setClient } from '../../app/(redux)/clientSlice';
-import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '../../settings';
+import { clientSetMessage } from '../../app/(redux)/clientSlice';
+import { darkTtextColor, lightTextColor } from '../../settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { FontAwesome } from '@expo/vector-icons';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
@@ -69,7 +68,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
       <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
           <Text style={[commonStylesCards.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name} {last_name ? last_name  : null}</Text>
           { inDetail ?
-          <Pressable onPress={() => router.push('/(app)/(clients)/clientUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
+          <TouchableOpacity onPress={() => router.push('/(app)/(clients)/clientUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></TouchableOpacity>
           :
           <Image 
           style={{width: 30, height: 30, borderRadius: 75}} 
@@ -80,15 +79,21 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
       </View>
       <View style={commonStylesCards.dataContainer}>
           <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
-          <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText type='link'>{address ? address : 'No address saved'}</ThemedText></Pressable>
+          <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
+            <ThemedText style={commonStylesCards.dataText} type='link'>{address ? address : 'No address saved'}</ThemedText>
+          </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
           <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
-          <Pressable onPress={() => Linking.openURL(`tel:${phone}`)}><ThemedText type='link'>{phone ? phone : 'No phone saved'}</ThemedText></Pressable>
+          <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}>
+            <ThemedText style={commonStylesCards.dataText} type='link'>{phone ? phone : 'No phone saved'}</ThemedText>
+          </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
           <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
-          <Pressable onPress={() => Linking.openURL(`mailto:${email}`)}><ThemedText type='link'>{email ? email : 'No email saved'}</ThemedText></Pressable>
+          <TouchableOpacity onPress={() => Linking.openURL(`mailto:${email}`)}>
+            <ThemedText style={commonStylesCards.dataText} type='link'>{email ? email : 'No email saved'}</ThemedText>
+          </TouchableOpacity>
       </View>
       {inDetail ?
       <View style={commonStylesCards.dataContainer}>
@@ -104,7 +109,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
           />
         </TouchableOpacity>
         }
-        <Pressable style={{alignSelf: 'flex-end', width:30}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></Pressable>
+        <TouchableOpacity style={{alignSelf: 'flex-end', width:30}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></TouchableOpacity>
       </View>
       : null}
       <Modal
@@ -137,7 +142,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
       </Modal>
       <Modal 
         transparent={true} 
-        animationType="fade" 
+        animationType="fade"
         visible={isBig}
         >
         <View style={commonStylesCards.modalContainer}>
@@ -147,11 +152,11 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
               style={commonStylesCards.expandedImage}
             />
           </TouchableOpacity>
-          <Pressable
+          <TouchableOpacity
           style={[commonStylesCards.button, {marginHorizontal: 5, flex: 1}]}
           onPress={() => setIsBig(!isBig)}>
             <Text style={{color:'white', textAlign: 'center', fontSize: 20}}>Close</Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </Modal>
     </ThemedSecondaryView>

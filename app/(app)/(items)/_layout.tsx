@@ -19,6 +19,7 @@ export default function ItemLayout() {
       <Stack.Screen name="index" options={{headerTitle: 'Items'}}/>
       <Stack.Screen name="itemDetails" options={{headerTitle: 'Item Details'}}/>
       <Stack.Screen name="itemCreate" options={{headerTitle: 'Add new Item'}}/>
+      <Stack.Screen name="itemUpdate" options={{headerTitle: 'Update Item'}}/>
     </Stack>
   );
 }

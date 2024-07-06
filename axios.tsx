@@ -1,7 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Alert } from 'react-native';
 import { baseURL } from '@/settings';
 import { Redirect, useRouter } from 'expo-router';
 import { store, useAppDispatch } from './app/(redux)/store';

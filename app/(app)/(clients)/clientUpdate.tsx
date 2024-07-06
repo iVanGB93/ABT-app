@@ -23,6 +23,9 @@ import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
 import { clientSetMessage, setClient } from "@/app/(redux)/clientSlice";
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import PhoneInput from 'react-native-phone-input';
+import ClientForm from "@/components/clients/ClientForm";
 
 
 interface Errors {
@@ -52,6 +55,8 @@ export default function ClientUpdate() {
     const validateForm = () => {
         let errors: Errors = {};
         if (!name) errors.name = "Name is required";
+        if (email) {if (!/\S+@\S+\.\S+/.test(email)) {errors.email = "Email is invalid!"}};
+        if (!address) errors.address = "Address is required";
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -139,81 +144,23 @@ export default function ClientUpdate() {
             <ActivityIndicator style={styles.loading} size="large" />
             :
             <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
-                <ScrollView>
-                    <ThemedText type="subtitle">Name</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={name ? name : "Enter client's name"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={name}
-                            onChangeText={setName}
-                        />
-                    </View>
-                    {errors.name ? (
-                        <Text style={styles.errorText}>{errors.name}</Text>
-                    ) : null}
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="person-add" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={lastName ? lastName : "Enter client's last name"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={lastName}
-                            onChangeText={setLastName}
-                        />
-                    </View>
-                    {errors.lastName ? (
-                        <Text style={styles.errorText}>{errors.lastName}</Text>
-                    ) : null}
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's phone"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={phone}
-                            onChangeText={setPhone}
-                        />
-                    </View>
-                    {errors.phone ? (
-                        <Text style={styles.errorText}>{errors.phone}</Text>
-                    ) : null}
-
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's email"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                        />
-                    </View>
-                    {errors.email ? (
-                        <Text style={styles.errorText}>{errors.email}</Text>
-                    ) : null}
-                    
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's address"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={address}
-                            onChangeText={setAddress}
-                        />
-                    </View>
-                    {errors.address ? (
-                        <Text style={styles.errorText}>{errors.address}</Text>
-                    ) : null}
-
+                <ScrollView 
+                    keyboardShouldPersistTaps={'handled'}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                >
+                    <ClientForm 
+                        name={name} 
+                        setName={setName} 
+                        lastName={lastName}
+                        setLastName={setLastName} 
+                        phone={phone}
+                        setPhone={setPhone}
+                        email={email}
+                        setEmail={setEmail}
+                        address={address}
+                        setAddress={setAddress}
+                        errors={errors}
+                    />
                     {image ?
                     <Image source={{ uri: image }} style={styles.image} />
                     :

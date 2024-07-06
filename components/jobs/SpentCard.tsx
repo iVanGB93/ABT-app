@@ -95,8 +95,8 @@ export default function SpentCard({image, id, description, amount, date}: SpentC
             <View style={{flex: 1, paddingLeft: 5}}>
                 <ThemedText style={commonStylesCards.LabelText}>Amount: ${amount}</ThemedText>
                 <ThemedText style={commonStylesCards.LabelText}>{formattedDate}</ThemedText>
-                <View style={[commonStylesCards.dataContainer, {justifyContent: 'space-evenly'}]}>
-                  <Pressable onPress={() => handleEdit()}><MaterialCommunityIcons name="clipboard-edit-outline" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
+                <View style={[commonStylesCards.dataContainer, {justifyContent: 'flex-end'}]}>
+                  {/* <Pressable onPress={() => handleEdit()}><MaterialCommunityIcons name="clipboard-edit-outline" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable> */}
                   <Pressable onPress={() => handleDelete()}><MaterialCommunityIcons name="delete-outline" color='red' size={30} /></Pressable>
                 </View>
             </View>
@@ -118,7 +118,7 @@ export default function SpentCard({image, id, description, amount, date}: SpentC
               <TouchableOpacity
                 style={[commonStylesCards.button, {borderColor: color}]}
                 onPress={() => setModalVisible(!modalVisible)}>
-                <ThemedText style={{textAlign: 'center'}}>No</ThemedText>
+                <ThemedText style={{textAlign: 'center', color: color}}>No</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[commonStylesCards.button, {borderColor: 'red'}]}

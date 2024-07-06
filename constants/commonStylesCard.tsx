@@ -33,13 +33,16 @@ export const commonStylesCards = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        overflow: 'scroll',
     },    
     LabelText: {
         fontSize: 16,
         fontWeight: "bold",
+        lineHeight: 20,
     },  
     dataText: {
-          fontSize: 12,
+        fontSize: 14,
+        lineHeight: 20,
     },
     imageUser: {
         width: 100, 

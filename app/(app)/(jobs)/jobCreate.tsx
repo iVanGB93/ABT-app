@@ -1,29 +1,23 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
-  Text,
   Platform,
   ActivityIndicator,
-  Switch,
   ScrollView
 } from "react-native";
 import { useSelector } from 'react-redux';
-import SelectDropdown from 'react-native-select-dropdown';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from "expo-router";
 
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import axiosInstance from '@/axios';
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
-import { commonStyles } from "@/constants/commonStyles";
-import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
+import { darkMainColor, lightMainColor } from "@/settings";
 import { setJobMessage } from "@/app/(redux)/jobSlice";
+import JobForm from "@/components/jobs/JobForm";
 
 
 interface Errors {
@@ -58,6 +52,8 @@ export default function JobCreate() {
         setIsEnabled(previousState => !previousState);
         if (!isEnabled) {
             setAddress(clientAddress())
+        } else {
+            setAddress(address)
         }
     };
 
@@ -103,14 +99,14 @@ export default function JobCreate() {
     };
 
     const clientAddress = () => {
-        let clientA = clients.find((clientA: { user: string; }) => clientA.user === client);
+        let clientA = clients.find((clientA: { name: string; }) => clientA.name === client);
         if (clientA !== undefined) {
             if ( clientA.address === "") {
                 return "no address saved"
             }
             return clientA.address
         } else {
-            return "no address submitted"
+            return "no client selected"
         }
     };
 
@@ -124,108 +120,25 @@ export default function JobCreate() {
             <ActivityIndicator style={styles.loading} color={color} size="large" />
             :
             <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
-                <ScrollView>
-                    {error ? (
-                        <Text style={styles.errorText}>{error}</Text>
-                    ) : null}
-                    <ThemedText type="subtitle">Client</ThemedText>
-                    <SelectDropdown
-                        data={clientsNames}
-                        onSelect={(selectedItem: string, index: number) => {
-                            setClient(selectedItem);
-                        }}
-                        renderButton={(selectedItem, isOpened) => {
-                            return (
-                            <View style={[styles.dropdownButtonStyle, {borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                                <ThemedText style={styles.dropdownButtonTxtStyle}>
-                                {(selectedItem ) || 'Select the client'}
-                                </ThemedText>
-                                <Ionicons name={isOpened ? 'chevron-up' : 'chevron-down'} size={26} color={darkTheme ? '#fff' : '#000'} />
-                            </View>
-                            );
-                        }}
-                        renderItem={(item, index, isSelected) => {
-                            return (
-                            <View style={{...styles.dropdownItemStyle, ...(isSelected && {backgroundColor: '#D2D9DF'})}}>
-                                <Text style={styles.dropdownItemTxtStyle}>{item}</Text>
-                            </View>
-                            );
-                        }}
-                        showsVerticalScrollIndicator={false}
-                        dropdownStyle={styles.dropdownMenuStyle}
-                        search={true}
-                        searchPlaceHolder={"Type to search"}
+                <ScrollView 
+                    keyboardShouldPersistTaps={'handled'}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                >
+                    <JobForm
+                        clientsNames={clientsNames}
+                        setClient={setClient}
+                        description={description}
+                        setDescription={setDescription}
+                        address={address}
+                        setAddress={setAddress}
+                        price={price}
+                        setPrice={setPrice}
+                        errors={errors}
+                        isEnabled={isEnabled}
+                        toggleSwitch={toggleSwitch}
+                        clientAddress={clientAddress}
+                        isUpdate={false}
                     />
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center'}}>
-                        <ThemedText style={[styles.label, {verticalAlign: 'middle'}]}>is a new client?</ThemedText>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, marginLeft: 5, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.push('(app)/(clients)/clientCreate')}>
-                            <ThemedText type="subtitle" style={{color: color}}>Add client</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-                    {errors.client ? (
-                        <Text style={styles.errorText}>{errors.client}</Text>
-                    ) : null}
-
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Description</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="text" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={description ? description : "Enter job's description"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={description}
-                            onChangeText={setDescription}
-                        />
-                    </View>
-                    {errors.description ? (
-                        <Text style={styles.errorText}>{errors.description}</Text>
-                    ) : null}
-
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    {isEnabled ?
-                    <ThemedText style={styles.label}>{clientAddress()}</ThemedText>
-                    :
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter job's address"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={address}
-                            onChangeText={setAddress}
-                        />
-                    </View>
-                    }
-                    {errors.address ? (
-                        <Text style={styles.errorText}>{errors.address}</Text>
-                    ) : null}
-
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center',}}>
-                        <Switch
-                            trackColor={{false: '#767577', true: color}}
-                            thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={toggleSwitch}
-                            value={isEnabled}
-                        />
-                        <ThemedText style={[styles.label, {flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', verticalAlign: 'middle'}]}>use client's address</ThemedText>
-                    </View>
-                    
-                    <ThemedText style={[commonStyles.text_action, {marginTop: 5}]} type="subtitle">Price</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter job's price"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={price}
-                            onChangeText={setPrice}
-                            keyboardType="numeric"
-                        />
-                    </View>
-                    {errors.price ? (
-                        <Text style={styles.errorText}>{errors.price}</Text>
-                    ) : null}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
@@ -263,18 +176,6 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: "bold",
     },
-    input: {
-      height: 40,
-      borderColor: "#ddd",
-      borderWidth: 1,
-      marginBottom: 5,
-      padding: 10,
-      borderRadius: 5,
-    },
-    errorText: {
-      color: "red",
-      marginBottom: 5,
-    },
     loading: {
         flex: 1,
         marginTop: 20,
@@ -290,52 +191,4 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderRightWidth: 1,
     },
-    headerText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        alignSelf: "center",
-    },
-    dropdownButtonStyle: {
-        height: 40,
-        borderBottomWidth: 1,
-        borderRadius: 5,
-        marginBottom: 5,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        color: '#fff',
-    },
-      dropdownButtonTxtStyle: {
-        flex: 1,
-        fontSize: 18,
-        fontWeight: '500',
-      },
-      dropdownButtonIconStyle: {
-        fontSize: 28,
-        marginRight: 8,
-        color: '#fff',
-      },
-      dropdownMenuStyle: {
-        borderRadius: 8,
-      },
-      dropdownItemStyle: {
-        width: '100%',
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 8,
-      },
-      dropdownItemTxtStyle: {
-        flex: 1,
-        fontSize: 18,
-        fontWeight: '500',
-        borderColor: "#ddd",
-        borderBottomWidth: 1,
-      },
-      dropdownItemIconStyle: {
-        fontSize: 28,
-        marginRight: 8,
-      },
 });

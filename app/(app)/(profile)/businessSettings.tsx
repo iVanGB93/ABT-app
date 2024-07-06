@@ -23,6 +23,8 @@ import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
 import { setBusiness } from "@/app/(redux)/settingSlice";
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { googleApiKey } from '@/private';
 
 
 interface Errors {
@@ -134,7 +136,10 @@ export default function businessSettings() {
             <ActivityIndicator style={styles.loading} size="large" />
             :
             <ThemedSecondaryView style={styles.form}>
-                <ScrollView>
+                <ScrollView 
+                    keyboardShouldPersistTaps={'handled'}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                >
                     {error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : null}
@@ -200,12 +205,37 @@ export default function businessSettings() {
                     <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's address"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={address}
-                            onChangeText={setAddress}
+                        <GooglePlacesAutocomplete
+                            placeholder={address ? address : "Business's address"}
+                            textInputProps={{
+                                placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
+                            }}
+                            onPress={(data, details = null) => {
+                                setAddress(data.description);
+                            }}
+                            query={{
+                                key: googleApiKey,
+                                language: 'en',
+                            }}
+                            styles={{
+                                textInputContainer: {
+                                    height: 26,
+                                },
+                                textInput: {
+                                    height: 26,
+                                    color: darkTheme ? '#fff' : '#000',
+                                    fontSize: 16,
+                                    backgroundColor: 'transparent'
+                                },
+                                predefinedPlacesDescription: {
+                                    color: darkTheme ? darkTtextColor: lightTextColor,
+                                },
+                            }}
+                            enablePoweredByContainer={false}
+                            disableScroll={true}
+                            listEmptyComponent={
+                                <ThemedText>No results, sorry.</ThemedText>
+                            }
                         />
                     </View>
                     {errors.address ? (

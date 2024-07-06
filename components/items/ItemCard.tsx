@@ -88,7 +88,7 @@ export default function ItemCard({image, id, name, description, amount, price, d
                 <ThemedText style={commonStylesCards.LabelText}>Price: ${price}</ThemedText>
                 { inDetail ?
                 <View style={[commonStylesCards.dataContainer, {justifyContent: 'space-evenly'}]}>
-                  <Pressable onPress={() => router.push('index')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
+                  <Pressable onPress={() => router.push('(app)/(items)/itemUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
                   <Pressable onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></Pressable>
                 </View>
                 : null}

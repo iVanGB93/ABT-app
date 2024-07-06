@@ -126,32 +126,34 @@ export default function JobCard({id, status, client, address, description, price
 
   return (
     <ThemedSecondaryView style={[commonStylesCards.card, {borderColor: color, shadowColor: darkTheme ? '#fff' : '#000'}]}>
-        <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
-            <ThemedText style={commonStylesCards.name}>
-            { inDetail ? 
-            <ThemedText style={commonStylesCards.name}>{statusIcon(status)} - {client}</ThemedText>
-            : 
-            description
-            }
-            </ThemedText>
-            <Pressable onPress={() => router.push('/(app)/(jobs)/jobUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
-        </View>
-        { inDetail ?
-        <View style={commonStylesCards.dataContainer}>
-            <ThemedText style={[commonStylesCards.LabelText, {fontSize: 20, marginTop: 5}]}>{description}</ThemedText>
-        </View>
-        : null }
+      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
+        <ThemedText style={commonStylesCards.name}>{description}</ThemedText>
+        <ThemedText style={commonStylesCards.name}>{statusIcon(status)}</ThemedText>
+        { isList ? null
+        : 
+        status !== 'finished' ?
+        <Pressable onPress={() => router.push('/(app)/(jobs)/jobUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></Pressable>
+        : null}
+      </View>
+      <View style={commonStylesCards.dataContainer}>
+          <ThemedText style={commonStylesCards.LabelText}>Client: </ThemedText>
+          <TouchableOpacity onPress={() => router.push('(app)/(clients)/clientDetails')}>
+            <ThemedText type='link'>{client}</ThemedText>
+          </TouchableOpacity>
+      </View>
         <View style={commonStylesCards.dataContainer}>
             <ThemedText style={commonStylesCards.LabelText}>Address: </ThemedText>
-            <Pressable onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}><ThemedText type='link'>{address}</ThemedText></Pressable>
+            <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
+              <ThemedText style={commonStylesCards.dataText} type='link'>{address}</ThemedText>
+            </TouchableOpacity>
         </View>
         <View style={commonStylesCards.dataContainer}>
             <ThemedText style={commonStylesCards.LabelText}>Price: </ThemedText>
-            <ThemedText>${price}</ThemedText>
+            <ThemedText style={commonStylesCards.dataText}>${price}</ThemedText>
         </View>
         <View style={commonStylesCards.dataContainer}>
             <ThemedText style={commonStylesCards.LabelText}>Date: </ThemedText>
-            <ThemedText>{formattedDate}</ThemedText>
+            <ThemedText style={commonStylesCards.dataText}>{formattedDate}</ThemedText>
         </View>
         { isList ? null
         :
@@ -173,11 +175,11 @@ export default function JobCard({id, status, client, address, description, price
           <View style={{flexDirection: 'column',}}>
             <View style={commonStylesCards.dataContainer}>
               { (status === 'finished') ?
-                (<ThemedText style={{color: color}}>Job finished</ThemedText>)
+                (<ThemedText style={{color: color}} type='subtitle'>Job finished</ThemedText>)
               :
-                <TouchableOpacity style={[commonStylesCards.button, {borderColor: 'red'}]} onPress={() => handleClose()}><ThemedText style={{color: 'red'}}>Close</ThemedText></TouchableOpacity>
+                <TouchableOpacity style={[commonStylesCards.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor, margin: 5}]} onPress={() => handleClose()}><ThemedText style={{color: 'red'}}>Close</ThemedText></TouchableOpacity>
               }
-              <TouchableOpacity style={[commonStylesCards.button, {borderColor: color}]} onPress={() => handleInvoice()}><ThemedText style={commonStylesCards.LabelText}>Invoice</ThemedText></TouchableOpacity>
+              <TouchableOpacity style={[commonStylesCards.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor, margin: 5}]} onPress={() => handleInvoice()}><ThemedText style={commonStylesCards.LabelText}>Invoice</ThemedText></TouchableOpacity>
             </View>
             <TouchableOpacity style={{alignSelf: 'flex-end', marginBottom: 0, marginTop: 10}} onPress={() => handleDelete()}><Ionicons name="trash" color='red' size={30} /></TouchableOpacity>
           </View>
@@ -199,12 +201,12 @@ export default function JobCard({id, status, client, address, description, price
             <ThemedText style={[commonStylesCards.name, {padding: 10}]}>Do you want to delete this job?</ThemedText>
             <View style={[commonStylesCards.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
               <TouchableOpacity
-                style={[commonStylesCards.button, {borderColor: color}]}
+                style={[commonStylesCards.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
                 onPress={() => setModalVisible(!modalVisible)}>
                 <ThemedText style={{color: color, textAlign: 'center'}}>Cancel</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[commonStylesCards.button, {borderColor: 'red'}]}
+                style={[commonStylesCards.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
                 onPress={() => deleteJob()}>
                 <ThemedText style={{color:'red', textAlign: 'center'}}>DELETE</ThemedText>
               </TouchableOpacity>
@@ -226,14 +228,14 @@ export default function JobCard({id, status, client, address, description, price
           :
           <ThemedSecondaryView style={[commonStylesCards.card, {padding: 10}]}>
             <ThemedText style={[commonStylesCards.name, {padding: 10, }]}>Did you finish this job?</ThemedText>
-            <View style={[commonStylesCards.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
+            <View style={[commonStylesCards.dataContainer, {padding: 5, justifyContent: 'space-evenly'}]}>
               <TouchableOpacity
-                style={[commonStylesCards.button, {borderColor: color}]}
+                style={[commonStylesCards.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
                 onPress={() => setModalVisibleFinish(!modalVisibleFinish)}>
                 <ThemedText style={{textAlign: 'center'}}>No</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[commonStylesCards.button, {borderColor: 'red'}]}
+                style={[commonStylesCards.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
                 onPress={() => closeJob()}>
                 <ThemedText style={{color:'red', textAlign: 'center'}}>Yes, close it</ThemedText>
               </TouchableOpacity>
@@ -254,11 +256,11 @@ export default function JobCard({id, status, client, address, description, price
               style={commonStylesCards.expandedImage}
             />
           </TouchableOpacity>
-          <Pressable
-          style={[commonStylesCards.button, {marginHorizontal: 5, flex: 1}]}
-          onPress={() => setIsBig(!isBig)}>
+          <TouchableOpacity
+            style={[commonStylesCards.button, {marginHorizontal: 5, flex: 1}]}
+            onPress={() => setIsBig(!isBig)}>
             <Text style={{color:'white', textAlign: 'center', fontSize: 20}}>Close</Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </Modal>
     </ThemedSecondaryView>

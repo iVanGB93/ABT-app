@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
-  Text,
   Platform,
   ActivityIndicator,
   Image,
@@ -14,16 +12,14 @@ import {
 import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 
 import axiosInstance from '@/axios';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { baseImageURL, darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings.js";
-import { ThemedView } from "@/components/ThemedView";
+import { baseImageURL, darkMainColor, lightMainColor } from "@/settings.js";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
-import { commonStyles } from "@/constants/commonStyles";
 import { ThemedText } from "@/components/ThemedText";
 import { setJobMessage } from "@/app/(redux)/jobSlice";
+import JobForm from "@/components/jobs/JobForm";
 
 
 interface Errors {
@@ -36,7 +32,7 @@ interface Errors {
 export default function JobUpdate() {
     const {color, darkTheme } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
-    const { job, jobs } = useSelector((state: RootState) => state.job);
+    const { job } = useSelector((state: RootState) => state.job);
     const [description, setDescription] = useState(job.description);
     const [address, setAddress] = useState(job.address);
     const [price, setPrice] = useState(job.price);
@@ -139,57 +135,26 @@ export default function JobUpdate() {
             <ActivityIndicator style={styles.loading} size="large" />
             :
             <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
-                <ScrollView>
-                    {error ? (
-                        <Text style={styles.errorText}>{error}</Text>
-                    ) : null}
+                <ScrollView 
+                    keyboardShouldPersistTaps={'handled'}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                >
                     <ThemedText style={[styles.label, {marginBottom: 5}]}>Job for {job.client}</ThemedText>
-                    <ThemedText style={[commonStyles.text_action, {marginTop: 5}]} type="subtitle">Description</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="text" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={description ? description : "Enter job's description"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={description}
-                            onChangeText={setDescription}
-                        />
-                    </View>
-                    {errors.description ? (
-                        <Text style={styles.errorText}>{errors.description}</Text>
-                    ) : null}
-
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter job's address"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={address}
-                            onChangeText={setAddress}
-                        />
-                    </View>
-                    {errors.address ? (
-                        <Text style={styles.errorText}>{errors.address}</Text>
-                    ) : null}
-                    
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Price</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={price ? price.toString() : "Enter job's price"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={price ? price.toString() : "0"}
-                            onChangeText={setPrice}
-                            keyboardType="numeric"
-                        />
-                    </View>
-                    {errors.price ? (
-                        <Text style={styles.errorText}>{errors.price}</Text>
-                    ) : null}
-                    
+                    <JobForm
+                        clientsNames={null}
+                        setClient={null}
+                        description={description}
+                        setDescription={setDescription}
+                        address={address}
+                        setAddress={setAddress}
+                        price={price}
+                        setPrice={setPrice}
+                        errors={errors}
+                        isEnabled={null}
+                        toggleSwitch={null}
+                        clientAddress={null}
+                        isUpdate={true}
+                    />
                     {image && <Image source={{ uri: image.uri }} style={styles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
@@ -236,18 +201,6 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: "bold",
     },
-    input: {
-      height: 40,
-      borderColor: "#ddd",
-      borderWidth: 1,
-      marginBottom: 5,
-      padding: 10,
-      borderRadius: 5,
-    },
-    errorText: {
-      color: "red",
-      marginBottom: 5,
-    },
     loading: {
         flex: 1,
         marginTop: 20,
@@ -269,11 +222,5 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderBottomWidth: 1,
         borderRightWidth: 1,
-    },
-    headerText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        alignSelf: "center",
-        marginTop: 5,
     },
 });
