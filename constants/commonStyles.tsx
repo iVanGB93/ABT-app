@@ -58,7 +58,7 @@ export const commonStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         height: 50,
-        width: 150,
+        width: 120,
         alignSelf: 'center',
         borderRadius: 10,
         borderBottomWidth: 1,

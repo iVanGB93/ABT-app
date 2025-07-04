@@ -17,7 +17,7 @@ import { RootState } from "@/app/(redux)/store";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
 import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
-import { googleApiKey } from '@/private';
+
 
 interface JobFormProps {
     clientsNames?: any;
@@ -126,7 +126,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
                         setAddress(data.description);
                     }}
                     query={{
-                        key: googleApiKey,
+                        key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
                         language: 'en',
                     }}
                     styles={{

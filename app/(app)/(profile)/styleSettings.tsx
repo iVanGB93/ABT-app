@@ -109,10 +109,10 @@ export default function Profile () {
             <ScrollView>
                 <ThemedSecondaryView style={styles.sectionContainer}>
                     <View style={styles.rowContainer}>
-                        { newLogo ?
-                        <Image source={{ uri: newLogo }} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
+                        { newLogo === '@/assets/images/logoDefault.png' ?
+                        <Image source={require('@/assets/images/logoDefault.png')} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
                         :
-                        <ThemedText type='subtitle'>Logo Image</ThemedText>
+                        <Image source={{ uri: newLogo }} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
                         //<Image source={require(businessLogo) } style={[styles.image, { borderColor: color, margin: 'auto' }]} />
                         }
                         <TouchableOpacity style={[commonStyles.button, {borderColor: color, height: 40, marginVertical: 'auto'}]} onPress={() => handleImage()}>

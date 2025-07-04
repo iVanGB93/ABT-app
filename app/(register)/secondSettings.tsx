@@ -9,29 +9,27 @@ import Toast from 'react-native-toast-message';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
 import { commonStyles } from '@/constants/commonStyles';
-import { authSetMessage } from './(redux)/authSlice';
+import { authSetMessage } from '../(redux)/authSlice';
 import axiosInstance from '@/axios';
-import { baseImageURL, darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '@/settings';
+import { baseImageURL, darkMainColor, darkSecondColor, darkThirdColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '@/settings';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import PhoneInput from 'react-native-phone-input';
 
 
 interface Errors {
-    newName?: string;
     address?: string;
     phone?: string;
-    businessLogo?: string;
 }
 
-export default function InitialSettings () {
+export default function SecondSettings () {
     const {token} = useSelector((state: RootState) => state.auth);
     const { authMessage, userName } = useSelector((state: RootState) => state.auth);
-    const { color, businessName, darkTheme, business } = useSelector((state: RootState) => state.settings);
-    const [newBusinessLogo, setNewBusinessLogo] = useState<any>(null);
+    const { color, businessName, darkTheme, businessLogo } = useSelector((state: RootState) => state.settings);
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
-    const [newName, setNewName] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [errors, setErrors] = useState<Errors>({});
     const router = useRouter();
@@ -62,10 +60,8 @@ export default function InitialSettings () {
 
     const validateForm = () => {
         let errors: Errors = {};
-        if (!newName) errors.newName = "Name is required!";
         if (!address) errors.address = "Address is required!";
         if (!phone) errors.phone = "Phone is required!";
-        if (!newBusinessLogo) errors.businessLogo = "Logo is required!";
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -74,15 +70,15 @@ export default function InitialSettings () {
         if (validateForm()) {
             setLoading(true);
             const formData = new FormData();
-            formData.append('business_name', newName);
+            formData.append('business_name', businessName);
             formData.append('phone', phone);
             formData.append('address', address);
-            if (newBusinessLogo !== null) {
-                const uriParts = newBusinessLogo.split('.');
+            if (businessLogo !== '@/assets/images/logoDefault.png') {
+                const uriParts = businessLogo.split('.');
                 const fileType = uriParts[uriParts.length - 1];
                 const fileName = `${userName}BusinessLogo.${fileType}`;
                 formData.append('business_logo', {
-                    uri: newBusinessLogo,
+                    uri: businessLogo,
                     name: fileName,
                     type: `image/${fileType}`,
                 } as unknown as Blob)
@@ -94,8 +90,6 @@ export default function InitialSettings () {
             }})
             .then(function(response) {
                 if (response.data) {
-                    dispatch(setBusinessName(newName));
-                    dispatch(setBusinessLogo(newBusinessLogo));
                     dispatch(setBusiness(response.data));
                     setLoading(false);
                     router.push('(app)/(clients)');
@@ -124,79 +118,79 @@ export default function InitialSettings () {
     return (
         <ThemedView style={commonStyles.container}>
             <View style={commonStyles.header}>
-                <Image style={commonStyles.image} source={require('../assets/images/logo.png')} />
-                <ThemedText type="title" style={commonStyles.text_header}>Let's define your business!</ThemedText>
+                { businessLogo === '@/assets/images/logoDefault.png' ? 
+                <Image style={commonStyles.image} source={require('@/assets/images/logoDefault.png')} />
+                :
+                <Image style={commonStyles.image} source={{uri: businessLogo}} />
+                }
+                <ThemedText type="title" style={[commonStyles.text_header, {textAlign: 'center'}]}>{businessName}</ThemedText>
             </View>
             <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color, flex: 4}]}>
                 {loading ?
                 <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
                 :
-                <ScrollView>
-                <ThemedText type="subtitle">Name</ThemedText>
-                <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                    <Ionicons name="business" color={darkTheme ? darkTtextColor: lightTextColor}/>
-                    <TextInput 
-                        autoFocus={false} 
-                        onChangeText={setNewName} 
-                        placeholder='Type your business name...'
-                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                        value={newName} 
-                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
-                    { newName !== 'Business Name' ?
-                    <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
-                    : null}
-                </View>
-                {errors.newName ? (
-                    <Text style={commonStyles.errorMsg}>{errors.newName}</Text>
-                ) : null}
+                <ScrollView 
+                    keyboardShouldPersistTaps={'handled'}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                >
                 <ThemedText type="subtitle">Address</ThemedText>
                 <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor}/>
-                    <TextInput 
-                        autoFocus={false} 
-                        onChangeText={setAddress} 
-                        placeholder='Type your business address...'
-                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                        value={address} 
-                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
-                    { newName !== 'Business Name' ?
-                    <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
-                    : null}
+                    <GooglePlacesAutocomplete
+                        placeholder={address ? address : "Business's address"}
+                        textInputProps={{
+                            placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
+                        }}
+                        onPress={(data, details = null) => {
+                            setAddress(data.description);
+                        }}
+                        query={{
+                            key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
+                            language: 'en',
+                        }}
+                        styles={{
+                            textInputContainer: {
+                                height: 26,
+                            },
+                            textInput: {
+                                height: 26,
+                                color: darkTheme ? '#fff' : '#000',
+                                fontSize: 16,
+                                backgroundColor: 'transparent'
+                            },
+                            predefinedPlacesDescription: {
+                                color: darkTheme ? darkTtextColor: lightTextColor,
+                            },
+                        }}
+                        enablePoweredByContainer={false}
+                        disableScroll={true}
+                        listEmptyComponent={
+                            <ThemedText>No results, sorry.</ThemedText>
+                        }
+                    />
                 </View>
                 {errors.address ? (
                     <Text style={commonStyles.errorMsg}>{errors.address}</Text>
                 ) : null}
-                <ThemedText type="subtitle">Phone</ThemedText>
+                <ThemedText type="subtitle" style={{marginTop: 50}}>Phone</ThemedText>
                 <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor}/>
-                    <TextInput 
-                        autoFocus={false}
-                        onChangeText={setPhone} 
-                        placeholder='Type your business phone...'
-                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                        value={phone} 
-                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
-                    { newName !== 'Business Name' ?
-                    <Ionicons name="checkmark-circle-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
-                    : null}
+                    <PhoneInput
+                        initialCountry="us"
+                        style={commonStyles.textInput}
+                        textProps={{placeholder: "Phone number"}}
+                        autoFormat={true}
+                        textStyle={{ color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 18 }}
+                        flagStyle={{ borderWidth: 0, marginHorizontal: 5 }}
+                        onChangePhoneNumber={(phoneNumber) => setPhone(phoneNumber)}
+                        initialValue={phone ? phone : ""}
+                    />
                 </View>
                 {errors.phone ? (
                     <Text style={commonStyles.errorMsg}>{errors.phone}</Text>
                 ) : null}
-                <ThemedText type="subtitle">Logo</ThemedText>
-                {errors.businessLogo ? (
-                    <Text style={commonStyles.errorMsg}>{errors.businessLogo}</Text>
-                ) : null}
-                {newBusinessLogo ? 
-                <Image source={{ uri : newBusinessLogo }} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />
-                :
-                <Image source={require('../assets/images/logoDefault.png')} style={{ width: 100, height: 100, alignSelf: 'center', borderRadius: 15 }} />
-                }
                 
-                <TouchableOpacity style={[commonStyles.button, {borderColor: color, marginBottom: 20, marginTop: 10, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
-                    <ThemedText type="subtitle" style={{color: color}}>Select Logo</ThemedText>
-                </TouchableOpacity>
-                <ThemedText type='subtitle'>Change color</ThemedText>
+                <ThemedText type='subtitle' style={{marginTop: 50}}>Change color</ThemedText>
                 <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <View style={commonStyles.colorsContainer}>
                         <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#009d93'}]} onPress={() => dispatch(setColor('#009d93'))}></TouchableOpacity>
@@ -205,10 +199,15 @@ export default function InitialSettings () {
                         <TouchableOpacity style={[commonStyles.color, {backgroundColor: '#d02860'}]} onPress={() => dispatch(setColor('#d02860'))}></TouchableOpacity>
                     </View>
                 </View>
-                <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 30, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={handleSubmit}>
+                <View style={{flexDirection: 'row', justifyContent: 'space-evenly'}}>
+                <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 30, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={router.back}>
+                    <ThemedText type="subtitle" style={{color: color}}>Back</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 30, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={handleSubmit}>
                     <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                 </TouchableOpacity>
-                    <ThemedText style={{ marginTop: 60, textAlign: 'center' }}>you can change this settings later</ThemedText>
+                </View>
+                <ThemedText style={{ marginTop: 60, textAlign: 'center' }}>you can change this settings later</ThemedText>
                 </ScrollView>
                 }
             </View>

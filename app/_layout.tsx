@@ -22,8 +22,7 @@ export default function RootLayout() {
           }}
           >
           <Stack.Screen name="index" />
-          <Stack.Screen name="register" />
-          <Stack.Screen name="initialSettings" />
+          <Stack.Screen name="(register)" />
           <Stack.Screen name="(app)" />
           <Stack.Screen name="+not-found" />
           </Stack>

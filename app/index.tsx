@@ -14,7 +14,7 @@ import { authSuccess } from "./(redux)/authSlice";
 import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
-import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
+import { darkMainColor, darkSecondColor, darkThirdColor, darkTtextColor, darkTtextSecondColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
 import { setDarkTheme } from "./(redux)/settingSlice";
 
 
@@ -103,12 +103,12 @@ export default function Login() {
         <ScrollView>       
           <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-            <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} size={18}/>
             <TextInput 
               onChangeText={setUsername}
               value={username}
               placeholder='type your username...'
-              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              placeholderTextColor={darkTheme ? darkTtextSecondColor: lightTextColor}
               style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
             { username ?
             <Ionicons name="checkmark-circle-outline" color={color} />
@@ -119,20 +119,20 @@ export default function Login() {
           ) : null}
           <ThemedText style={commonStyles.text_action} type="subtitle">Password</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-            <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} size={18}/>
             <TextInput 
               onChangeText={setPassword}
               value={password}
               placeholder='type your password...' 
-              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              placeholderTextColor={darkTheme ? darkTtextSecondColor: lightTextColor}
               secureTextEntry={secureTextEntry ? true : false} 
               style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'
               />
             <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
               {secureTextEntry ? 
-              <Ionicons size={15} name="eye-off-outline" color={darkTheme ? darkTtextColor: lightTextColor} /> 
+              <Ionicons size={20} name="eye-off-outline" color={darkTheme ? darkTtextColor: lightTextColor} /> 
               : 
-              <Ionicons size={15} name="eye-outline" color={darkTheme ? darkTtextColor: lightTextColor} />}
+              <Ionicons size={20} name="eye-outline" color={darkTheme ? darkTtextColor: lightTextColor} />}
             </TouchableOpacity>
           </View>
           {errors.password ? (
@@ -142,12 +142,12 @@ export default function Login() {
           <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
           : 
           <>
-          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={handleSubmit}>
-            <ThemedText type="title" style={{color: color}}>Login</ThemedText> 
+          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={handleSubmit}>
+            <ThemedText type="subtitle" style={{color: color}}>Login</ThemedText> 
           </TouchableOpacity>
           <View style={commonStyles.linkSection}>
             <ThemedText type="subtitle">I'm new, </ThemedText>
-            <TouchableOpacity onPress={() => router.push('register')}>
+            <TouchableOpacity onPress={() => router.push('(register)')}>
               <ThemedText type="subtitle" style={{color: color}}> create account!!</ThemedText>
             </TouchableOpacity>
           </View>

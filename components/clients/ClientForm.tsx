@@ -14,7 +14,6 @@ import PhoneInput from 'react-native-phone-input';
 import { ThemedText } from "@/components/ThemedText";
 import { darkTtextColor, lightTextColor } from "@/settings";
 import { commonStyles } from "@/constants/commonStyles";
-import { googleApiKey } from '@/private';
 
 
 interface ClientFormProps {
@@ -107,7 +106,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                         setAddress(data.description);
                     }}
                     query={{
-                        key: googleApiKey,
+                        key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
                         language: 'en',
                     }}
                     styles={{

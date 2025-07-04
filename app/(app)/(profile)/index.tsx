@@ -132,7 +132,7 @@ export default function Profile () {
             :
             <ScrollView>
                 <View style={styles.rowContainerLast}>
-                    <Image source={{ uri: baseImageURL + business.image }} style={[styles.image, { borderColor: color }]} />
+                    <Image source={{ uri: baseImageURL + business.business_logo }} style={[styles.image, { borderColor: color }]} />
                     <View style={styles.info}>
                         <ThemedText type='title'>{userName}</ThemedText>
                         <ThemedText type='subtitle'>{business.business_name}</ThemedText>
@@ -151,7 +151,7 @@ export default function Profile () {
                         <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="call-outline"/> Phone</Text>
                         <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.phone ? business.phone : 'no phone saved'}</Text>
                     </View>
-                    <View style={styles.rowContainerLast}>
+                    <View style={{ overflow: 'scroll'}}>
                         <Text style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]}><Ionicons style={[styles.optionText, {color:darkTheme ? darkTtextColor: lightTextColor}]} name="location-outline"/> Address</Text>
                         <Text style={[styles.optionTextRight, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{business.address ? business.address : 'no address saved'}</Text>
                     </View>
@@ -258,9 +258,9 @@ const styles = StyleSheet.create ({
         fontSize: 25,
     },
     optionText: {
-        fontSize: 22,
+        fontSize: 20,
     },
     optionTextRight: {
-        fontSize: 18,
+        fontSize: 16,
     },
 });

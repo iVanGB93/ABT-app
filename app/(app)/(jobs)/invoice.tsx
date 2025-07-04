@@ -11,7 +11,7 @@ import axiosInstance from '@/axios';
 import { setInvoice, setCharges } from '@/app/(redux)/jobSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { darkSecondColor, lightSecondColor, darkMainColor } from '@/settings';
+import { darkSecondColor, lightSecondColor, darkMainColor, darkThirdColor, lightMainColor } from '@/settings';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 
@@ -62,65 +62,154 @@ export default function Invoice() {
         <html>
             <head>
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .header { display: flex; justify-content: space-between; }
-                .invoice-title { font-size: 24px; font-weight: bold; }
-                .invoice-number { font-size: 20px; font-weight: bold; }
-                .business-section { text-align: end; }
-                .business-details { font-size: 16px; }
-                .details { display: flex; justify-content: space-between; margin-top: 20px; }
-                .details p { margin: 5px 0; }
-                .table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-                .table th, .table td { border: 1px solid #ddd; padding: 8px; }
-                .table th { background-color: #f2f2f2; text-align: left; }
-                .footer { margin-top: 20px; text-align: end; }
-                hr {border: none;border-top: 2px solid black;margin: 20px 0;}
-                a {text-decoration: none; border-radius: 5px; background-color: blue; padding: 10px; color: #ddd;}
+                body {
+                    font-family: 'Arial', sans-serif;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                    color: #333;
+                    max-width: 1024px;
+                    margin: auto;
+                }
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background-color: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                .invoice-title {
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 10px;
+                    text-align: right;
+                }
+                .invoice-number {
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin: 5px;
+                    text-align: right;
+                }
+                .business-section {
+                    text-align: right;
+                }
+                .business-details {
+                    font-size: 16px;
+                    margin: 1px;
+                    text-align: right;
+                }
+                .details {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 10px;
+                    background-color: #fff;
+                    padding: 20px;
+                    margin-bottom: 10px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                .details p {
+                    margin: 5px 0;
+                    text-align: right;
+                }
+                .table-div {
+                    background-color: #fff;
+                    padding: 20px;
+                    min-height: 300px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                .table {
+                    width: 80%;
+                    margin: auto;
+                    border-collapse: collapse;
+                    background-color: #fff;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                .table th, .table td {
+                    padding: 12px;
+                }
+                .table th {
+                    background-color: #f7f7f7;
+                    color: #333;
+                    font-weight: bold;
+                    text-align: center;
+                    border-bottom: 1px solid #1e1e1e;
+                }
+                .table tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                    border-bottom: 1px solid #1e1e1e;
+                }
+                .right-td {
+                    text-align: right;
+                }
+                .footer {
+                    margin-top: 10px;
+                    text-align: right;
+                    background-color: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                .footer p {
+                    margin: 10px;
+                }
+                a {
+                    text-decoration: none;
+                    border-radius: 5px;
+                    background-color: #007bff;
+                    padding: 10px 20px;
+                    margin: 10px;
+                    color: #fff;
+                    font-weight: bold;
+                    transition: background-color 0.3s ease;
+                }
             </style>
             </head>
             <body>
-            <div class="header">
-                <img src=${base64Image} alt="logo-image" style="width: 150px; height: 150px"/>
-                <div>
-                    <p class="invoice-title">${businessName}</p>
-                    <p class="business-details">${business.address}</p>
-                    <p class="business-details">${business.phone}</p>
-                    <p class="business-details">${business.email}</p>
-                    <p class="invoice-number">Invoice #${invoice.number}</p>
-                    <p class="business-details">${formatDate(new Date(invoice.date))}</p>
+                <div class="header">
+                    <img src=${base64Image} alt="logo-image" style="width: 150px; height: 150px"/>
+                    <div>
+                        <p class="invoice-title">${businessName}</p>
+                        <p class="business-details">${business.address}</p>
+                        <p class="business-details">${business.phone}</p>
+                        <p class="business-details">${business.email}</p>
+                        <p class="invoice-number">Invoice #${invoice.number}</p>
+                        <p class="business-details">${formatDate(new Date(invoice.date))}</p>
+                    </div>
                 </div>
-            </div>
-            <hr>
-            <div class="details">
-                <p><strong>Bill to:</strong></p>
-                <div>
-                    <p>${client.name}</p>
-                    <p>${client.email}</p>
-                    <p>${client.phone}</p>
-                    <p>${client.address}</p>
+                <div class="details">
+                    <p><strong>Bill to:</strong></p>
+                    <div>
+                        <p>${client.name}</p>
+                        <p>${client.email}</p>
+                        <p>${client.phone}</p>
+                        <p>${client.address}</p>
+                    </div>
                 </div>
-            </div>
-            <table class="table">
-                <tr>
-                <th>Description</th>
-                <th>Amount</th>
-                </tr>
-                ${charges.map((item: { description: any; amount: any; }) => `
-                <tr>
-                    <td>${item.description}</td>
-                    <td>$ ${item.amount}</td>
-                </tr>
-                `).join('')}
-            </table>
-            <hr>
-            <div class="footer">
-                <p><strong>Total:</strong> $ ${invoice.total}</p>
-                <p><strong>PAID:</strong> $ ${invoice.paid}</p>
-                <p><strong>Balance Due:</strong> $ ${invoice.due}</p>
-            </div>
-            <div class="footer">
-                <a href="https://abt.qbared.com/jobs/invoice/${invoice.number}/">Pay Now</a>
-            </div>
+                <div class="table-div">
+                    <table class="table">
+                        <tr>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                        ${charges.map((item: { description: any; amount: any; }) => `
+                        <tr>
+                            <td>${item.description}</td>
+                            <td class="right-td">$ ${item.amount}</td>
+                        </tr>
+                        `).join('')}
+                    </table>
+                </div>
+                <div class="footer">
+                    <p><strong>Total:</strong> $ ${invoice.total}</p>
+                    <p><strong>PAID:</strong> $ ${invoice.paid}</p>
+                    <p><strong>Balance Due:</strong> $ ${invoice.due}</p>
+                    <a href="https://abt.qbared.com/jobs/invoice/${invoice.number}/">Pay Now</a>
+                </div>
             </body>
         </html>
     `;
@@ -249,11 +338,11 @@ export default function Invoice() {
                         { invoice.closed ?
                         <Button  title='Closed'/>
                         :
-                        <TouchableOpacity style={[styles.button, {borderColor: color, margin: 'auto'}]} onPress={() => router.push('invoiceUpdate')}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, margin: 'auto', backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => router.push('invoiceUpdate')}>
                             <ThemedText type="subtitle" style={{color: color}}>Change</ThemedText>
                         </TouchableOpacity>
                         }
-                        <TouchableOpacity style={[styles.button, {borderColor: color, width: 120, margin: 'auto'}]} onPress={() => createAndSendInvoice()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: color, width: 120, margin: 'auto', backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => createAndSendInvoice()}>
                         <ThemedText type="subtitle" style={{color: color}}>Send Invoice</ThemedText>
                         </TouchableOpacity>
                     </View>

@@ -2,28 +2,26 @@ import React, {useState, useEffect} from 'react';
 import { Text, View, TouchableOpacity, TextInput, ActivityIndicator, ScrollView, Image } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from 'expo-router';
-import { useAppDispatch, RootState } from './(redux)/store';
+import { useAppDispatch, RootState } from '../(redux)/store';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
-import { authSetMessage, authSuccess } from './(redux)/authSlice';
+import { authSetMessage, authSuccess, setCodeAndEmail } from '../(redux)/authSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
+import { darkMainColor, darkSecondColor, darkThirdColor, darkTtextColor, darkTtextSecondColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
 
 interface Errors {
   username?: string;
   password?: string;
-  email?: string;
 }
 
 export default function Register() {
-  const {token} = useSelector((state: RootState) => state.auth);
+  const {token, email} = useSelector((state: RootState) => state.auth);
   const {color, darkTheme} = useSelector((state: RootState) => state.settings);
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -43,7 +41,6 @@ export default function Register() {
     let errors: Errors = {};
     if (!username) errors.username = "Username is required!";
     if (password.length < 8 ) errors.password = "Password must be at least 8 characters!";
-    if (!email) {errors.email = "Email is required!"} else if (!/\S+@\S+\.\S+/.test(email)) {errors.email = "Email is invalid!"};
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -79,10 +76,11 @@ export default function Register() {
     if (validateForm()) {
       setLoading(true);
       await axiosInstance
-      .post("user/register/", {username: username, password: password, email: email})
+      .post("user/register/", {username: username, password: password, email: email, action: 'new'})
       .then(function(response) {
         if (response.status === 201) {
           dispatch(authSetMessage("Account created!!!"));
+          dispatch(setCodeAndEmail({code: null, email: null}));
           loginUser();
         } 
         if (response.status === 203) {
@@ -107,19 +105,20 @@ export default function Register() {
   return (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Image style={commonStyles.image} source={require('../assets/images/logo.png')} />
-        <ThemedText type="title"  style={commonStyles.text_header}>Hello, please register!</ThemedText>
+        <Image style={commonStyles.image} source={require('../../assets/images/logo.png')} />
+        <ThemedText type="title"  style={commonStyles.text_header}>Finish registering!</ThemedText>
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
         <ScrollView>  
+          <ThemedText style={commonStyles.text_action} type="subtitle">Set your user and password</ThemedText>
           <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-            <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} size={18}/>
             <TextInput 
               onChangeText={setUsername} 
               placeholder='type your username...' 
-              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              placeholderTextColor={darkTheme ? darkTtextSecondColor: lightTextColor}
               style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'/>
             { username ?
             <Ionicons name="checkmark-circle-outline" color={color} />
@@ -128,37 +127,21 @@ export default function Register() {
           {errors.username ? (
               <Text style={commonStyles.errorMsg}>{errors.username}</Text>
           ) : null}
-          <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
-          <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-            <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
-            <TextInput 
-              onChangeText={setEmail} 
-              placeholder='type your email...' 
-              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-              style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'
-              />
-            { email ?
-            <Ionicons name="checkmark-circle-outline" color={color}/>
-            : null}
-          </View>
-          {errors.email ? (
-              <Text style={commonStyles.errorMsg}>{errors.email}</Text>
-          ) : null}
           <ThemedText style={commonStyles.text_action} type="subtitle">Password</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-            <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} />
+            <Ionicons name="lock-closed" color={darkTheme ? darkTtextColor: lightTextColor} size={18} />
             <TextInput 
               onChangeText={setPassword} 
               placeholder='type your password...' 
-              placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+              placeholderTextColor={darkTheme ? darkTtextSecondColor: lightTextColor}
               secureTextEntry={secureTextEntry ? true : false} 
               style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]} autoCapitalize='none'
               />
             <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
               {secureTextEntry ? 
-                <Ionicons size={15} name="eye-off-outline" color={darkTheme ? darkTtextColor: lightTextColor} /> 
+                <Ionicons size={20} name="eye-off-outline" color={darkTheme ? darkTtextColor: lightTextColor} /> 
                 : 
-                <Ionicons size={15} name="eye-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
+                <Ionicons size={20} name="eye-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
               }
             </TouchableOpacity>
           </View>
@@ -169,11 +152,11 @@ export default function Register() {
           <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
           :
           <>
-          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={handleSubmit}>
-            <ThemedText type="subtitle" style={{color: color}}>Register</ThemedText> 
+          <TouchableOpacity style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={handleSubmit}>
+            <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
           </TouchableOpacity>
           <View style={commonStyles.linkSection}>
-            <ThemedText type="subtitle">Go to </ThemedText>
+            <ThemedText type="subtitle">Cancel and </ThemedText>
             <TouchableOpacity
               onPress={() => router.push('/')}>
               <ThemedText type="subtitle" style={{color: color}}>Login!!</ThemedText>

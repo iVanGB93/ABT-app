@@ -24,7 +24,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
 import { setBusiness } from "@/app/(redux)/settingSlice";
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { googleApiKey } from '@/private';
+import PhoneInput from 'react-native-phone-input';
 
 
 interface Errors {
@@ -174,12 +174,15 @@ export default function businessSettings() {
                     <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's phone"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={phone}
-                            onChangeText={setPhone}
+                        <PhoneInput
+                            initialCountry="us"
+                            style={commonStyles.textInput}
+                            textProps={{placeholder: "Phone number"}}
+                            autoFormat={true}
+                            textStyle={{ color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 18 }}
+                            flagStyle={{ borderWidth: 0, marginHorizontal: 5 }}
+                            onChangePhoneNumber={(phoneNumber) => setPhone(phoneNumber)}
+                            initialValue={phone ? phone : ""}
                         />
                     </View>
                     {errors.phone ? (
@@ -214,7 +217,7 @@ export default function businessSettings() {
                                 setAddress(data.description);
                             }}
                             query={{
-                                key: googleApiKey,
+                                key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
                                 language: 'en',
                             }}
                             styles={{

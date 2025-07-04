@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs, Redirect } from 'expo-router';
+import { Tabs, Redirect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
@@ -9,9 +9,13 @@ import { darkSecondColor, lightSecondColor } from '@/settings';
 
 export default function TabLayout() {
   const token = useSelector((state:RootState) => state.auth.token);
-  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
+  const {color, darkTheme, businessName} = useSelector((state:RootState) => state.settings);
+  const router = useRouter()
   if (!token) {
     return <Redirect href="/" />;
+  }
+  if (businessName === 'Business Name') {
+    return <Redirect href="(register)/initialSettings" />;
   }
   return (
     <>

@@ -25,7 +25,7 @@ import { setInvoice } from "@/app/(redux)/jobSlice";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
-import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
+import { darkMainColor, darkThirdColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
 
 
 interface Errors {
@@ -138,34 +138,35 @@ export default function InvoiceCreate() {
                 ListEmptyComponent={<ThemedText style={[styles.label, {marginBottom: 5}]}>No charges added yet</ThemedText>}
                 ListFooterComponent={<View style={{ height: 10, borderTopColor: 'white', borderTopWidth: 1}} />}
                 />
-                <TouchableOpacity style={[styles.button, {borderColor: color, alignSelf: 'center'}]} onPress={() => setModalVisible(true)}>
+                <TouchableOpacity style={[styles.button, {borderColor: color, alignSelf: 'center', backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => setModalVisible(true)}>
                     <ThemedText type="subtitle" style={{color: color}}>+ Charge</ThemedText>
                 </TouchableOpacity>
                 <View style={[commonStyles.action, {justifyContent: 'space-between'}]}>
                     <ThemedText style={[commonStyles.text_action, {marginTop: 0}]} type="subtitle">Price</ThemedText>
                     <ThemedText style={styles.label}>${price}</ThemedText>
                 </View>
-                <ThemedText style={commonStyles.text_action} type="subtitle">Paid</ThemedText>
-                <View style={commonStyles.action}>
-                    <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor: lightTextColor} />
-                    <TextInput
-                        style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                        placeholder="Enter amount paid"
-                        placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                        value={paid}
-                        onChangeText={setPaid}
-                        keyboardType="numeric"
-                    />
+                <View style={[commonStyles.action, {justifyContent: 'space-between'}]}>
+                    <ThemedText style={[commonStyles.text_action, {marginTop: 0}]} type="subtitle">Paid</ThemedText>
+                    <View style={styles.label}>
+                        <TextInput
+                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
+                            placeholder="Enter amount paid"
+                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
+                            value={paid}
+                            onChangeText={setPaid}
+                            keyboardType="numeric"
+                        />
+                    </View>
                 </View>
                 {errors.paid ? (
                     <Text style={styles.errorText}>{errors.paid}</Text>
                 ) : null}
                 <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                    <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
+                    <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => handleSubmit()}>
                         <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => router.back()}>
-                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                    <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => router.back()}>
+                        <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                     </TouchableOpacity>
                 </View>
                 <Modal
@@ -208,12 +209,12 @@ export default function InvoiceCreate() {
                             ) : null}
                             <View style={[styles.dataContainer, {padding: 10, justifyContent: 'space-evenly'}]}>
                             <TouchableOpacity
-                                style={[styles.button, {borderColor: color, marginHorizontal: 5, flex: 1}]}
+                                style={[styles.button, {borderColor: color, marginHorizontal: 5, flex: 1, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]}
                                 onPress={() => handleCharge()}>
                                 <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[[styles.button, {borderColor: 'red', marginHorizontal: 5, flex: 1}]]}
+                                style={[[styles.button, {borderColor: 'red', marginHorizontal: 5, flex: 1, backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]]}
                                 onPress={() => setModalVisible(!modalVisible)}>
                                 <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                             </TouchableOpacity>
