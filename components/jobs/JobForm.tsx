@@ -126,7 +126,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
                         setAddress(data.description);
                     }}
                     query={{
-                        key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
+                        key: '',
                         language: 'en',
                     }}
                     styles={{
