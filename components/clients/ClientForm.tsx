@@ -108,7 +108,8 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                         setAddress(data.description);
                     }}
                     query={{
-                        key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
+
+                        key: GOOGLE_PLACES_API_KEY,
                         language: 'en',
                     }}
                     fetchDetails={true}

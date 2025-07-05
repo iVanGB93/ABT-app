@@ -1,5 +1,5 @@
 
-export const production = false;
+export const production = true;
 
 let baseURL;
 let baseImageURL;
