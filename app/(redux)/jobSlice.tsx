@@ -1,6 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 
-
 export interface JobState {
     jobLoading: boolean;
     job: any;
@@ -55,7 +54,7 @@ export const jobSlice = createSlice({
     }
 });
 
-
 export const { setJobMessage, setJob, setJobs, jobFail, setInvoice, setCharges } = jobSlice.actions;
 
 export const jobReducer = jobSlice.reducer;
+export default jobSlice.reducer;

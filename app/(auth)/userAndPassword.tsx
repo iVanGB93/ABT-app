@@ -33,7 +33,7 @@ export default function Register() {
 
   useEffect(() => {
     if ( token) {
-        router.push('(app)/(clients)/')
+        router.push('./(app)/(clients)/')
     };
   }, [token]);
 
@@ -55,7 +55,7 @@ export default function Register() {
         dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
         setAlertVisible(false);
         setLoading(false);
-        router.push('initialSettings');
+        router.push('/initialSettings');
       } else {
         dispatch(authSetMessage("Account created but error loggin in."));
         setAlertVisible(false);
@@ -111,7 +111,7 @@ export default function Register() {
       </View>     
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
         <ScrollView>  
-          <ThemedText style={commonStyles.text_action} type="subtitle">Set your user and password</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">Set your username and password</ThemedText>
           <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} size={18}/>

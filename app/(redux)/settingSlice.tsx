@@ -1,6 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 
-
 export interface SettingState {
     color: string;
     darkTheme: boolean,
@@ -47,3 +46,4 @@ export const settingSlice = createSlice({
 export const {setBusiness, setBusinessName, setBusinessLogo, setColor, setDarkTheme, setMessage} = settingSlice.actions;
 
 export const settingReducer = settingSlice.reducer;
+export default settingSlice.reducer;

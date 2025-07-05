@@ -9,13 +9,9 @@ import { darkSecondColor, lightSecondColor } from '@/settings';
 
 export default function TabLayout() {
   const token = useSelector((state:RootState) => state.auth.token);
-  const {color, darkTheme, businessName} = useSelector((state:RootState) => state.settings);
-  const router = useRouter()
+  const {color, darkTheme } = useSelector((state:RootState) => state.settings);
   if (!token) {
     return <Redirect href="/" />;
-  }
-  if (businessName === 'Business Name') {
-    return <Redirect href="(register)/initialSettings" />;
   }
   return (
     <>
@@ -48,6 +44,14 @@ export default function TabLayout() {
           title: 'Items',
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="briefcase" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="(business)"
+        options={{
+          title: 'Business',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <FontAwesome size={28} name="building" color={color} />,
         }}
       />
       <Tabs.Screen

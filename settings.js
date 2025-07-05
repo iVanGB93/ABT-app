@@ -1,10 +1,18 @@
-//export const baseURL = 'http://192.168.1.137:8000/api/';
 
-export const baseURL = 'https://abt.qbared.com/api/';
+export const production = false;
 
-//export const baseImageURL = 'http://192.168.1.137:8000';
+let baseURL;
+let baseImageURL;
 
-export const baseImageURL = 'https://abt.qbared.com';
+if (production) {
+    baseURL = 'https://abt.qbared.com/api/';
+    baseImageURL = 'https://abt.qbared.com';
+} else {
+    baseURL = 'http://172.20.6.179:8000/api/';
+    baseImageURL = 'http://172.20.6.179:8000';
+}
+
+export { baseURL, baseImageURL };
 
 export const darkMainColor = '#000000';
 export const darkSecondColor = '#1e1e1e';

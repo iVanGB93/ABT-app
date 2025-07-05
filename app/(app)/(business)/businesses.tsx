@@ -8,40 +8,36 @@ import Toast from 'react-native-toast-message';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
-import { clientSetMessage, setClient, setClients } from "@/app/(redux)/clientSlice";
-import ClientCard from '@/components/clients/ClientCard';
+import { businessSetMessage, setBusiness, setBusinesses } from "@/app/(redux)/businessSlice";
 import axiosInstance from '@/axios';
 import { setMessage } from '@/app/(redux)/settingSlice';
+import BusinessCard from '@/components/business/BusinessCard';
 
 
-export default function Clients() {
+export default function Businesses() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
-  const {clients, clientMessage} = useSelector((state: RootState) => state.client);
-  const { business } = useSelector((state: RootState) => state.business);
+  const {businesses, businessMessage} = useSelector((state: RootState) => state.business);
   const [isLoading, setIsLoading] = useState(false);
   const [ error, setError ] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const getClients = async() => {
+  const getBusinesses = async() => {
     setIsLoading(true);
     await axiosInstance
-    .get(`clients/${userName}/`)
+    .get(`business/${userName}/`)
     .then(function(response) {
         if (response.data) {
-          let clients = Array.isArray(response.data)
-          ? response.data.filter((clients) => clients.business === business.id)
-          : [];
-          dispatch(setClients(clients));
+          dispatch(setBusinesses(response.data));
           setIsLoading(false);
         } else {
-          dispatch(clientSetMessage(response.data.message));
+          dispatch(businessSetMessage(response.data.message));
           setIsLoading(false);
         }
     })
     .catch(function(error) {
-        console.error('Error fetching clients:', error);
+        console.error('Error fetching business:', error);
         if (typeof error.response === 'undefined') {
           setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
           setIsLoading(false);
@@ -51,15 +47,15 @@ export default function Clients() {
             dispatch(setMessage('Unauthorized, please login againg'))
             router.push('/');
           } else {
-            setError("Error getting your clients.");
+            setError("Error getting your businesses.");
             setIsLoading(false);
           }
         };
     });
   };
   
-  const fetchClients = () => {
-    getClients();
+  const fetchBusinesses = () => {
+    getBusinesses();
     /* if (clients.length !== 0) {
         console.log("SAME CLIENTS");
     } else {
@@ -68,21 +64,21 @@ export default function Clients() {
   };
   
   useEffect(() => {
-    if ( clientMessage) {
+    if ( businessMessage) {
       Toast.show({
           type: 'success',
           text1: 'Success',
-          text2: clientMessage
+          text2: businessMessage
       });
-      dispatch(clientSetMessage(null))
+      dispatch(businessSetMessage(null))
     };
-    fetchClients();
+    fetchBusinesses();
   }, []);
 
   const handlePressable = (id: string) => {
-    let client = clients.find((client: { id: string; }) => client.id === id);
-    dispatch(setClient(client));
-    router.push('/(app)/(clients)/clientDetails');
+    let business = businesses.find((business: { id: string; }) => business.id === id);
+    dispatch(setBusiness(business));
+    router.navigate('/(app)/(clients)');
   };
 
   return (
@@ -90,7 +86,7 @@ export default function Clients() {
       {error ?
       <>
         <ThemedText>{error}</ThemedText>
-        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchClients()}>
+        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchBusinesses()}>
         <ThemedText>Try againg</ThemedText>
         </TouchableOpacity>
       </>
@@ -100,27 +96,27 @@ export default function Clients() {
       :
       <>
       <FlatList
-        data={clients}
+        data={businesses}
         renderItem={({ item }) => {
           return (
             <TouchableOpacity onPress={() => handlePressable(item.id)}>
-              <ClientCard id={item.id} name={item.name} last_name={item.last_name} address={item.address} phone={item.phone} email={item.email} image={item.image}/>
+              <BusinessCard id={item.id} name={item.name} description={item.description} address={item.address} phone={item.phone} email={item.email} logo={item.logo} owners={item.owners} website={item.website} created_at={item.created_at} updated_at={item.updated_at}/>
             </TouchableOpacity>
           );
         }}
-        ItemSeparatorComponent={<View style={{ height: 10}}/>}
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientMessage ? clientMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        ListEmptyComponent={<ThemedText style={styles.loading}>{ businessMessage ? businessMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
-            onRefresh={() => getClients()}
+            onRefresh={() => getBusinesses()}
             colors={[color]} // Colores del indicador de carga
             tintColor={color} // Color del indicador de carga en iOS
         />}
       />
-      <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('/(app)/(clients)/clientCreate')}>
+      <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.navigate('/businessCreate')}>
         <Ionicons name="add" size={30} color="#FFF" />
       </TouchableOpacity>
       </>

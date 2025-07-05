@@ -1,12 +1,38 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
+import { ScrollView, View } from "react-native";
 
 import { darkSecondColor, lightSecondColor } from "@/settings";
+import { ThemedText } from "@/components/ThemedText";
 
+
+function BusinessNameHeader({ name }: { name: string }) {
+  return (
+    <View style={{ minWidth: 120, maxWidth: 250, marginLeft: 40, paddingRight: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ThemedText
+          numberOfLines={1}
+          style={{
+            fontWeight: 'bold',
+            fontSize: 18,
+            textAlign: 'right',
+          }}
+        >
+          {name}
+        </ThemedText>
+      </ScrollView>
+    </View>
+  );
+}
 
 export default function ItemLayout() {
   const {color, darkTheme} = useSelector((state:RootState) => state.settings);
+  const {business} = useSelector((state:RootState) => state.business);
+  
+  if (!business || Object.keys(business).length === 0) {
+    return <Redirect href={'/(app)/(business)/businesses'}/>
+  }
   
   return (
     <Stack 
@@ -16,7 +42,13 @@ export default function ItemLayout() {
         },
       }}
     >
-      <Stack.Screen name="index" options={{headerTitle: 'Items'}}/>
+      <Stack.Screen
+        name="index"
+        options={{
+          headerTitle: 'Items',
+          headerRight: () => <BusinessNameHeader name={business.name} />,
+        }}
+      />
       <Stack.Screen name="itemDetails" options={{headerTitle: 'Item Details'}}/>
       <Stack.Screen name="itemCreate" options={{headerTitle: 'Add new Item'}}/>
       <Stack.Screen name="itemUpdate" options={{headerTitle: 'Update Item'}}/>

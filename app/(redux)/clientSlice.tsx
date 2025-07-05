@@ -33,3 +33,5 @@ export const clientSlice = createSlice({
 export const { clientSetMessage, setClient, setClients } = clientSlice.actions;
 
 export const clientReducer = clientSlice.reducer;
+
+export default clientReducer;

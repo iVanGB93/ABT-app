@@ -24,7 +24,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
 import { clientSetMessage, setClient } from "@/app/(redux)/clientSlice";
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-input';
+import PhoneInput from 'react-native-phone-number-input';
 import ClientForm from "@/components/clients/ClientForm";
 
 

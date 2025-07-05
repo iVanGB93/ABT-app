@@ -12,6 +12,8 @@ import SelectDropdown from 'react-native-select-dropdown';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from "expo-router";
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import Constants from 'expo-constants';
+const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 
 import { RootState } from "@/app/(redux)/store";
 import { ThemedText } from "@/components/ThemedText";
@@ -126,7 +128,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
                         setAddress(data.description);
                     }}
                     query={{
-                        key: '',
+                        key: GOOGLE_PLACES_API_KEY,
                         language: 'en',
                     }}
                     styles={{

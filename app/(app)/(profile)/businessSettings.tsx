@@ -24,7 +24,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
 import { setBusiness } from "@/app/(redux)/settingSlice";
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-input';
+/* import PhoneInput from 'react-native-phone-number-input'; */
 
 
 interface Errors {
@@ -174,16 +174,16 @@ export default function businessSettings() {
                     <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
                     <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                         <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <PhoneInput
-                            initialCountry="us"
-                            style={commonStyles.textInput}
-                            textProps={{placeholder: "Phone number"}}
-                            autoFormat={true}
-                            textStyle={{ color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 18 }}
-                            flagStyle={{ borderWidth: 0, marginHorizontal: 5 }}
-                            onChangePhoneNumber={(phoneNumber) => setPhone(phoneNumber)}
-                            initialValue={phone ? phone : ""}
-                        />
+                        {/* <PhoneInput
+                            defaultCode="US"
+                            containerStyle={commonStyles.textInput}
+                            textContainerStyle={{ backgroundColor: 'transparent' }}
+                            textInputStyle={{ color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 18 }}
+                            codeTextStyle={{ color: darkTheme ? darkTtextColor : lightTextColor }}
+                            flagButtonStyle={{ borderWidth: 0, marginHorizontal: 5 }}
+                            value={phone}
+                            onChangeFormattedText={setPhone}
+                        /> */}
                     </View>
                     {errors.phone ? (
                         <Text style={styles.errorText}>{errors.phone}</Text>
@@ -217,7 +217,7 @@ export default function businessSettings() {
                                 setAddress(data.description);
                             }}
                             query={{
-                                key: '',
+                                key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
                                 language: 'en',
                             }}
                             styles={{

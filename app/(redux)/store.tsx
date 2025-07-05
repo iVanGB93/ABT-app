@@ -7,7 +7,7 @@ import { clientReducer } from './clientSlice';
 import { settingReducer } from './settingSlice';
 import { jobReducer } from './jobSlice';
 import { itemReducer } from './itemSlice';
-
+import { businessReducer } from './businessSlice';
 
 const persistConfig = {
   key: "root",
@@ -18,6 +18,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   settings: settingReducer,
   auth: authReducer,
+  business: businessReducer,
   client: clientReducer,
   job: jobReducer,
   item: itemReducer,
@@ -35,7 +36,7 @@ export const store = configureStore({
   }),
 });
 
-export type RootState = ReturnType<typeof store.getState>
+export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export const useAppDispatch = useDispatch as () => AppDispatch;
 
@@ -47,3 +48,4 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 >;
 
 export const persistor = persistStore(store);
+export default store;

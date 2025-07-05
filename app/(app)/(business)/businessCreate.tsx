@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TextInput,
@@ -25,21 +25,21 @@ import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
 import { commonStyles } from "@/constants/commonStyles";
-import { clientSetMessage } from "@/app/(redux)/clientSlice";
-import ClientForm from "@/components/clients/ClientForm";
+import BusinessForm from "@/components/business/BusinessForm";
+import { businessSetMessage } from "@/app/(redux)/businessSlice";
 
 
 interface Errors {
     name?: string;
-    lastName?: string;
+    description?: string;
     phone?: string;
     email?: string;
     address?: string;
 };
   
-export default function ClientCreate() {
+export default function BusinessCreate() {
     const [name, setName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [description, setDescription] = useState("");
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
@@ -52,11 +52,15 @@ export default function ClientCreate() {
     const dispatch = useAppDispatch()
     const router = useRouter();
 
+    useEffect(() => {
+        console.log("BusinessCreate component mounted");
+    }, []);
+
     const validateForm = () => {
         let errors: Errors = {};
         if (!name) errors.name = "Name is required";
         if (email) {if (!/\S+@\S+\.\S+/.test(email)) {errors.email = "Email is invalid!"}};
-        if (!address) errors.address = "Address is required";
+        /* if (!address) errors.address = "Address is required"; */
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -97,14 +101,14 @@ export default function ClientCreate() {
             const formData = new FormData();
             formData.append('action', 'new');
             formData.append('name', name);
-            formData.append('last_name', lastName);
+            formData.append('description', description);
             formData.append('phone', phone);
             formData.append('email', email);
             formData.append('address', address);
             if (image !== null) {
                 const uriParts = image.split('.');
                 const fileType = uriParts[uriParts.length - 1];
-                const fileName = `${name}ProfilePicture.${fileType}`;
+                const fileName = `${name}BusinessLogo.${fileType}`;
                 formData.append('image', {
                     uri: image,
                     name: fileName,
@@ -113,25 +117,25 @@ export default function ClientCreate() {
             };
             setIsLoading(true);
             await axiosInstance
-            .post(`clients/create/${userName}/`, formData,
+            .post(`business/create/${userName}/`, formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
             .then(function(response) {
                 let data = response.data;
-                dispatch(clientSetMessage(data.message));
+                dispatch(businessSetMessage(data.message));
                 if (data.OK) {
-                    router.push('/(app)/(clients)');
+                    router.navigate('/businesses');
                 }
                 setIsLoading(false);
             })
             .catch(function(error) {
-                console.error('Error creating a client:', error);
+                console.error('Error creating a business:', error);
                 if (typeof error.response === 'undefined') {
-                    setError("Error creating a client, undefinded");
+                    setError("Error creating a business, undefined");
                   } else {
                     if (error.response.status === 401) {
-                        router.push('/');
+                        router.navigate('/');
                     } else {
                       setError(error.message);
                     };
@@ -155,11 +159,11 @@ export default function ClientCreate() {
                     keyboardShouldPersistTaps={'handled'}
                     contentContainerStyle={{ flexGrow: 1 }}
                 >
-                    <ClientForm 
+                    <BusinessForm 
                         name={name} 
                         setName={setName} 
-                        lastName={lastName}
-                        setLastName={setLastName} 
+                        description={description}
+                        setDescription={setDescription} 
                         phone={phone}
                         setPhone={setPhone}
                         email={email}

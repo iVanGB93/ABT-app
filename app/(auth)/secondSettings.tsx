@@ -5,6 +5,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
+import Constants from 'expo-constants';
+const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
@@ -15,7 +17,7 @@ import { baseImageURL, darkMainColor, darkSecondColor, darkThirdColor, darkTtext
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-input';
+/* import PhoneInput from 'react-native-phone-input'; */
 
 
 interface Errors {
@@ -145,7 +147,7 @@ export default function SecondSettings () {
                             setAddress(data.description);
                         }}
                         query={{
-                            key: '',
+                            key: GOOGLE_PLACES_API_KEY,
                             language: 'en',
                         }}
                         styles={{
@@ -175,7 +177,7 @@ export default function SecondSettings () {
                 <ThemedText type="subtitle" style={{marginTop: 50}}>Phone</ThemedText>
                 <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                     <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor}/>
-                    <PhoneInput
+                    {/* <PhoneInput
                         initialCountry="us"
                         style={commonStyles.textInput}
                         textProps={{placeholder: "Phone number"}}
@@ -184,7 +186,7 @@ export default function SecondSettings () {
                         flagStyle={{ borderWidth: 0, marginHorizontal: 5 }}
                         onChangePhoneNumber={(phoneNumber) => setPhone(phoneNumber)}
                         initialValue={phone ? phone : ""}
-                    />
+                    /> */}
                 </View>
                 {errors.phone ? (
                     <Text style={commonStyles.errorMsg}>{errors.phone}</Text>

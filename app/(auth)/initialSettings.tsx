@@ -72,7 +72,7 @@ export default function InitialSettings () {
             } else {
                 dispatch(setBusinessLogo(newBusinessLogo));
             }
-            router.push('(register)/secondSettings');
+            router.push('/secondSettings');
         }
     };
 

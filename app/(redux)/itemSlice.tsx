@@ -1,6 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 
-
 export interface ItemState {
     item: any;
     items: any;
@@ -36,7 +35,7 @@ export const itemSlice = createSlice({
     }
 });
 
-
 export const { setItem, setItems, setUsedItems, setItemMessage } = itemSlice.actions;
 
 export const itemReducer = itemSlice.reducer;
+export default itemSlice.reducer;

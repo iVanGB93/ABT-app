@@ -18,11 +18,11 @@ import { darkTtextColor, lightTextColor } from "@/settings";
 import { commonStyles } from "@/constants/commonStyles";
 
 
-interface ClientFormProps {
+interface BusinessFormProps {
     name?: string;
     setName?: any;
-    lastName?: string;
-    setLastName?: any;
+    description?: string;
+    setDescription?: any;
     phone?: string;
     setPhone?: any;
     email?: string;
@@ -32,7 +32,7 @@ interface ClientFormProps {
     errors?: any;
 };
 
-export default function ClientForm({name, setName, lastName, setLastName, phone, setPhone, email, setEmail, address, setAddress, errors, }: ClientFormProps) {
+export default function BusinessForm({name, setName, description, setDescription, phone, setPhone, email, setEmail, address, setAddress, errors, }: BusinessFormProps) {
     const {color, darkTheme } = useSelector((state: RootState) => state.settings);
 
     return (
@@ -42,7 +42,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 <Ionicons style={{marginBottom: 5, fontSize: 16}} name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
                 <TextInput
                     style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                    placeholder={name ? name : "Enter client's name"}
+                    placeholder={name ? name : "Enter business's name"}
                     placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
                     value={name}
                     onChangeText={setName}
@@ -51,19 +51,19 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
             {errors.name ? (
                 <Text style={styles.errorText}>{errors.name}</Text>
             ) : null}
-            <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
+            <ThemedText style={commonStyles.text_action} type="subtitle">Description</ThemedText>
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                 <Ionicons style={{marginBottom: 5, fontSize: 16}} name="person-add" color={darkTheme ? darkTtextColor: lightTextColor} />
                 <TextInput
                     style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                    placeholder={lastName ? lastName : "Enter client's last name"}
+                    placeholder={description ? description : "Enter business's desciption"}
                     placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                    value={lastName}
-                    onChangeText={setLastName}
+                    value={description}
+                    onChangeText={setDescription}
                 />
             </View>
-            {errors.lastName ? (
-                <Text style={styles.errorText}>{errors.lastName}</Text>
+            {errors.description ? (
+                <Text style={styles.errorText}>{errors.description}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
@@ -87,7 +87,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 <Ionicons style={{marginBottom: 5, fontSize: 16}} name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
                 <TextInput
                     style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                    placeholder="Enter client's email"
+                    placeholder="Enter business's email"
                     placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
                     value={email}
                     onChangeText={setEmail}
@@ -100,7 +100,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
             {/* <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                 <Ionicons style={{marginBottom: 5, fontSize: 16}} name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
                 <GooglePlacesAutocomplete
-                    placeholder={address ? address : "Client's address"}
+                    placeholder={address ? address : "Business's address"}
                     textInputProps={{
                         placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
                     }}
@@ -108,10 +108,9 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                         setAddress(data.description);
                     }}
                     query={{
-                        key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
+                        key: GOOGLE_PLACES_API_KEY,
                         language: 'en',
                     }}
-                    fetchDetails={true}
                     styles={{
                         textInputContainer: {
                             height: 26,
@@ -131,9 +130,6 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                     listEmptyComponent={
                         <ThemedText>No results, sorry.</ThemedText>
                     }
-                    renderRow={(rowData: import('react-native-google-places-autocomplete').GooglePlaceData) => (
-                        <ThemedText>{rowData.description || ''}</ThemedText>
-                    )}
                 />
             </View> */}
             {errors.address ? (

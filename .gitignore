@@ -20,7 +20,7 @@ expo-env.d.ts
 # @end expo-cli
 
 playstorekey.json
-settings.env
+.env
 
 android/
 
