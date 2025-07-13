@@ -21,6 +21,7 @@ expo-env.d.ts
 
 playstorekey.json
 .env
+.prettierrc
 
 android/
 

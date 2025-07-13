@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -11,12 +11,8 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import axiosInstance from '@/axios';
-import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
-import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import {
   baseImageURL,
   darkMainColor,
@@ -24,61 +20,40 @@ import {
   lightMainColor,
   lightTextColor,
 } from '@/settings';
-import { ThemedView } from '@/components/ThemedView';
+import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
-import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-number-input';
-import ClientForm from '@/components/clients/ClientForm';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import axiosInstance from '@/axios';
 
 interface Errors {
-  name?: string;
-  lastName?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
+  description?: string;
+  amount?: string;
 }
 
-export default function ClientUpdate() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
-  const { client } = useSelector((state: RootState) => state.client);
-  const [name, setName] = useState(client.name);
-  const [lastName, setLastName] = useState(client.last_name);
-  const [phone, setPhone] = useState(client.phone);
-  const [email, setEmail] = useState(client.email);
-  const [address, setAddress] = useState(client.address);
-  const [image, setImage] = useState<string | null>(null);
-  const [error, setError] = useState('');
+export default function BusinessIncomeCreate() {
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const [isEnabled, setIsEnabled] = useState<any>(false);
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [image, setImage] = useState<any>(null);
   const [errors, setErrors] = useState<Errors>({});
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const dispatch = useAppDispatch();
-
-  const validateForm = () => {
-    let errors: Errors = {};
-    if (!name) errors.name = 'Name is required';
-    if (email) {
-      if (!/\S+@\S+\.\S+/.test(email)) {
-        errors.email = 'Email is invalid!';
-      }
-    }
-    if (!address) errors.address = 'Address is required';
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  const router = useRouter();
 
   const handleImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      setImage(result.assets[0]);
     }
   };
 
@@ -88,40 +63,46 @@ export default function ClientUpdate() {
       alert('Permission to access camera is required!');
       return;
     }
+
     let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      setImage(result.assets[0]);
     }
+  };
+
+  const validateForm = () => {
+    let errors: Errors = {};
+    if (!description) errors.description = 'Description is required';
+    if (!amount) errors.amount = 'Amount is required';
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (validateForm()) {
+      setIsLoading(true);
       const formData = new FormData();
-      formData.append('action', 'update');
-      formData.append('id', client.id);
-      formData.append('name', name);
-      formData.append('last_name', lastName);
-      formData.append('phone', phone);
-      formData.append('email', email);
-      formData.append('address', address);
+      formData.append('action', 'new');
+      formData.append('type', 'income');
+      formData.append('description', description);
+      formData.append('amount', amount);
       if (image !== null) {
-        const uriParts = image.split('.');
+        const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
-        const fileName = `${name}ProfilePicture.${fileType}`;
+        const fileName = `${description}ExpensePicture.${fileType}`;
         formData.append('image', {
-          uri: image,
+          uri: image.uri,
           name: fileName,
           type: `image/${fileType}`,
         } as unknown as Blob);
       }
-      setIsLoading(true);
       await axiosInstance
-        .post(`clients/update/${userName}/`, formData, {
+        .post(`business/extras/${business.name}/`, formData, {
           headers: {
             'content-Type': 'multipart/form-data',
           },
@@ -129,17 +110,17 @@ export default function ClientUpdate() {
         .then(function (response) {
           let data = response.data;
           if (data.OK) {
-            dispatch(setClient(data.client));
-            dispatch(clientSetMessage(data.message));
-            router.push('/(app)/(clients)/clientDetails');
+            router.push('/(app)/(business)/businessDetails');
           }
-          setError(response.data.message);
           setIsLoading(false);
         })
         .catch(function (error) {
-          console.error('Error updating a client:', error.config);
+          console.error('Error creating a expense:', error);
+          /* dispatch({
+                    type: CHANGE_ERROR,
+                    payload: error.message
+                }) */
           setIsLoading(false);
-          setError(error.message);
         });
     }
   };
@@ -154,24 +135,58 @@ export default function ClientUpdate() {
         <ActivityIndicator style={styles.loading} size="large" />
       ) : (
         <ThemedSecondaryView style={[styles.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}>
-          <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
-            <ClientForm
-              name={name}
-              setName={setName}
-              lastName={lastName}
-              setLastName={setLastName}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
-              address={address}
-              setAddress={setAddress}
-              errors={errors}
-            />
+          <ScrollView>
+            <ThemedText style={commonStyles.text_action} type="subtitle">
+              Description
+            </ThemedText>
+            <View
+              style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+            >
+              <Ionicons name="text" color={darkTheme ? darkTtextColor : lightTextColor} />
+              <TextInput
+                style={[
+                  commonStyles.textInput,
+                  { color: darkTheme ? darkTtextColor : lightTextColor },
+                ]}
+                placeholder={description ? description : "Enter expense's description"}
+                placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+                value={description}
+                onChangeText={setDescription}
+              />
+            </View>
+            {errors.description ? <Text style={styles.errorText}>{errors.description}</Text> : null}
+            <ThemedText style={commonStyles.text_action} type="subtitle">
+              Amount
+            </ThemedText>
+            <View
+              style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+            >
+              <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor : lightTextColor} />
+              {isEnabled ? (
+                <ThemedText> $ {amount}</ThemedText>
+              ) : (
+                <TextInput
+                  style={[
+                    commonStyles.textInput,
+                    { color: darkTheme ? darkTtextColor : lightTextColor },
+                  ]}
+                  placeholder={amount ? amount.toString() : "Enter expense's amount"}
+                  placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+                  value={amount ? amount.toString() : ''}
+                  onChangeText={setAmount}
+                  keyboardType="numeric"
+                />
+              )}
+            </View>
+            {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
             {image ? (
-              <Image source={{ uri: image }} style={styles.image} />
+              <Image
+                source={{ uri: image.uri }}
+                style={styles.image}
+                onError={() => setImage(null)}
+              />
             ) : (
-              <Image source={{ uri: baseImageURL + client.image }} style={styles.image} />
+              <ThemedText style={{ alignSelf: 'center' }}>image not found </ThemedText>
             )}
             <View
               style={{
@@ -229,7 +244,7 @@ export default function ClientUpdate() {
                 onPress={() => handleSubmit()}
               >
                 <ThemedText type="subtitle" style={{ color: color }}>
-                  Update
+                  Create
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -263,7 +278,7 @@ const styles = StyleSheet.create({
   form: {
     padding: 20,
     borderRadius: 10,
-    shadowColor: '#fff',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -296,9 +311,9 @@ const styles = StyleSheet.create({
   },
   image: {
     width: 100,
-    height: 100,
-    borderRadius: 75,
-    margin: 10,
+    height: 80,
+    marginTop: 10,
+    borderRadius: 15,
     alignSelf: 'center',
   },
   button: {
@@ -315,5 +330,48 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     alignSelf: 'center',
     marginTop: 5,
+  },
+  dropdownButtonStyle: {
+    height: 40,
+    borderBottomWidth: 1,
+    borderRadius: 5,
+    marginBottom: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    color: '#fff',
+  },
+  dropdownButtonTxtStyle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  dropdownButtonIconStyle: {
+    fontSize: 28,
+    marginRight: 8,
+    color: '#fff',
+  },
+  dropdownMenuStyle: {
+    borderRadius: 8,
+  },
+  dropdownItemStyle: {
+    width: '100%',
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dropdownItemTxtStyle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '500',
+    borderColor: '#ddd',
+    borderBottomWidth: 1,
+  },
+  dropdownItemIconStyle: {
+    fontSize: 28,
+    marginRight: 8,
   },
 });

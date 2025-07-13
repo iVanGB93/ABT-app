@@ -181,7 +181,7 @@ export default function ClientCreate() {
                         <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
+                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.navigate('/(app)/(clients)')}>
                             <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>

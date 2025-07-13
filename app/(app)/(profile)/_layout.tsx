@@ -17,8 +17,8 @@ export default function ProfileLayout() {
     }}
     >
       <Stack.Screen name="index" options={{headerTitle: 'Profile'}} />
-      <Stack.Screen name="businessSettings" options={{headerTitle: 'Update Account'}}/>
-      <Stack.Screen name="styleSettings" options={{headerTitle: 'Update Business'}}/>
+      <Stack.Screen name="businessSettings" options={{headerTitle: 'Update Business'}}/>
+      <Stack.Screen name="styleSettings" options={{headerTitle: 'Update Style'}}/>
     </Stack>
   );
 }

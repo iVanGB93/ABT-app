@@ -22,14 +22,16 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { commonStyles } from "@/constants/commonStyles";
+import { businessSetMessage } from "@/app/(redux)/businessSlice";
 import { setBusiness } from "@/app/(redux)/settingSlice";
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import BusinessForm from "@/components/business/BusinessForm";
 /* import PhoneInput from 'react-native-phone-number-input'; */
 
 
 interface Errors {
     name?: string;
-    lastName?: string;
+    description?: string;
     phone?: string;
     email?: string;
     address?: string;
@@ -37,10 +39,10 @@ interface Errors {
 
 export default function businessSettings() {
     const {color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-    const {userName } = useSelector((state: RootState) => state.auth);
-    const { client } = useSelector((state: RootState) => state.client);
-    const [name, setName] = useState(client.name);
-    const [lastName, setLastName] = useState(client.last_name);
+    const {userName } = useSelector((state: RootState) => state.auth);  
+    const [owners, setOwners] = useState<string[]>(business.owners || []);
+    const [name, setName] = useState(business.name);
+    const [description, setDescription] = useState(business.description);
     const [phone, setPhone] = useState(business.phone);
     const [email, setEmail] = useState(business.email);
     const [address, setAddress] = useState(business.address);
@@ -90,41 +92,73 @@ export default function businessSettings() {
     const handleSubmit = async () => {
         if (validateForm()) {
             const formData = new FormData();
+            const onlyEmails = owners.filter(o => o.includes('@'));
+            formData.append('owners', JSON.stringify(onlyEmails));
             formData.append('action', 'update');
+            formData.append('id', business.id);
+            formData.append('name', name);
+            formData.append('description', description);
             formData.append('phone', phone);
             formData.append('email', email);
             formData.append('address', address);
-            /* if (image !== null) {
+            if (image !== null) {
                 const uriParts = image.split('.');
                 const fileType = uriParts[uriParts.length - 1];
-                const fileName = `${name}ProfilePicture.${fileType}`;
+                const fileName = `${name}BusinessLogo.${fileType}`;
                 formData.append('image', {
-                    uri: image,
-                    name: fileName,
-                    type: `image/${fileType}`,
-                } as unknown as Blob)
-            }; */
+                uri: image,
+                name: fileName,
+                type: `image/${fileType}`,
+                } as unknown as Blob);
+            }
             setIsLoading(true);
             await axiosInstance
-            .post(`user/account/update/${userName}/`, formData,
+            .post(`business/update/${userName}/`, formData,
             { headers: {
                 'content-Type': 'multipart/form-data',
             }})
             .then(function(response) {
                 if (response.status === 200) {
-                    dispatch(setBusiness(response.data));
-                    router.push('/(app)/(profile)/');
+                    console.log(response.data.business);
+                    
+                    dispatch(businessSetMessage(response.data.message));
+                    dispatch(setBusiness(response.data.business));
+                    router.navigate('/(app)/(business)/businessDetails');
                 }
                 setError(response.data.message)
                 setIsLoading(false);
             })
             .catch(function(error) {
-                console.error('Error updating account:', error.config);
+                console.error('Error updating your business:', error.config);
                 setIsLoading(false);
                 setError(error.message);
             });
             };
     };
+
+    const handleDelete = async () => {
+        setIsLoading(true);
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        await axiosInstance
+        .post(`business/delete/${business.id}/`, formData,
+        { headers: {
+            'content-Type': 'multipart/form-data',
+        }})
+        .then(function(response) {
+            if (response.status === 200) {
+                dispatch(setBusiness({}));
+                router.navigate('/(businessSelect)');
+            }
+            setError(response.data.message)
+            setIsLoading(false);
+        })
+        .catch(function(error) {
+            console.error('Error deleting the business:', error.config);
+            setIsLoading(false);
+            setError(error.message);
+        });
+        };
 
     return (
         <KeyboardAvoidingView
@@ -135,129 +169,26 @@ export default function businessSettings() {
             { isLoading ?
             <ActivityIndicator style={styles.loading} size="large" />
             :
-            <ThemedSecondaryView style={styles.form}>
-                <ScrollView 
-                    keyboardShouldPersistTaps={'handled'}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                >
-                    {error ? (
-                        <Text style={styles.errorText}>{error}</Text>
-                    ) : null}
-                    {/* <ThemedText type="subtitle">Name</ThemedText>
-                    <View style={commonStyles.action}>
-                        <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={name ? name : "Enter client's name"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={name}
-                            onChangeText={setName}
-                        />
-                    </View>
-                    {errors.name ? (
-                        <Text style={styles.errorText}>{errors.name}</Text>
-                    ) : null}
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
-                    <View style={commonStyles.action}>
-                        <Ionicons name="person-add" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder={lastName ? lastName : "Enter client's last name"}
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={lastName}
-                            onChangeText={setLastName}
-                        />
-                    </View>
-                    {errors.lastName ? (
-                        <Text style={styles.errorText}>{errors.lastName}</Text>
-                    ) : null} */}
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        {/* <PhoneInput
-                            defaultCode="US"
-                            containerStyle={commonStyles.textInput}
-                            textContainerStyle={{ backgroundColor: 'transparent' }}
-                            textInputStyle={{ color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 18 }}
-                            codeTextStyle={{ color: darkTheme ? darkTtextColor : lightTextColor }}
-                            flagButtonStyle={{ borderWidth: 0, marginHorizontal: 5 }}
-                            value={phone}
-                            onChangeFormattedText={setPhone}
-                        /> */}
-                    </View>
-                    {errors.phone ? (
-                        <Text style={styles.errorText}>{errors.phone}</Text>
-                    ) : null}
-
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="mail" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <TextInput
-                            autoCapitalize='none'
-                            style={[commonStyles.textInput, {color: darkTheme ? darkTtextColor: lightTextColor}]}
-                            placeholder="Enter client's email"
-                            placeholderTextColor={darkTheme ? darkTtextColor: lightTextColor}
-                            value={email}
-                            onChangeText={setEmail}
-                        />
-                    </View>
-                    {errors.email ? (
-                        <Text style={styles.errorText}>{errors.email}</Text>
-                    ) : null}
-                    
-                    <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-                    <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                        <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                        <GooglePlacesAutocomplete
-                            placeholder={address ? address : "Business's address"}
-                            textInputProps={{
-                                placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
-                            }}
-                            onPress={(data, details = null) => {
-                                setAddress(data.description);
-                            }}
-                            query={{
-                                key: 'AIzaSyCxFKe0gGStVNei-UNOVB3e0-l89uN38rY',
-                                language: 'en',
-                            }}
-                            styles={{
-                                textInputContainer: {
-                                    height: 26,
-                                },
-                                textInput: {
-                                    height: 26,
-                                    color: darkTheme ? '#fff' : '#000',
-                                    fontSize: 16,
-                                    backgroundColor: 'transparent'
-                                },
-                                predefinedPlacesDescription: {
-                                    color: darkTheme ? darkTtextColor: lightTextColor,
-                                },
-                            }}
-                            enablePoweredByContainer={false}
-                            disableScroll={true}
-                            listEmptyComponent={
-                                <ThemedText>No results, sorry.</ThemedText>
-                            }
-                        />
-                    </View>
-                    {errors.address ? (
-                        <Text style={styles.errorText}>{errors.address}</Text>
-                    ) : null}
-
-                    {/* {image ?
-                    <Image source={{ uri: image }} style={styles.image} />
-                    :
-                    <Image source={{ uri: baseImageURL + client.image }} style={styles.image} />
-                    }
-                    <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleImage()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => takePhoto()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
-                        </TouchableOpacity>
-                    </View> */}
+            <ScrollView 
+                keyboardShouldPersistTaps={'handled'}
+                contentContainerStyle={{ flexGrow: 1 }}
+            >
+                <ThemedSecondaryView style={styles.form}>
+                    <BusinessForm
+                        owners={owners}
+                        setOwners={setOwners}
+                        name={name}
+                        setName={setName}
+                        description={description}
+                        setDescription={setDescription}
+                        phone={phone}
+                        setPhone={setPhone}
+                        email={email}
+                        setEmail={setEmail}
+                        address={address}
+                        setAddress={setAddress}
+                        errors={errors}
+                    />
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
                         <TouchableOpacity style={[styles.button, {borderColor: color}]} onPress={() => handleSubmit()}>
                             <ThemedText type="subtitle" style={{color: color}}>Update</ThemedText>
@@ -266,8 +197,13 @@ export default function businessSettings() {
                             <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>
-                </ScrollView>
-            </ThemedSecondaryView>
+                </ThemedSecondaryView>
+                <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
+                    <TouchableOpacity style={[styles.button, {borderColor: 'red'}]} onPress={() => handleDelete()}>
+                        <ThemedText type="subtitle" style={{color: 'red'}}>Delete</ThemedText>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
             }
         </KeyboardAvoidingView>
     )

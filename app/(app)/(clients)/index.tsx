@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSelector } from "react-redux";
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 
@@ -15,25 +15,21 @@ import { setMessage } from '@/app/(redux)/settingSlice';
 
 
 export default function Clients() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const {clients, clientMessage} = useSelector((state: RootState) => state.client);
-  const { business } = useSelector((state: RootState) => state.business);
   const [isLoading, setIsLoading] = useState(false);
   const [ error, setError ] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+
   const getClients = async() => {
     setIsLoading(true);
     await axiosInstance
-    .get(`clients/${userName}/`)
+    .get(`clients/${business.name}/`)
     .then(function(response) {
         if (response.data) {
-          let clients = Array.isArray(response.data)
-          ? response.data.filter((clients) => clients.business === business.id)
-          : [];
-          dispatch(setClients(clients));
+          dispatch(setClients(response.data));
           setIsLoading(false);
         } else {
           dispatch(clientSetMessage(response.data.message));
@@ -108,7 +104,7 @@ export default function Clients() {
             </TouchableOpacity>
           );
         }}
-        ItemSeparatorComponent={<View style={{ height: 10}}/>}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         ListEmptyComponent={<ThemedText style={styles.loading}>{ clientMessage ? clientMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}

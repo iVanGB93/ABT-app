@@ -26,11 +26,10 @@ function BusinessNameHeader({ name }: { name: string }) {
 }
 
 export default function ClientLayout() {
-  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
-  const {business} = useSelector((state:RootState) => state.business);
+  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
   
   if (!business || Object.keys(business).length === 0) {
-    return <Redirect href={'/(app)/(business)/businesses'}/>
+    return <Redirect href={'/(businessSelect)'}/>
   }
 
   return (

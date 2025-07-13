@@ -19,7 +19,7 @@ interface Errors {
 }
 
 export default function Register() {
-  const {token, email} = useSelector((state: RootState) => state.auth);
+  const {token, userEmail} = useSelector((state: RootState) => state.auth);
   const {color, darkTheme} = useSelector((state: RootState) => state.settings);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +33,7 @@ export default function Register() {
 
   useEffect(() => {
     if ( token) {
-        router.push('./(app)/(clients)/')
+        router.push('/(businessSelect)');
     };
   }, [token]);
 
@@ -55,7 +55,7 @@ export default function Register() {
         dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
         setAlertVisible(false);
         setLoading(false);
-        router.push('/initialSettings');
+        router.push('/(businessSelect)');
       } else {
         dispatch(authSetMessage("Account created but error loggin in."));
         setAlertVisible(false);
@@ -76,7 +76,7 @@ export default function Register() {
     if (validateForm()) {
       setLoading(true);
       await axiosInstance
-      .post("user/register/", {username: username, password: password, email: email, action: 'new'})
+      .post("user/register/", {username: username, password: password, email: userEmail, action: 'new'})
       .then(function(response) {
         if (response.status === 201) {
           dispatch(authSetMessage("Account created!!!"));

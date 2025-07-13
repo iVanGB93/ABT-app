@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { Text, View, TouchableOpacity, TextInput, ActivityIndicator, ScrollView, Image } from "react-native";
 import { useSelector } from "react-redux";
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useAppDispatch, RootState } from '../(redux)/store';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -28,12 +28,6 @@ export default function Register() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  useEffect(() => {
-    if ( token ) {
-        router.navigate('./(app)/(clients)/')
-    };
-  }, [token]);
-
   const validateEmail = () => {
     let errors: Errors = {};
     if (!email) {errors.email = "Email is required!"} else if (!/\S+@\S+\.\S+/.test(email)) {errors.email = "Email is invalid!"};
@@ -48,7 +42,7 @@ export default function Register() {
       .post("user/register/", {action: 'email', email: email})
       .then(function(response) {
         if (response.status === 200) {
-          dispatch(authSetMessage("Code sent!!!"));
+          dispatch(authSetMessage("Code sent, check your email!!!"));
           dispatch(setCodeAndEmail({code: response.data.code, email: response.data.email}))
           router.navigate('/verifyCode');
         } 
@@ -72,6 +66,9 @@ export default function Register() {
   };
 
   return (
+    token ? (
+      <Redirect href={'/(businessSelect)'}/>
+    ) : (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <Image style={commonStyles.image} source={require('../../assets/images/logo.png')} />
@@ -121,5 +118,6 @@ export default function Register() {
         onClose={() => setAlertVisible(false)}
       />
     </ThemedView>
+    )
   );
 };

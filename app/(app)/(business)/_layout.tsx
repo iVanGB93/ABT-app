@@ -16,9 +16,9 @@ export default function BusinessLayout() {
         },
       }}
     >
-      <Stack.Screen name="businesses" options={{headerTitle: 'Businesses'}}/>
       <Stack.Screen name="businessDetails" options={{headerTitle: 'Details'}}/>
-      <Stack.Screen name="businessCreate" options={{headerTitle: 'Add New Business'}}/>
+      <Stack.Screen name="businessExpenseCreate" options={{headerTitle: 'Add New Business Expense'}}/>
+      <Stack.Screen name="businessIncomeCreate" options={{headerTitle: 'Add New Business Income'}}/>
       <Stack.Screen name="businessUpdate" options={{headerTitle: 'Update Business'}}/>
     </Stack>
   );

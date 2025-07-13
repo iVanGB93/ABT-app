@@ -7,6 +7,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { persistor, store } from './(redux)/store';
+import { StatusBar } from 'expo-status-bar';
 
 
 export default function RootLayout() {
@@ -16,15 +17,17 @@ export default function RootLayout() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
           <Stack
           screenOptions={{
               headerShown: false
           }}
           >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(app)" />
-          <Stack.Screen name="+not-found" />
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(businessSelect)" />
+            <Stack.Screen name="(app)" />
+            <Stack.Screen name="+not-found" />
           </Stack>
           <Toast />
         </ThemeProvider>

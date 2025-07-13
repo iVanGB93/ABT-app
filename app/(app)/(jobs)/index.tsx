@@ -15,8 +15,7 @@ import axiosInstance from '@/axios';
 
 
 export default function Jobs() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { jobs, jobMessage, jobError } = useSelector((state: RootState) => state.job);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
@@ -25,7 +24,7 @@ export default function Jobs() {
     const getJobs = async () => {
         setIsLoading(true);
         await axiosInstance
-        .get(`jobs/list/${userName}/`)
+        .get(`jobs/list/${business.name}/`)
         .then(function(response) {
             if (response.data) {
                 dispatch(setJobs(response.data));

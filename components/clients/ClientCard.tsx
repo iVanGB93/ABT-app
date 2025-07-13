@@ -80,19 +80,19 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
       <View style={commonStylesCards.dataContainer}>
           <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
-            <ThemedText style={commonStylesCards.dataText} type='link'>{address ? address : 'No address saved'}</ThemedText>
+            <ThemedText style={commonStylesCards.dataText}>{address ? address : 'No address saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
           <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}>
-            <ThemedText style={commonStylesCards.dataText} type='link'>{phone ? phone : 'No phone saved'}</ThemedText>
+            <ThemedText style={commonStylesCards.dataText}>{phone ? phone : 'No phone saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
           <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`mailto:${email}`)}>
-            <ThemedText style={commonStylesCards.dataText} type='link'>{email ? email : 'No email saved'}</ThemedText>
+            <ThemedText style={commonStylesCards.dataText} type='default'>{email ? email : 'No email saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       {inDetail ?

@@ -8,7 +8,7 @@ import { ThemedText } from "@/components/ThemedText";
 
 function BusinessNameHeader({ name }: { name: string }) {
   return (
-    <View style={{ minWidth: 120, maxWidth: 250, flex: 1, alignItems: 'flex-end', paddingLeft: 24, paddingRight: 8 }}>
+    <View style={{ minWidth: 120, maxWidth: 250, marginLeft: 40, paddingRight: 8 }}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <ThemedText
           numberOfLines={1}
@@ -26,11 +26,10 @@ function BusinessNameHeader({ name }: { name: string }) {
 }
 
 export default function JobLayout() {
-  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
-  const {business} = useSelector((state:RootState) => state.business);
+  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
 
   if (!business || Object.keys(business).length === 0) {
-    return <Redirect href={'/(app)/(business)/businesses'}/>
+    return <Redirect href={'/(businessSelect)'}/>
   }
 
   return (

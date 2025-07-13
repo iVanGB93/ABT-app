@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   TextInput,
@@ -9,7 +9,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/app/(redux)/store";
 import { Ionicons } from "@expo/vector-icons";
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-number-input';
+import PhoneInput, { ICountry, isValidPhoneNumber, } from 'react-native-international-phone-number';
 import Constants from 'expo-constants';
 const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 
@@ -34,6 +34,17 @@ interface ClientFormProps {
 
 export default function ClientForm({name, setName, lastName, setLastName, phone, setPhone, email, setEmail, address, setAddress, errors, }: ClientFormProps) {
     const {color, darkTheme } = useSelector((state: RootState) => state.settings);
+    const [selectedCountry, setSelectedCountry] =
+    useState<null | ICountry>(null);
+    const [inputValue, setInputValue] = useState<string>('');
+
+    function handleInputValue(phoneNumber: string) {
+        setInputValue(phoneNumber);
+    }
+
+    function handleSelectedCountry(country: ICountry) {
+        setSelectedCountry(country);
+    }
 
     return (
         <View>
@@ -66,19 +77,29 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 <Text style={styles.errorText}>{errors.lastName}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
-            <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                <Ionicons style={{marginBottom: 5, fontSize: 16}} name="phone-portrait-sharp" color={darkTheme ? darkTtextColor: lightTextColor} />
-            {/* <PhoneInput
-                defaultCode="US"
-                containerStyle={commonStyles.textInput}
-                textContainerStyle={{ backgroundColor: 'transparent' }}
-                textInputStyle={{ color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 18 }}
-                codeTextStyle={{ color: darkTheme ? darkTtextColor : lightTextColor }}
-                flagButtonStyle={{ borderWidth: 0, marginHorizontal: 5 }}
-                value={phone}
-                onChangeFormattedText={setPhone}
-            /> */}
-            </View>
+            <PhoneInput
+                defaultCountry="US"
+                value={phone ?? ""}
+                onChangePhoneNumber={setPhone}
+                selectedCountry={selectedCountry}
+                onChangeSelectedCountry={handleSelectedCountry}
+                theme={darkTheme ? 'dark' : 'light'}
+                placeholder="Enter client's phone"
+                phoneInputStyles={{
+                    flagContainer: {
+                        margin: 0,
+                        width: 90,
+                        padding: 0,
+                    },
+                    caret: {
+                        fontSize: 12,
+                        width: 3,
+                    },
+                    callingCode: {
+                        fontSize: 12,
+                    }
+                }}
+            />
             {errors.phone ? (
                 <Text style={styles.errorText}>{errors.phone}</Text>
             ) : null}
@@ -97,46 +118,44 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 <Text style={styles.errorText}>{errors.email}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
-            {/* <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
-                <Ionicons style={{marginBottom: 5, fontSize: 16}} name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                <GooglePlacesAutocomplete
-                    placeholder={address ? address : "Client's address"}
-                    textInputProps={{
-                        placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
-                    }}
-                    onPress={(data, details = null) => {
-                        setAddress(data.description);
-                    }}
-                    query={{
-
-                        key: GOOGLE_PLACES_API_KEY,
-                        language: 'en',
-                    }}
-                    fetchDetails={true}
-                    styles={{
-                        textInputContainer: {
-                            height: 26,
-                        },
-                        textInput: {
-                            height: 26,
-                            color: darkTheme ? '#fff' : '#000',
-                            fontSize: 16,
-                            backgroundColor: 'transparent'
-                        },
-                        predefinedPlacesDescription: {
-                            color: darkTheme ? darkTtextColor: lightTextColor,
-                        },
-                    }}
-                    enablePoweredByContainer={false}
-                    disableScroll={true}
-                    listEmptyComponent={
-                        <ThemedText>No results, sorry.</ThemedText>
-                    }
-                    renderRow={(rowData: import('react-native-google-places-autocomplete').GooglePlaceData) => (
-                        <ThemedText>{rowData.description || ''}</ThemedText>
-                    )}
-                />
-            </View> */}
+            <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
+              <Ionicons style={{marginBottom: 5, fontSize: 16}} name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
+              <GooglePlacesAutocomplete
+                predefinedPlaces={[]}
+                placeholder={address ? address : "Client's address"}
+                minLength={2}
+                timeout={1000}
+                textInputProps={{
+                    placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
+                }}
+                onPress={(data, details = null) => {
+                    setAddress(data.description);
+                }}
+                query={{
+                    key: GOOGLE_PLACES_API_KEY,
+                    language: 'en',
+                }}
+                styles={{
+                    textInputContainer: {
+                        height: 26,
+                    },
+                    textInput: {
+                        height: 26,
+                        color: darkTheme ? '#fff' : '#000',
+                        fontSize: 16,
+                        backgroundColor: 'transparent'
+                    },
+                    predefinedPlacesDescription: {
+                        color: darkTheme ? darkTtextColor: lightTextColor,
+                    },
+                }}
+                enablePoweredByContainer={false}
+                disableScroll={true}
+                listEmptyComponent={
+                    <ThemedText>No results, sorry.</ThemedText>
+                }
+              />
+            </View>
             {errors.address ? (
                 <Text style={styles.errorText}>{errors.address}</Text>
             ) : null}

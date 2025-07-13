@@ -6,7 +6,7 @@ export interface AuthState {
     userName: string | null;
     authMessage: string | null;
     code: number | null;
-    email: string | null;
+    userEmail: string | null;
 };
 
 const initialState: AuthState = {
@@ -15,7 +15,7 @@ const initialState: AuthState = {
     userName: null,
     authMessage: null,
     code: null,
-    email: null,
+    userEmail: null,
 };
 
 export const authSlice = createSlice({
@@ -41,7 +41,7 @@ export const authSlice = createSlice({
         },
         setCodeAndEmail: (state, action: PayloadAction<{code: number | null, email:string | null}>) => {
             state.code = action.payload.code;
-            state.email = action.payload.email;
+            state.userEmail = action.payload.email;
         },
     }
 });

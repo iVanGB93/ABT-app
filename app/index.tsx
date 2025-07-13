@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useTheme } from '@react-navigation/native';
+import 'react-native-get-random-values';
 
 import { RootState, useAppDispatch } from "./(redux)/store";
 import { setDarkTheme } from "./(redux)/settingSlice";
@@ -22,12 +23,11 @@ export default function Login() {
       dispatch(setDarkTheme(false));
     }
     SplashScreen.hideAsync();
-    console.log('first index', token);
   }, []);
 
   return (
     token ? (
-      <Redirect href={'/(app)/(business)/businesses'}/>
+      <Redirect href={'/(businessSelect)'}/>
     ) : (
       <Redirect href={'/(auth)/login'}/>
     )

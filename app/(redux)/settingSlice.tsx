@@ -3,8 +3,6 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 export interface SettingState {
     color: string;
     darkTheme: boolean,
-    businessName: string,
-    businessLogo: any,
     business: any,
     message: string | null,
 };
@@ -12,8 +10,6 @@ export interface SettingState {
 const initialState: SettingState = {
     color: '#009d93',
     darkTheme: true,
-    businessName: 'Business Name',
-    businessLogo: null,
     business: {},
     message: null,
 };
@@ -24,12 +20,6 @@ export const settingSlice = createSlice({
     reducers: {
         setBusiness: (state, action: PayloadAction<any>) => {
             state.business = action.payload
-        },
-        setBusinessName: (state, action: PayloadAction<string>) => {
-            state.businessName = action.payload
-        },
-        setBusinessLogo: (state, action: PayloadAction<any>) => {
-            state.businessLogo = action.payload
         },
         setColor: (state, action: PayloadAction<string>) => {
             state.color = action.payload
@@ -43,7 +33,7 @@ export const settingSlice = createSlice({
     }
 });
 
-export const {setBusiness, setBusinessName, setBusinessLogo, setColor, setDarkTheme, setMessage} = settingSlice.actions;
+export const {setBusiness, setColor, setDarkTheme, setMessage} = settingSlice.actions;
 
 export const settingReducer = settingSlice.reducer;
 export default settingSlice.reducer;

@@ -5,6 +5,11 @@ export const commonStyles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    containerCentered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     header: {
         flex: 1,
         justifyContent: 'flex-end',
@@ -90,5 +95,20 @@ export const commonStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 50,
+    },
+    createButton: {
+        position: 'absolute',
+        bottom: 30,
+        right: 30,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 1,
+        elevation: 5,
     },
 });

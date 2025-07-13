@@ -15,7 +15,7 @@ import ItemCard from '@/components/items/ItemCard';
 
 
 export default function Items() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const {items, itemMessage} = useSelector((state: RootState) => state.item);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +26,7 @@ export default function Items() {
   const getItems = async() => {
     setIsLoading(true);
     await axiosInstance
-    .get(`items/list/${userName}/`)
+    .get(`items/list/${business.name}/`)
     .then(function(response) {
         if (response.data) {
           dispatch(setItems(response.data));
@@ -46,7 +46,7 @@ export default function Items() {
             dispatch(setMessage('Unauthorized, please login againg'))
             router.push('/');
           } else {
-            setError("Error getting your clients.");
+            setError("Error getting your items.");
             setIsLoading(false);
           }
         };

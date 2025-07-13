@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import { View, TouchableOpacity, Text, TextInput, ActivityIndicator, Image, ScrollView } from "react-native";
 import { Redirect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as SplashScreen from 'expo-splash-screen';
 import { useTheme } from '@react-navigation/native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -15,10 +14,7 @@ import {commonStyles} from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from "@/axios";
 import { darkMainColor, darkSecondColor, darkThirdColor, darkTtextColor, darkTtextSecondColor, lightMainColor, lightSecondColor, lightTextColor } from "@/settings";
-import { setDarkTheme } from "../(redux)/settingSlice";
 
-
-SplashScreen.preventAutoHideAsync();
 
 interface Errors {
   username?: string;
@@ -39,15 +35,6 @@ export default function Login() {
   const router = useRouter();
   const theme = useTheme()
 
-  useEffect(() => {
-    if (theme.dark) {
-        dispatch(setDarkTheme(true));
-    } else {
-      dispatch(setDarkTheme(false));
-    }
-    SplashScreen.hideAsync();
-  }, []);
-
   const validateForm = () => {
     let errors: Errors = {};
     if (!username) errors.username = "Username is required!";
@@ -65,7 +52,7 @@ export default function Login() {
           if (response.data.access !== undefined) {
             dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
             setLoading(false);
-            router.navigate('/(app)/(business)/businesses');
+            router.navigate('/(businessSelect)');
           } else {
             setError(response.data.message);
             setAlertVisible(true);
@@ -91,7 +78,7 @@ export default function Login() {
 
   return (
     token ? (
-      <Redirect href={'/(app)/(business)/businesses'}/>
+      <Redirect href={'/(businessSelect)'}/>
     ) : (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
@@ -101,7 +88,7 @@ export default function Login() {
       </View>
       <ThemedSecondaryView style={[commonStyles.footer, {borderColor: color}]}>
         <ScrollView>       
-          <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">Username</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="person" color={darkTheme ? darkTtextColor: lightTextColor} size={18}/>
             <TextInput 
@@ -156,7 +143,7 @@ export default function Login() {
         </ScrollView>
       </ThemedSecondaryView>
       <CustomAlert
-        title='Login'
+        title='Login error'
         visible={alertVisible}
         message={error}
         onClose={() => setAlertVisible(false)}

@@ -87,6 +87,8 @@ export default function BusinessUpdate() {
     };
 
     const handleDelete = () => {
+        console.log(business);
+        
         setModalVisible(true)
     };
 

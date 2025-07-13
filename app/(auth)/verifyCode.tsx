@@ -29,10 +29,8 @@ export default function VerifyCode() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('VerifyCode component mounted');
-    
     if ( !code) {
-        router.push('./(app)/(clients)/')
+        router.push('/')
     };
     if (authMessage) {
         Toast.show({

@@ -73,7 +73,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
                     search={true}
                     searchPlaceHolder={"Type to search"}
                 />
-                <TouchableOpacity onPress={() => router.push('(app)/(clients)/clientCreate')} style={[styles.buttonAdd, {backgroundColor: darkTheme ? darkMainColor: lightMainColor, borderColor: color}]}>
+                <TouchableOpacity onPress={() => router.navigate('/(app)/(clients)/clientCreate')} style={[styles.buttonAdd, {backgroundColor: darkTheme ? darkMainColor: lightMainColor, borderColor: color}]}>
                     <Ionicons name="person-add-outline" color={color} size={28}/>
                 </TouchableOpacity>
             </View>
@@ -119,7 +119,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
             :
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                 <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                <GooglePlacesAutocomplete
+                {/* <GooglePlacesAutocomplete
                     placeholder={address ? address : "Job address"}
                     textInputProps={{
                         placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
@@ -150,7 +150,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
                     listEmptyComponent={
                         <ThemedText>No results, sorry.</ThemedText>
                     }
-                />
+                /> */}
             </View>
             }
             {errors.address ? (

@@ -1,25 +1,28 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs, Redirect, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { Tabs, Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
 
 import { darkSecondColor, lightSecondColor } from '@/settings';
 
-
 export default function TabLayout() {
-  const token = useSelector((state:RootState) => state.auth.token);
-  const {color, darkTheme } = useSelector((state:RootState) => state.settings);
+  const token = useSelector((state: RootState) => state.auth.token);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+
   if (!token) {
     return <Redirect href="/" />;
   }
+  if (!business || Object.keys(business).length === 0) {
+    return <Redirect href="/(businessSelect)" />;
+  }
+
   return (
-    <>
-    <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: color,
-        tabBarStyle: {backgroundColor: darkTheme ? darkSecondColor : lightSecondColor},
+        tabBarStyle: {
+          backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+        },
       }}
     >
       <Tabs.Screen
@@ -63,6 +66,5 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </>
   );
 }

@@ -137,14 +137,14 @@ export default function JobCard({id, status, client, address, description, price
       </View>
       <View style={commonStylesCards.dataContainer}>
           <ThemedText style={commonStylesCards.LabelText}>Client: </ThemedText>
-          <TouchableOpacity onPress={() => router.push('(app)/(clients)/clientDetails')}>
-            <ThemedText type='link'>{client}</ThemedText>
+          <TouchableOpacity onPress={() => router.navigate('/(app)/(clients)/clientDetails')}>
+            <ThemedText>{client}</ThemedText>
           </TouchableOpacity>
       </View>
         <View style={commonStylesCards.dataContainer}>
             <ThemedText style={commonStylesCards.LabelText}>Address: </ThemedText>
             <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
-              <ThemedText style={commonStylesCards.dataText} type='link'>{address}</ThemedText>
+              <ThemedText style={commonStylesCards.dataText}>{address}</ThemedText>
             </TouchableOpacity>
         </View>
         <View style={commonStylesCards.dataContainer}>

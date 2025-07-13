@@ -67,13 +67,13 @@ export default function JobDetail() {
                             />
                         );
                     }}
-                    ItemSeparatorComponent={
+                    ItemSeparatorComponent={() => (
                         <View
                         style={{
                             height: 16,
                         }}
                         />
-                    }
+                    )}
                     ListEmptyComponent={<View><ThemedText style={[commonStylesDetails.headerText, {marginTop: 50}]}>No spents found, pull to refresh</ThemedText></View>}
                     ListHeaderComponent={<View style={{margin: 5}} />}
                     ListFooterComponent={job.status !== 'finished' ? <TouchableOpacity style={[commonStyles.button, {marginTop: 20, marginHorizontal: 'auto', borderColor: color, backgroundColor: darkTheme ? darkSecondColor : lightSecondColor}]} onPress={() => router.push('spentCreate')}><Text style={[commonStylesDetails.headerText, {color: color}]}>Add new spent</Text></TouchableOpacity>: null}
