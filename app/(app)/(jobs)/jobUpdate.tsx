@@ -20,6 +20,8 @@ import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
 import { setJobMessage } from "@/app/(redux)/jobSlice";
 import JobForm from "@/components/jobs/JobForm";
+import { commonStyles } from "@/constants/commonStyles";
+import { commonStylesForm } from "@/constants/commonStylesForm";
 
 
 interface Errors {
@@ -129,17 +131,17 @@ export default function JobUpdate() {
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
+            style={[commonStyles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
-            <ActivityIndicator style={styles.loading} size="large" />
+            <ActivityIndicator style={commonStyles.loading} size="large" />
             :
-            <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
+            <ThemedSecondaryView style={[commonStylesForm.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 <ScrollView 
                     keyboardShouldPersistTaps={'handled'}
                     contentContainerStyle={{ flexGrow: 1 }}
                 >
-                    <ThemedText style={[styles.label, {marginBottom: 5}]}>Job for {job.client}</ThemedText>
+                    <ThemedText style={[commonStylesForm.label, {marginBottom: 5}]}>Job for {job.client}</ThemedText>
                     <JobForm
                         clientsNames={null}
                         setClient={null}
@@ -155,21 +157,21 @@ export default function JobUpdate() {
                         clientAddress={null}
                         isUpdate={true}
                     />
-                    {image && <Image source={{ uri: image.uri }} style={styles.image} />}
+                    {image && <Image source={{ uri: image.uri }} style={commonStyles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
+                            <ThemedText style={{color: color}}>Add image</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
+                            <ThemedText style={{color: color}}>Take Photo</ThemedText>
                         </TouchableOpacity>
                     </View>
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Update</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
+                            <ThemedText style={{color: color}}>Update</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
-                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
+                            <ThemedText style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -177,50 +179,4 @@ export default function JobUpdate() {
             }
         </KeyboardAvoidingView>
     )
-}
-
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 20,
-    },
-    form: {
-      padding: 20,
-      borderRadius: 10,
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    label: {
-      fontSize: 16,
-      fontWeight: "bold",
-    },
-    loading: {
-        flex: 1,
-        marginTop: 20,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
-    },
-    image: {
-        width: 200,
-        height: 115,
-        borderRadius: 10,
-        marginVertical: 10,
-        alignSelf: 'center',
-    },
-    button: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        width: 100,
-        borderRadius: 10,
-        borderBottomWidth: 1,
-        borderRightWidth: 1,
-    },
-});
+};

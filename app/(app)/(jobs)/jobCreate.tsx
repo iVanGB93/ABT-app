@@ -18,6 +18,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { darkMainColor, lightMainColor } from "@/settings";
 import { setJobMessage } from "@/app/(redux)/jobSlice";
 import JobForm from "@/components/jobs/JobForm";
+import { commonStyles } from "@/constants/commonStyles";
+import { commonStylesForm } from "@/constants/commonStylesForm";
 
 
 interface Errors {
@@ -28,7 +30,7 @@ interface Errors {
 };
 
 export default function JobCreate() {
-    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
+    const {color, darkTheme, business } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const { clients } = useSelector((state: RootState) => state.client);
     const [client, setClient] = useState("");
@@ -73,6 +75,7 @@ export default function JobCreate() {
             await axiosInstance
             .post(`jobs/create/${userName}/`, {
                 action: 'new',
+                business: business.name,
                 name: client,
                 description: description,
                 price: price,
@@ -114,12 +117,12 @@ export default function JobCreate() {
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
+            style={[commonStyles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
-            <ActivityIndicator style={styles.loading} color={color} size="large" />
+            <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
             :
-            <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
+            <ThemedSecondaryView style={[commonStylesForm.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 <ScrollView 
                     keyboardShouldPersistTaps={'handled'}
                     contentContainerStyle={{ flexGrow: 1 }}
@@ -140,11 +143,11 @@ export default function JobCreate() {
                         isUpdate={false}
                     />
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
+                            <ThemedText style={{color: color}}>Create</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
-                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.back()}>
+                            <ThemedText style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -152,43 +155,4 @@ export default function JobCreate() {
             }
         </KeyboardAvoidingView>
     )
-}
-
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 20,
-    },
-    form: {
-      padding: 20,
-      borderRadius: 10,
-      shadowColor: "#fff",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    label: {
-      fontSize: 16,
-      fontWeight: "bold",
-    },
-    loading: {
-        flex: 1,
-        marginTop: 20,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
-    },
-    button: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        width: 100,
-        borderRadius: 10,
-        borderBottomWidth: 1,
-        borderRightWidth: 1,
-    },
-});
+};

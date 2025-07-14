@@ -12,6 +12,7 @@ import { jobFail, setJobs, setJob, setJobMessage } from '@/app/(redux)/jobSlice'
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { darkMainColor, darkSecondColor, lightMainColor } from '@/settings';
 import axiosInstance from '@/axios';
+import { commonStyles } from '@/constants/commonStyles';
 
 
 export default function Jobs() {
@@ -73,11 +74,11 @@ export default function Jobs() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={commonStyles.container}>
       { jobError ? 
       <>
         <ThemedText>{jobError}</ThemedText>
-        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchJobs()}>
+        <TouchableOpacity style={[commonStyles.button, {backgroundColor: color}]} onPress={() => fetchJobs()}>
         <ThemedText>Try againg</ThemedText>
         </TouchableOpacity>
       </>
@@ -95,14 +96,14 @@ export default function Jobs() {
                 </TouchableOpacity>
             );
         }}
-        ItemSeparatorComponent={
+        ItemSeparatorComponent={() => (
             <View
-            style={{
-                height: 16,
-            }}
+                style={{
+                    height: 16,
+                }}
             />
-        }
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ jobError ? jobError.toString() + ", pull to refresh" : "No jobs found, pull to refresh"}</ThemedText>}
+        )}
+        ListEmptyComponent={<ThemedText style={commonStyles.loading}>{ jobError ? jobError.toString() + ", pull to refresh" : "No jobs found, pull to refresh or create a new one"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={
@@ -113,47 +114,11 @@ export default function Jobs() {
                 tintColor={color} // Color del indicador de carga en iOS
             />}
         />
-        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('/(app)/(jobs)/jobCreate')}>
+        <TouchableOpacity style={[commonStyles.createButton, {backgroundColor: color}]} onPress={() => router.push('/(app)/(jobs)/jobCreate')}>
             <Ionicons name="add" size={30} color="#FFF" />
         </TouchableOpacity>
         </>
         }
     </ThemedView>
   )
-}
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loading: {
-        flex: 1,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
-    },
-    button: {
-        position: 'absolute',
-        bottom: 30,
-        right: 30,
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 2,
-        elevation: 5,
-      },
-      updateButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 50,
-        marginTop: 50,
-        width: '80%',
-        borderRadius: 10,
-      },
-})
+};

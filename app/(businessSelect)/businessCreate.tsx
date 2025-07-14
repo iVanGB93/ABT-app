@@ -65,7 +65,7 @@ export default function BusinessCreate() {
   const validateForm = () => {
     let errors: Errors = {};
     if (!name) errors.name = 'Name is required';
-    if (!description) errors.description = 'Description is required';
+    //if (!description) errors.description = 'Description is required';
     if (!email) errors.email = 'Email is required';
     if (email) {
       if (!/\S+@\S+\.\S+/.test(email)) {
@@ -155,7 +155,6 @@ export default function BusinessCreate() {
         {
           backgroundColor: darkTheme ? darkMainColor : lightMainColor,
           marginTop: 50,
-          paddingHorizontal: 15,
         },
       ]}
     >

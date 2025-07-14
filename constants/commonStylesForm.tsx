@@ -4,6 +4,7 @@ import { StyleSheet, Platform } from 'react-native';
 export const commonStylesForm = StyleSheet.create({
     form: {
       padding: 10,
+      margin: 10,
       borderRadius: 10,
       shadowOffset: {
         width: 0,

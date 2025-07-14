@@ -1,1 +1,1 @@
-# Welcome to your Expo app 👋
+# Hello 👋

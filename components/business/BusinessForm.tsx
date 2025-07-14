@@ -120,24 +120,7 @@ export default function BusinessForm({
         />
       </View>
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Description
-      </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons
-          style={{ marginBottom: 5, fontSize: 16 }}
-          name="person-add"
-          color={darkTheme ? darkTtextColor : lightTextColor}
-        />
-        <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
-          placeholder={description ? description : "Enter business's desciption"}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
-          value={description}
-          onChangeText={setDescription}
-        />
-      </View>
-      {errors.description ? <Text style={commonStyles.errorMsg}>{errors.description}</Text> : null}
+      
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Phone
       </ThemedText>
@@ -241,6 +224,24 @@ export default function BusinessForm({
         />
       </View>
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
+      <ThemedText style={commonStyles.text_action} type="subtitle">
+        Description (optional)
+      </ThemedText>
+      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+        <Ionicons
+          style={{ marginBottom: 5, fontSize: 16 }}
+          name="person-add"
+          color={darkTheme ? darkTtextColor : lightTextColor}
+        />
+        <TextInput
+          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          placeholder={description ? description : "Enter business's desciption"}
+          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          value={description}
+          onChangeText={setDescription}
+        />
+      </View>
+      {errors.description ? <Text style={commonStyles.errorMsg}>{errors.description}</Text> : null}
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Website (optional)
       </ThemedText>

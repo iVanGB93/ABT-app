@@ -4,7 +4,6 @@ import {
   View,
   ActivityIndicator,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   Platform,
   Image,
@@ -340,7 +339,7 @@ export default function Profile() {
               Logout
             </ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/*  <TouchableOpacity
             style={[
               commonStyles.button,
               {
@@ -355,7 +354,7 @@ export default function Profile() {
             <ThemedText type="subtitle" style={{ color: color }}>
               Change Business
             </ThemedText>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ScrollView>
       )}
     </ThemedView>

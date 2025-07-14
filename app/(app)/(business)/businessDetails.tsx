@@ -1,12 +1,12 @@
 import {
-  StyleSheet,
+  Image,
+  Text,
+  Modal,
   View,
   ActivityIndicator,
-  Text,
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Platform,
   Alert,
 } from 'react-native';
 import { useState, useEffect } from 'react';
@@ -18,7 +18,14 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import BusinessCard from '@/components/business/BusinessCard';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
+import {
+  darkMainColor,
+  darkSecondColor,
+  darkTtextColor,
+  lightMainColor,
+  lightSecondColor,
+  lightTextColor,
+} from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { businessSetMessage, setExtraExpenses, setExtraIncome } from '@/app/(redux)/businessSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
@@ -33,11 +40,15 @@ export default function BusinessDetails() {
     (state: RootState) => state.business,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const totalIncome = extraIncome?.reduce((sum: any, item: any) => sum + (Number(item.amount) || 0), 0) || 0;
-  const totalExpenses = extraExpenses?.reduce((sum: any, item: any) => sum + (Number(item.amount) || 0), 0) || 0;
+  const totalIncome =
+    extraIncome?.reduce((sum: any, item: any) => sum + (Number(item.amount) || 0), 0) || 0;
+  const totalExpenses =
+    extraExpenses?.reduce((sum: any, item: any) => sum + (Number(item.amount) || 0), 0) || 0;
   const difference = totalIncome - totalExpenses;
 
   const getExtras = async () => {
@@ -68,56 +79,12 @@ export default function BusinessDetails() {
       });
   };
 
-  const handleDelete = async (id: any, type: 'income' | 'expense') => {
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append('action', 'delete');
-    formData.append('type', type);
-    formData.append('id', id);
-    await axiosInstance
-      .post(`business/extras/${business.name}/`, formData, {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-      })
-      .then(function (response) {
-        if (response.data) {
-          Toast.show({
-            type: 'success',
-            text1: 'Success',
-            text2: 'Extra deleted successfully',
-          });
-          getExtras();
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: response.data.message,
-          });
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        console.error('Error deleting extra:', error);
-        if (typeof error.response === 'undefined') {
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2:
-              'A server/network error occurred. Sorry about this - try again in a few minutes.',
-          });
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: error.message,
-          });
-        }
-        setIsLoading(false);
-      });
-  };
-
   useEffect(() => {
+    if (business === undefined) {
+      router.push('/(businessSelect)');
+      return;
+    }
+
     if (businessMessage) {
       Toast.show({
         type: 'success',
@@ -127,7 +94,7 @@ export default function BusinessDetails() {
       dispatch(businessSetMessage(null));
     }
     getExtras();
-  }, []);
+  }, [business]);
 
   return (
     <ThemedView
@@ -151,18 +118,44 @@ export default function BusinessDetails() {
         updated_at={business.updated_at}
       />
       <View style={commonStylesDetails.bottom}>
-        <ThemedText
-          type="subtitle"
+        <View
           style={{
-            color: difference >= 0 ? 'green' : 'red',
-            fontWeight: 'bold',
-            fontSize: 18,
-            marginBottom: 8,
-            textAlign: 'center',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            justifyContent: 'space-between',
+            paddingHorizontal: 10,
           }}
         >
-          {difference >= 0 ? '+' : '-'}${Math.abs(difference)}
-        </ThemedText>
+          <ThemedText>Balance</ThemedText>
+          <ThemedText
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              color: darkTheme ? darkTtextColor : lightTextColor,
+              fontWeight: 'bold',
+              letterSpacing: 2,
+              fontSize: 18,
+              includeFontPadding: false,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          >
+            {'.'.repeat(50)}
+          </ThemedText>
+          <ThemedText
+            type="subtitle"
+            style={{
+              color: difference >= 0 ? 'green' : 'red',
+              fontWeight: 'bold',
+              fontSize: 18,
+              marginBottom: 8,
+              textAlign: 'center',
+            }}
+          >
+            {difference >= 0 ? '+' : '-'}${Math.abs(difference).toFixed(2)}
+          </ThemedText>
+        </View>
         {/* Tabs */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
           <TouchableOpacity
@@ -198,15 +191,9 @@ export default function BusinessDetails() {
               data={activeTab === 'expenses' ? extraExpenses : extraIncome}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  onLongPress={() => {
-                    Alert.alert('Delete', 'Are you sure you want to delete this item?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Delete',
-                        style: 'destructive',
-                        onPress: () => handleDelete(item.id, activeTab === 'income' ? 'income' : 'expense'),
-                      },
-                    ]);
+                  onPress={() => {
+                    setSelectedItem(item);
+                    setDetailsModalVisible(true);
                   }}
                 >
                   <ExtrasCard
@@ -215,19 +202,18 @@ export default function BusinessDetails() {
                     amount={item.amount}
                     date={item.date}
                     income={activeTab === 'income'}
+                    image={item.image}
                   />
                 </TouchableOpacity>
               )}
-              ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
               ListEmptyComponent={
                 <View>
                   <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>
                     No extra {activeTab === 'expenses' ? 'expenses' : 'income'} found, pull to
-                    refresh
+                    refresh or create a new one.
                   </ThemedText>
                 </View>
               }
-              ListHeaderComponent={<View style={{ margin: 5 }} />}
               refreshControl={
                 <RefreshControl
                   refreshing={isLoading}
@@ -241,7 +227,10 @@ export default function BusinessDetails() {
         )}
       </View>
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: darkTheme ? darkSecondColor : lightSecondColor }]}
+        style={[
+          commonStyles.createButton,
+          { backgroundColor: darkTheme ? darkSecondColor : lightSecondColor },
+        ]}
         onPress={
           activeTab === 'income'
             ? () => router.navigate('/(app)/(business)/businessIncomeCreate')
@@ -250,24 +239,53 @@ export default function BusinessDetails() {
       >
         <Ionicons name="add" size={30} color={activeTab === 'income' ? 'green' : 'red'} />
       </TouchableOpacity>
+      <Modal
+        visible={detailsModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDetailsModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <View style={{ width: '90%' }}>
+            <ThemedText type="subtitle" style={{ marginBottom: 10 }}>
+              {activeTab === 'income' ? 'Income Details' : 'Expense Details'}
+            </ThemedText>
+            {selectedItem && (
+              <ExtrasCard
+                id={selectedItem.id}
+                description={selectedItem.description}
+                amount={selectedItem.amount}
+                date={selectedItem.date}
+                image={selectedItem.image}
+                income={activeTab === 'income'}
+                inDetail={true}
+              />
+            )}
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  marginTop: 20,
+                  borderColor: color,
+                  backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+                },
+              ]}
+              onPress={() => setDetailsModalVisible(false)}
+            >
+              <ThemedText type="link" style={{ color }}>
+                Close
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 1,
-    elevation: 5,
-  },
-});

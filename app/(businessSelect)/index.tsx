@@ -21,7 +21,7 @@ import { setBusiness, setMessage } from '@/app/(redux)/settingSlice';
 import BusinessCard from '@/components/business/BusinessCard';
 import { commonStyles } from '@/constants/commonStyles';
 import { darkSecondColor, lightSecondColor } from '@/settings';
-
+import { authLogout } from '../(redux)/authSlice';
 
 export default function BusinessSelect() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -85,7 +85,12 @@ export default function BusinessSelect() {
   const handlePressable = (id: string) => {
     let business = businesses.find((business: { id: string }) => business.id === id);
     dispatch(setBusiness(business));
-    router.navigate('/(app)/(clients)');
+    router.navigate('/(app)/(business)/businessDetails');
+  };
+
+  const handleLogout = async () => {
+    dispatch(authLogout());
+    router.replace('/(auth)/login');
   };
 
   return (
@@ -94,7 +99,14 @@ export default function BusinessSelect() {
         <>
           <ThemedText>{error}</ThemedText>
           <TouchableOpacity
-            style={[commonStyles.button, { borderColor: color, marginTop: 50, backgroundColor: darkTheme ? darkSecondColor : lightSecondColor}]}
+            style={[
+              commonStyles.button,
+              {
+                borderColor: color,
+                marginTop: 50,
+                backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+              },
+            ]}
             onPress={() => getBusinesses()}
           >
             <ThemedText>Try againg</ThemedText>
@@ -136,7 +148,11 @@ export default function BusinessSelect() {
               </ThemedText>
             }
             ListHeaderComponent={<View style={{ margin: 5 }} />}
-            ListFooterComponent={<View style={{ margin: 5 }} />}
+            ListFooterComponent={
+              <TouchableOpacity style={[commonStyles.button, { borderColor: color, margin: 15 }]} onPress={() => handleLogout()}>
+                <ThemedText>Change user</ThemedText>
+              </TouchableOpacity>
+            }
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}
@@ -156,4 +172,4 @@ export default function BusinessSelect() {
       )}
     </ThemedView>
   );
-};
+}

@@ -12,6 +12,7 @@ import { clientSetMessage, setClient, setClients } from "@/app/(redux)/clientSli
 import ClientCard from '@/components/clients/ClientCard';
 import axiosInstance from '@/axios';
 import { setMessage } from '@/app/(redux)/settingSlice';
+import { commonStyles } from '@/constants/commonStyles';
 
 
 export default function Clients() {
@@ -82,17 +83,17 @@ export default function Clients() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={commonStyles.container}>
       {error ?
       <>
         <ThemedText>{error}</ThemedText>
-        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchClients()}>
+        <TouchableOpacity style={[commonStyles.button, {backgroundColor: color}]} onPress={() => fetchClients()}>
         <ThemedText>Try againg</ThemedText>
         </TouchableOpacity>
       </>
       :
       isLoading ? 
-      <ActivityIndicator color={color} size="large" />
+      <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
       :
       <>
       <FlatList
@@ -105,7 +106,7 @@ export default function Clients() {
           );
         }}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ clientMessage ? clientMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh"}</ThemedText>}
+        ListEmptyComponent={<ThemedText style={commonStyles.loading}>{ clientMessage ? clientMessage.toString() + ", pull to refresh" : "No clients found, pull to refresh or create a new one"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={
@@ -116,48 +117,11 @@ export default function Clients() {
             tintColor={color} // Color del indicador de carga en iOS
         />}
       />
-      <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('/(app)/(clients)/clientCreate')}>
+      <TouchableOpacity style={[commonStyles.createButton, {backgroundColor: color}]} onPress={() => router.push('/(app)/(clients)/clientCreate')}>
         <Ionicons name="add" size={30} color="#FFF" />
       </TouchableOpacity>
       </>
       }
     </ThemedView>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-  },
-  loading: {
-      flex: 1,
-      verticalAlign: 'middle',
-      alignSelf: 'center',
-      fontSize: 18,
-  },
-  button: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 1,
-    elevation: 5,
-  },
-  updateButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    marginTop: 50,
-    width: '80%',
-    borderRadius: 10,
-  },
-});
+};

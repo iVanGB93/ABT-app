@@ -32,6 +32,7 @@ import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import PhoneInput from 'react-native-phone-number-input';
 import ClientForm from '@/components/clients/ClientForm';
+import { commonStylesForm } from '@/constants/commonStylesForm';
 
 interface Errors {
   name?: string;
@@ -148,12 +149,17 @@ export default function ClientUpdate() {
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-      style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor }]}
+      style={[
+        commonStyles.container,
+        { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
+      ]}
     >
       {isLoading ? (
-        <ActivityIndicator style={styles.loading} size="large" />
+        <ActivityIndicator style={commonStyles.loading} size="large" />
       ) : (
-        <ThemedSecondaryView style={[styles.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}>
+        <ThemedSecondaryView
+          style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
+        >
           <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
             <ClientForm
               name={name}
@@ -169,9 +175,9 @@ export default function ClientUpdate() {
               errors={errors}
             />
             {image ? (
-              <Image source={{ uri: image }} style={styles.image} />
+              <Image source={{ uri: image }} style={commonStyles.image} />
             ) : (
-              <Image source={{ uri: baseImageURL + client.image }} style={styles.image} />
+              <Image source={{ uri: baseImageURL + client.image }} style={commonStyles.image} />
             )}
             <View
               style={{
@@ -183,7 +189,7 @@ export default function ClientUpdate() {
             >
               <TouchableOpacity
                 style={[
-                  styles.button,
+                  commonStyles.button,
                   {
                     borderColor: color,
                     backgroundColor: darkTheme ? darkMainColor : lightMainColor,
@@ -191,13 +197,13 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => handleImage()}
               >
-                <ThemedText type="subtitle" style={{ color: color }}>
+                <ThemedText style={{ color: color }}>
                   Add image
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
-                  styles.button,
+                  commonStyles.button,
                   {
                     borderColor: color,
                     backgroundColor: darkTheme ? darkMainColor : lightMainColor,
@@ -205,7 +211,7 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => takePhoto()}
               >
-                <ThemedText type="subtitle" style={{ color: color }}>
+                <ThemedText style={{ color: color }}>
                   Take Photo
                 </ThemedText>
               </TouchableOpacity>
@@ -220,7 +226,7 @@ export default function ClientUpdate() {
             >
               <TouchableOpacity
                 style={[
-                  styles.button,
+                  commonStyles.button,
                   {
                     borderColor: color,
                     backgroundColor: darkTheme ? darkMainColor : lightMainColor,
@@ -228,13 +234,13 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => handleSubmit()}
               >
-                <ThemedText type="subtitle" style={{ color: color }}>
+                <ThemedText style={{ color: color }}>
                   Update
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
-                  styles.button,
+                  commonStyles.button,
                   {
                     borderColor: 'red',
                     backgroundColor: darkTheme ? darkMainColor : lightMainColor,
@@ -242,7 +248,7 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => router.back()}
               >
-                <ThemedText type="subtitle" style={{ color: 'red' }}>
+                <ThemedText style={{ color: 'red' }}>
                   Cancel
                 </ThemedText>
               </TouchableOpacity>
@@ -253,67 +259,3 @@ export default function ClientUpdate() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  form: {
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: '#fff',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  input: {
-    height: 40,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    marginBottom: 5,
-    padding: 10,
-    borderRadius: 5,
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 5,
-  },
-  loading: {
-    flex: 1,
-    marginTop: 20,
-    verticalAlign: 'middle',
-    alignSelf: 'center',
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 75,
-    margin: 10,
-    alignSelf: 'center',
-  },
-  button: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 40,
-    width: 100,
-    borderRadius: 10,
-    borderBottomWidth: 1,
-    borderRightWidth: 1,
-  },
-  headerText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginTop: 5,
-  },
-});

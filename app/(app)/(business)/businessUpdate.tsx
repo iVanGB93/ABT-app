@@ -41,9 +41,9 @@ interface Errors {
 }
 
 export default function BusinessUpdate() {
-    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
+    const {color, darkTheme, business } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
-    const { business, businesses } = useSelector((state: RootState) => state.business);
+    const { businesses } = useSelector((state: RootState) => state.business);
     const [name, setName] = useState(business.name);
     const [description, setDescription] = useState(business.description);
     const [phone, setPhone] = useState(business.phone);
@@ -77,7 +77,7 @@ export default function BusinessUpdate() {
         .then(function(response) {
         if (response.data.OK) {
             dispatch(businessSetMessage(response.data.message));
-            router.navigate('/(app)/(business)/businesses');
+            router.navigate('/(app)/(business)/businessDetails');
         }
         })
         .catch(function(error) {
@@ -152,7 +152,7 @@ export default function BusinessUpdate() {
                 if (data.OK) {
                     dispatch(setBusiness(data.business));
                     dispatch(businessSetMessage(data.message));
-                    router.navigate('/(app)/(business)/businesses');
+                    router.navigate('/(app)/(business)/businessDetails');
                 }
                 setError(response.data.message)
                 setIsLoading(false);

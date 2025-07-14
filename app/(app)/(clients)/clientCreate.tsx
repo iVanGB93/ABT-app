@@ -27,6 +27,7 @@ import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@
 import { commonStyles } from "@/constants/commonStyles";
 import { clientSetMessage } from "@/app/(redux)/clientSlice";
 import ClientForm from "@/components/clients/ClientForm";
+import { commonStylesForm } from "@/constants/commonStylesForm";
 
 
 interface Errors {
@@ -47,7 +48,7 @@ export default function ClientCreate() {
     const [error, setError] = useState("");
     const [errors, setErrors] = useState<Errors>({});
     const [isLoading, setIsLoading] = useState(false);
-    const {color, darkTheme } = useSelector((state: RootState) => state.settings);
+    const {color, darkTheme, business } = useSelector((state: RootState) => state.settings);
     const {userName } = useSelector((state: RootState) => state.auth);
     const dispatch = useAppDispatch()
     const router = useRouter();
@@ -56,7 +57,7 @@ export default function ClientCreate() {
         let errors: Errors = {};
         if (!name) errors.name = "Name is required";
         if (email) {if (!/\S+@\S+\.\S+/.test(email)) {errors.email = "Email is invalid!"}};
-        if (!address) errors.address = "Address is required";
+        /* if (!address) errors.address = "Address is required"; */
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -96,6 +97,7 @@ export default function ClientCreate() {
         if (validateForm()) {
             const formData = new FormData();
             formData.append('action', 'new');
+            formData.append('business', business.name);
             formData.append('name', name);
             formData.append('last_name', lastName);
             formData.append('phone', phone);
@@ -144,13 +146,13 @@ export default function ClientCreate() {
     return (
         <KeyboardAvoidingView
             behavior="padding"
-            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
+            style={[commonStyles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             { isLoading ?
-            <ActivityIndicator style={styles.loading} size="large" />
+            <ActivityIndicator style={commonStyles.loading} size="large" />
             :
-            <ThemedSecondaryView style={[styles.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
+            <ThemedSecondaryView style={[commonStylesForm.form, {shadowColor: darkTheme ? '#fff' : '#000'}]}>
                 <ScrollView 
                     keyboardShouldPersistTaps={'handled'}
                     contentContainerStyle={{ flexGrow: 1 }}
@@ -168,21 +170,21 @@ export default function ClientCreate() {
                         setAddress={setAddress}
                         errors={errors}
                     />
-                    {image && <Image source={{ uri: image }} style={styles.image} />}
+                    {image && <Image source={{ uri: image }} style={commonStyles.image} />}
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Add image</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleImage()}>
+                            <ThemedText style={{color: color}}>Add image</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Take Photo</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => takePhoto()}>
+                            <ThemedText style={{color: color}}>Take Photo</ThemedText>
                         </TouchableOpacity>
                     </View>
                     <View style={{width: '100%', flexDirection: 'row',justifyContent: 'space-evenly', marginTop: 15}}>
-                        <TouchableOpacity style={[styles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
-                            <ThemedText type="subtitle" style={{color: color}}>Create</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => handleSubmit()}>
+                            <ThemedText style={{color: color}}>Create</ThemedText>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.navigate('/(app)/(clients)')}>
-                            <ThemedText type="subtitle" style={{color: 'red'}}>Cancel</ThemedText>
+                        <TouchableOpacity style={[commonStyles.button, {borderColor: 'red', backgroundColor: darkTheme ? darkMainColor : lightMainColor}]} onPress={() => router.navigate('/(app)/(clients)')}>
+                            <ThemedText style={{color: 'red'}}>Cancel</ThemedText>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -190,67 +192,4 @@ export default function ClientCreate() {
             }
         </KeyboardAvoidingView>
     )
-}
-
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 20,
-    },
-    form: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-      borderRadius: 10,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    label: {
-      fontSize: 16,
-      fontWeight: "bold",
-    },
-    input: {
-      height: 40,
-      borderColor: "#ddd",
-      borderWidth: 1,
-      marginBottom: 5,
-      padding: 10,
-      borderRadius: 5,
-    },
-    errorText: {
-      color: "red",
-      marginBottom: 5,
-    },
-    loading: {
-        flex: 1,
-        marginTop: 20,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
-    },
-    image: {
-        width: 100,
-        height: 100,
-        margin: 10,
-        borderRadius: 75,
-        alignSelf: 'center',
-    },
-    button: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        width: 100,
-        borderRadius: 10,
-        borderBottomWidth: 1,
-        borderRightWidth: 1,
-    },
-    headerText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        alignSelf: "center",
-    },
-});
+};

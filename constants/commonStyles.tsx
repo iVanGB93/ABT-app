@@ -62,8 +62,8 @@ export const commonStyles = StyleSheet.create({
     button: {
         alignItems: 'center',
         justifyContent: 'center',
-        height: 50,
-        width: 120,
+        height: 40,
+        width: 100,
         alignSelf: 'center',
         borderRadius: 10,
         borderBottomWidth: 1,

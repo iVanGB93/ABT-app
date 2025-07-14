@@ -156,8 +156,8 @@ export default function ClientDetail() {
                   ]}
                   onPress={() => router.push('/(app)/(jobs)/jobCreate')}
                 >
-                  <ThemedText type="subtitle" style={{ color: color }}>
-                    Add new Job
+                  <ThemedText style={{ color: color }}>
+                    + Job
                   </ThemedText>
                 </TouchableOpacity>
               }
