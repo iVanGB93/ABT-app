@@ -105,7 +105,7 @@ export default function Register() {
   return (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Image style={commonStyles.image} source={require('../../assets/images/logo.png')} />
+        <Image style={commonStyles.imageCircle} source={require('../../assets/images/logo.png')} />
         <ThemedText type="title"  style={commonStyles.text_header}>Finish registering!</ThemedText>
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     

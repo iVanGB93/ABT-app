@@ -75,16 +75,16 @@ export default function Jobs() {
 
   return (
     <ThemedView style={commonStyles.container}>
-      { jobError ? 
-      <>
+      { isLoading ? 
+      <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
+      :
+      jobError ? 
+      <View style={commonStyles.containerCentered}>
         <ThemedText>{jobError}</ThemedText>
         <TouchableOpacity style={[commonStyles.button, {backgroundColor: color}]} onPress={() => fetchJobs()}>
-        <ThemedText>Try againg</ThemedText>
+        <ThemedText>Try again</ThemedText>
         </TouchableOpacity>
-      </>
-      :
-      isLoading ? 
-      <ActivityIndicator color={color} size="large" />
+      </View>
       :
       <>
       <FlatList

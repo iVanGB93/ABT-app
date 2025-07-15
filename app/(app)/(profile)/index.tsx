@@ -145,10 +145,6 @@ export default function Profile() {
     router.replace('/(auth)/login');
   };
 
-  const handleChangeBusiness = async () => {
-    dispatch(setBusiness({}));
-  };
-
   return (
     <ThemedView style={styles.container}>
       {loading ? (
@@ -339,22 +335,6 @@ export default function Profile() {
               Logout
             </ThemedText>
           </TouchableOpacity>
-          {/*  <TouchableOpacity
-            style={[
-              commonStyles.button,
-              {
-                borderColor: color,
-                alignSelf: 'center',
-                margin: 15,
-                backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-              },
-            ]}
-            onPress={handleChangeBusiness}
-          >
-            <ThemedText type="subtitle" style={{ color: color }}>
-              Change Business
-            </ThemedText>
-          </TouchableOpacity> */}
         </ScrollView>
       )}
     </ThemedView>

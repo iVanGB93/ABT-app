@@ -60,7 +60,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 />
             </View>
             {errors.name ? (
-                <Text style={styles.errorText}>{errors.name}</Text>
+                <Text style={commonStyles.errorMsg}>{errors.name}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Last Name</ThemedText>
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
@@ -74,7 +74,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 />
             </View>
             {errors.lastName ? (
-                <Text style={styles.errorText}>{errors.lastName}</Text>
+                <Text style={commonStyles.errorMsg}>{errors.lastName}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Phone</ThemedText>
             <PhoneInput
@@ -101,7 +101,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 }}
             />
             {errors.phone ? (
-                <Text style={styles.errorText}>{errors.phone}</Text>
+                <Text style={commonStyles.errorMsg}>{errors.phone}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Email</ThemedText>
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
@@ -115,7 +115,7 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
                 />
             </View>
             {errors.email ? (
-                <Text style={styles.errorText}>{errors.email}</Text>
+                <Text style={commonStyles.errorMsg}>{errors.email}</Text>
             ) : null}
             <ThemedText style={commonStyles.text_action} type="subtitle">Address</ThemedText>
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
@@ -157,71 +157,8 @@ export default function ClientForm({name, setName, lastName, setLastName, phone,
               />
             </View>
             {errors.address ? (
-                <Text style={styles.errorText}>{errors.address}</Text>
+                <Text style={commonStyles.errorMsg}>{errors.address}</Text>
             ) : null}
         </View>
     )
 };
-
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 20,
-    },
-    form: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-      borderRadius: 10,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    label: {
-      fontSize: 16,
-      fontWeight: "bold",
-    },
-    input: {
-      height: 40,
-      borderColor: "#ddd",
-      borderWidth: 1,
-      marginBottom: 5,
-      padding: 10,
-      borderRadius: 5,
-    },
-    errorText: {
-      color: "red",
-      marginBottom: 5,
-    },
-    loading: {
-        flex: 1,
-        marginTop: 20,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
-    },
-    image: {
-        width: 100,
-        height: 100,
-        margin: 10,
-        borderRadius: 75,
-        alignSelf: 'center',
-    },
-    button: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        width: 100,
-        borderRadius: 10,
-        borderBottomWidth: 1,
-        borderRightWidth: 1,
-    },
-    headerText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        alignSelf: "center",
-    },
-});

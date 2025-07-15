@@ -2,6 +2,8 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs, Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
+import { Vibration } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 import { darkSecondColor, lightSecondColor } from '@/settings';
 
@@ -16,7 +18,11 @@ export default function TabLayout() {
     return <Redirect href="/(businessSelect)" />;
   }
 
+  const vibrateTab = () => Vibration.vibrate(30);
+
   return (
+    <>
+    <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: color,
@@ -32,6 +38,9 @@ export default function TabLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="users" color={color} />,
         }}
+        listeners={{
+          tabPress: vibrateTab,
+        }}
       />
       <Tabs.Screen
         name="(jobs)"
@@ -39,6 +48,9 @@ export default function TabLayout() {
           title: 'Jobs',
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="id-card" color={color} />,
+        }}
+        listeners={{
+          tabPress: vibrateTab,
         }}
       />
       <Tabs.Screen
@@ -48,6 +60,9 @@ export default function TabLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="briefcase" color={color} />,
         }}
+        listeners={{
+          tabPress: vibrateTab,
+        }}
       />
       <Tabs.Screen
         name="(business)"
@@ -55,6 +70,9 @@ export default function TabLayout() {
           title: 'Business',
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="building" color={color} />,
+        }}
+        listeners={{
+          tabPress: vibrateTab,
         }}
       />
       <Tabs.Screen
@@ -64,7 +82,11 @@ export default function TabLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="cogs" color={color} />,
         }}
+        listeners={{
+          tabPress: vibrateTab,
+        }}
       />
     </Tabs>
+    </>
   );
 }

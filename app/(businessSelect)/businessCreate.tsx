@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  TextInput,
-  StyleSheet,
   KeyboardAvoidingView,
-  Text,
   Platform,
   ActivityIndicator,
   Image,
@@ -73,7 +70,7 @@ export default function BusinessCreate() {
       }
     }
     //if (!phone) errors.phone = "Phone is required";
-    if (!address) errors.address = 'Address is required';
+    //if (!address) errors.address = 'Address is required';
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };

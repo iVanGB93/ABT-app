@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
 
@@ -10,8 +10,16 @@ import { Ionicons } from "@expo/vector-icons";
 
 
 export default function BusinessLayout() {
-  const {color, darkTheme} = useSelector((state:RootState) => state.settings);
+  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
+  const token = useSelector((state: RootState) => state.auth.token);
   const dispatch = useDispatch();
+
+  if (!token) {
+      return <Redirect href="/" />;
+    }
+    if (!business || Object.keys(business).length === 0) {
+      return <Redirect href="/(businessSelect)" />;
+    }
 
   const handleChangeBusiness = async () => {
       dispatch(setBusiness({}));

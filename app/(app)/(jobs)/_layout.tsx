@@ -27,9 +27,13 @@ function BusinessNameHeader({ name }: { name: string }) {
 
 export default function JobLayout() {
   const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
+  const token = useSelector((state: RootState) => state.auth.token);
 
+  if (!token) {
+    return <Redirect href="/" />;
+  }
   if (!business || Object.keys(business).length === 0) {
-    return <Redirect href={'/(businessSelect)'}/>
+    return <Redirect href="/(businessSelect)" />;
   }
 
   return (

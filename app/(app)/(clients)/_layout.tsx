@@ -1,10 +1,10 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
-import { ScrollView, View } from "react-native";
+import { ScrollView, View } from 'react-native';
 
-import { darkSecondColor, lightSecondColor } from "@/settings";
-import { ThemedText } from "@/components/ThemedText";
+import { darkSecondColor, lightSecondColor } from '@/settings';
+import { ThemedText } from '@/components/ThemedText';
 
 function BusinessNameHeader({ name }: { name: string }) {
   return (
@@ -26,18 +26,22 @@ function BusinessNameHeader({ name }: { name: string }) {
 }
 
 export default function ClientLayout() {
-  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
-  
+  const token = useSelector((state: RootState) => state.auth.token);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+
+  if (!token) {
+    return <Redirect href="/" />;
+  }
   if (!business || Object.keys(business).length === 0) {
-    return <Redirect href={'/(businessSelect)'}/>
+    return <Redirect href="/(businessSelect)" />;
   }
 
   return (
-    <Stack 
+    <Stack
       screenOptions={{
         headerStyle: {
           backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-        }
+        },
       }}
     >
       <Stack.Screen
@@ -47,9 +51,9 @@ export default function ClientLayout() {
           headerRight: () => <BusinessNameHeader name={business.name} />,
         }}
       />
-      <Stack.Screen name="clientDetails" options={{headerTitle: 'Client Details'}}/>
-      <Stack.Screen name="clientCreate" options={{headerTitle: 'Add New Client'}}/>
-      <Stack.Screen name="clientUpdate" options={{headerTitle: 'Update Client'}}/>
+      <Stack.Screen name="clientDetails" options={{ headerTitle: 'Client Details' }} />
+      <Stack.Screen name="clientCreate" options={{ headerTitle: 'Add New Client' }} />
+      <Stack.Screen name="clientUpdate" options={{ headerTitle: 'Update Client' }} />
     </Stack>
   );
 }

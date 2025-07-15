@@ -18,7 +18,7 @@ interface Errors {
 }
 
 export default function VerifyCode() {
-  const {token, code, email,authMessage} = useSelector((state: RootState) => state.auth);
+  const {token, code, userEmail, authMessage} = useSelector((state: RootState) => state.auth);
   const {color, darkTheme} = useSelector((state: RootState) => state.settings);
   const [stateCode, setStateCode] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ export default function VerifyCode() {
         setLoading(true);
         if (code) {
             if (stateCode === code.toString()) {
-                dispatch(setCodeAndEmail({code: null, email: email}));
+                dispatch(setCodeAndEmail({code: null, email: userEmail }));
                 router.navigate('./userAndPassword');
             }
             else {
@@ -69,13 +69,13 @@ export default function VerifyCode() {
   return (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Image style={commonStyles.image} source={require('../../assets/images/logo.png')} />
+        <Image style={commonStyles.imageCircle} source={require('../../assets/images/logo.png')} />
         <ThemedText type="title"  style={commonStyles.text_header}>Continue registering!</ThemedText>
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
         <ScrollView> 
-          <ThemedText style={commonStyles.text_action} type="subtitle">{email}</ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">{userEmail}</ThemedText>
           <ThemedText style={commonStyles.text_action} type="subtitle">Code</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
             <Ionicons name="mail-open-outline" color={darkTheme ? darkTtextColor: lightTextColor} size={18} />

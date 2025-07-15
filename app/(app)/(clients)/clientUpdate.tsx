@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import {
   View,
-  TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
-  Text,
   Platform,
   ActivityIndicator,
   Image,
@@ -13,24 +10,18 @@ import {
 } from 'react-native';
 import axiosInstance from '@/axios';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import {
   baseImageURL,
   darkMainColor,
-  darkTtextColor,
   lightMainColor,
-  lightTextColor,
 } from '@/settings';
-import { ThemedView } from '@/components/ThemedView';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-number-input';
 import ClientForm from '@/components/clients/ClientForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 
@@ -73,7 +64,7 @@ export default function ClientUpdate() {
 
   const handleImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -90,7 +81,7 @@ export default function ClientUpdate() {
       return;
     }
     let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -175,9 +166,9 @@ export default function ClientUpdate() {
               errors={errors}
             />
             {image ? (
-              <Image source={{ uri: image }} style={commonStyles.image} />
+              <Image source={{ uri: image }} style={commonStyles.imageCircle} />
             ) : (
-              <Image source={{ uri: baseImageURL + client.image }} style={commonStyles.image} />
+              <Image source={{ uri: baseImageURL + client.image }} style={commonStyles.imageCircle} />
             )}
             <View
               style={{
@@ -197,9 +188,7 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => handleImage()}
               >
-                <ThemedText style={{ color: color }}>
-                  Add image
-                </ThemedText>
+                <ThemedText style={{ color: color }}>Add image</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -211,9 +200,7 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => takePhoto()}
               >
-                <ThemedText style={{ color: color }}>
-                  Take Photo
-                </ThemedText>
+                <ThemedText style={{ color: color }}>Take Photo</ThemedText>
               </TouchableOpacity>
             </View>
             <View
@@ -234,9 +221,7 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => handleSubmit()}
               >
-                <ThemedText style={{ color: color }}>
-                  Update
-                </ThemedText>
+                <ThemedText style={{ color: color }}>Update</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -248,9 +233,7 @@ export default function ClientUpdate() {
                 ]}
                 onPress={() => router.back()}
               >
-                <ThemedText style={{ color: 'red' }}>
-                  Cancel
-                </ThemedText>
+                <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
               </TouchableOpacity>
             </View>
           </ScrollView>

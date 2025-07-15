@@ -12,6 +12,7 @@ import axiosInstance from '@/axios';
 import { setMessage } from '@/app/(redux)/settingSlice';
 import { setItem, setItemMessage, setItems } from '@/app/(redux)/itemSlice';
 import ItemCard from '@/components/items/ItemCard';
+import { commonStyles } from '@/constants/commonStyles';
 
 
 export default function Items() {
@@ -81,17 +82,17 @@ export default function Items() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={commonStyles.container}>
       {error ?
       <>
         <ThemedText>{error}</ThemedText>
-        <TouchableOpacity style={[styles.updateButton, {backgroundColor: color}]} onPress={() => fetchItems()}>
+        <TouchableOpacity style={[commonStyles.button, {backgroundColor: color}]} onPress={() => fetchItems()}>
         <ThemedText>Try againg</ThemedText>
         </TouchableOpacity>
       </>
       :
       isLoading ? 
-      <ActivityIndicator color={color} size="large" />
+      <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
       :
       <>
       <FlatList
@@ -103,8 +104,8 @@ export default function Items() {
             </TouchableOpacity>
           );
         }}
-        ItemSeparatorComponent={<View style={{ height: 10}}/>}
-        ListEmptyComponent={<ThemedText style={styles.loading}>{ itemMessage ? itemMessage.toString() + ", pull to refresh" : "No items found, pull to refresh"}</ThemedText>}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        ListEmptyComponent={<ThemedText style={commonStyles.loading}>{ itemMessage ? itemMessage.toString() + ", pull to refresh" : "No items found, pull to refresh"}</ThemedText>}
         ListHeaderComponent={<View style={{margin: 5}} />}
         ListFooterComponent={<View style={{margin: 5}} />}
         refreshControl={
@@ -115,48 +116,11 @@ export default function Items() {
             tintColor={color} // Color del indicador de carga en iOS
         />}
       />
-      <TouchableOpacity style={[styles.button, {backgroundColor: color}]} onPress={() => router.push('/(app)/(items)/itemCreate')}>
+      <TouchableOpacity style={[commonStyles.createButton, {backgroundColor: color}]} onPress={() => router.push('/(app)/(items)/itemCreate')}>
         <Ionicons name="add" size={30} color="#FFF" />
       </TouchableOpacity>
       </>
       }
     </ThemedView>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-  },
-  loading: {
-      flex: 1,
-      verticalAlign: 'middle',
-      alignSelf: 'center',
-      fontSize: 18,
-  },
-  button: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  updateButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    marginTop: 50,
-    width: '80%',
-    borderRadius: 10,
-  },
-});
+};

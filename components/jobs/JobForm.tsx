@@ -119,8 +119,11 @@ export default function JobForm({clientsNames, setClient, description, setDescri
             :
             <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>
                 <Ionicons name="location" color={darkTheme ? darkTtextColor: lightTextColor} />
-                {/* <GooglePlacesAutocomplete
+                <GooglePlacesAutocomplete
+                    predefinedPlaces={[]}
                     placeholder={address ? address : "Job address"}
+                    minLength={2}
+                    timeout={1000}
                     textInputProps={{
                         placeholderTextColor: darkTheme ? darkTtextColor: lightTextColor,
                     }}
@@ -150,7 +153,7 @@ export default function JobForm({clientsNames, setClient, description, setDescri
                     listEmptyComponent={
                         <ThemedText>No results, sorry.</ThemedText>
                     }
-                /> */}
+                />
             </View>
             }
             {errors.address ? (

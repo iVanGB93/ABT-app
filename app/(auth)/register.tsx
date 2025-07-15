@@ -94,7 +94,7 @@ export default function Register() {
   ) : (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Image style={commonStyles.image} source={require('../../assets/images/logo.png')} />
+        <Image style={commonStyles.imageCircle} source={require('../../assets/images/logo.png')} />
         <ThemedText type="title" style={commonStyles.text_header}>
           Start registering!
         </ThemedText>

@@ -26,7 +26,7 @@ import { clientSetMessage } from '@/app/(redux)/clientSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
 
 export default function ClientDetail() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const { clientMessage, client } = useSelector((state: RootState) => state.client);
   const { jobs } = useSelector((state: RootState) => state.job);
@@ -39,7 +39,7 @@ export default function ClientDetail() {
   const getJobs = async () => {
     setIsLoading(true);
     await axiosInstance
-      .get(`jobs/list/${userName}/`)
+      .get(`jobs/list/${business.name}/`)
       .then(function (response) {
         if (response.data) {
           dispatch(setJobs(response.data));
@@ -156,9 +156,7 @@ export default function ClientDetail() {
                   ]}
                   onPress={() => router.push('/(app)/(jobs)/jobCreate')}
                 >
-                  <ThemedText style={{ color: color }}>
-                    + Job
-                  </ThemedText>
+                  <ThemedText style={{ color: color }}>+ Job</ThemedText>
                 </TouchableOpacity>
               }
               refreshControl={

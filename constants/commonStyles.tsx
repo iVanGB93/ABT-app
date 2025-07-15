@@ -15,10 +15,16 @@ export const commonStyles = StyleSheet.create({
         justifyContent: 'flex-end',
         padding: 10,
     },
-    image : {
+    imageCircle : {
         width: 80,
         height: 80,
         borderRadius: 50,
+        alignSelf: 'center',
+    },
+    imageSquare : {
+        width: 160,
+        height: 80,
+        borderRadius: 10,
         alignSelf: 'center',
     },
     text_header: {

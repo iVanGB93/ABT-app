@@ -14,7 +14,7 @@ if (production) {
 
 export { baseURL, baseImageURL };
 
-export const version = '1.0.7';
+export const version = '1.0.8';
 
 export const darkMainColor = '#000000';
 export const darkSecondColor = '#1e1e1e';
