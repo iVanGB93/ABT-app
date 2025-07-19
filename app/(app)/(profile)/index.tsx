@@ -8,6 +8,8 @@ import {
   Platform,
   Image,
   ScrollView,
+  Modal,
+  Linking,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,11 +30,13 @@ import { commonStyles } from '@/constants/commonStyles';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
+import { commonStylesCards } from '@/constants/commonStylesCard';
 
 export default function Profile() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
+  const [contactModalVisible, setContactModalVisible] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -50,7 +54,7 @@ export default function Profile() {
         <ScrollView>
           <View style={styles.rowContainerLast}>
             <Image
-              source={{ uri: baseImageURL + business.logo }}
+              source={{ uri: business.logo }}
               style={[styles.image, { borderColor: color }]}
             />
             <View style={styles.info}>
@@ -159,18 +163,19 @@ export default function Profile() {
           </ThemedSecondaryView>
           <ThemedSecondaryView style={styles.sectionContainer}>
             <View style={styles.rowContainer}>
-              <Text
-                style={[styles.optionText, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+              <TouchableOpacity
+                onPress={() => setContactModalVisible(true)}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
               >
                 <Ionicons
                   style={[
                     styles.optionText,
-                    { color: darkTheme ? darkTtextColor : lightTextColor },
+                    { color: darkTheme ? darkTtextColor : lightTextColor, marginRight: 5 },
                   ]}
                   name="person"
-                />{' '}
-                Contact
-              </Text>
+                />
+                <ThemedText type="subtitle">Contact</ThemedText>
+              </TouchableOpacity>
             </View>
             <View style={styles.rowContainer}>
               <Text
@@ -241,6 +246,69 @@ export default function Profile() {
               Logout
             </ThemedText>
           </TouchableOpacity>
+          <Modal
+            visible={contactModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setContactModalVisible(false)}
+          >
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0,0,0,0.3)',
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: darkTheme ? darkSecondColor : '#fff',
+                  padding: 20,
+                  borderRadius: 16,
+                  minWidth: 250,
+                  alignItems: 'center',
+                }}
+              >
+                <ThemedText type="subtitle">
+                  For questions, suggestions or feedback, please contact me:
+                </ThemedText>
+                <View style={[commonStylesCards.dataContainer, { margin: 10 }]}>
+                  <ThemedText
+                    style={[
+                      commonStylesCards.LabelText,
+                      { color: darkTheme ? darkTtextColor : lightTextColor },
+                    ]}
+                  >
+                    Phone:{' '}
+                  </ThemedText>
+                  <TouchableOpacity onPress={() => Linking.openURL(`tel:+17866129974`)}>
+                    <ThemedText type="link">+1 786-612-9974</ThemedText>
+                  </TouchableOpacity>
+                </View>
+                <View style={[commonStylesCards.dataContainer, { margin: 10 }]}>
+                  <ThemedText
+                    style={[
+                      commonStylesCards.LabelText,
+                      { color: darkTheme ? darkTtextColor : lightTextColor },
+                    ]}
+                  >
+                    Email:{' '}
+                  </ThemedText>
+                  <TouchableOpacity onPress={() => Linking.openURL(`mailto:admin@qbared.com`)}>
+                    <ThemedText type="link">admin@qbared.com</ThemedText>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={[commonStyles.button, { borderColor: color, marginTop: 15 }]}
+                  onPress={() => setContactModalVisible(false)}
+                >
+                  <ThemedText type="subtitle" style={{ color: color }}>
+                    Close
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </ScrollView>
       )}
     </ThemedView>

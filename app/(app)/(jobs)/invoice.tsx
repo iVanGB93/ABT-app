@@ -1,220 +1,343 @@
-import React, {useState, useEffect} from 'react';
-import { View, Button, Text, StyleSheet, ScrollView, Modal, Pressable, TouchableOpacity, Platform, ActivityIndicator, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Button,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  Pressable,
+  TouchableOpacity,
+  Platform,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { useSelector } from 'react-redux';
 
-import { RootState, useAppDispatch } from "@/app/(redux)/store";
+import { RootState, useAppDispatch } from '@/app/(redux)/store';
 //import { SENDGRID_API_KEY } from '@env';
 import axiosInstance from '@/axios';
 import { setInvoice, setCharges } from '@/app/(redux)/jobSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { darkSecondColor, lightSecondColor, darkMainColor, darkThirdColor, lightMainColor } from '@/settings';
+import {
+  darkSecondColor,
+  lightSecondColor,
+  darkMainColor,
+  darkThirdColor,
+  lightMainColor,
+} from '@/settings';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 
-
 export default function Invoice() {
-    const { color, darkTheme, businessName, businessLogo, business } = useSelector((state: RootState) => state.settings);
-    const { client } = useSelector((state: RootState) => state.client);
-    const {job, invoice, charges} = useSelector((state: RootState) => state.job);
-    const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const dispatch = useAppDispatch();
-    const router = useRouter();
-    
-    const getInvoice = async () => {
-        setLoading(true);
-        await axiosInstance
-        .get(`jobs/invoice/${job.id}/`)
-        .then(function(response) {
-            if (response.status === 200) {
-                dispatch(setInvoice(response.data.invoice));
-                dispatch(setCharges(response.data.charges));
-                setLoading(false);
-            } else {
-                dispatch(setInvoice(response.data.invoice));
-                dispatch(setCharges(response.data.charges));
-                setError(response.data.message);
-                setLoading(false);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error fetching an invoice', error);
-            setError(error.message);
-            setLoading(false);
-        });
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { client } = useSelector((state: RootState) => state.client);
+  const { job, invoice, charges } = useSelector((state: RootState) => state.job);
+  const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const getInvoice = async () => {
+    setLoading(true);
+    await axiosInstance
+      .get(`jobs/invoice/${job.id}/`)
+      .then(function (response) {
+        if (response.status === 200) {
+          dispatch(setInvoice(response.data.invoice));
+          dispatch(setCharges(response.data.charges));
+          setLoading(false);
+        } else {
+          dispatch(setInvoice(response.data.invoice));
+          dispatch(setCharges(response.data.charges));
+          setError(response.data.message);
+          setLoading(false);
+        }
+      })
+      .catch(function (error) {
+        console.error('Error fetching an invoice', error);
+        setError(error.message);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getInvoice();
+  }, []);
+
+  const convertImageToBase64 = async (uri: any) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+    return `data:image/jpeg;base64,${base64}`;
+  };
+
+  const getBase64FromUrl = async (url: string) => {
+    try {
+      // Descarga la imagen remota a un archivo local temporal
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        FileSystem.cacheDirectory + 'temp_logo.jpg',
+      );
+      const downloadResult = await downloadResumable.downloadAsync();
+      if (!downloadResult || !downloadResult.uri) {
+        throw new Error('Failed to download image or get URI');
+      }
+      // Convierte el archivo local a base64
+      const base64 = await FileSystem.readAsStringAsync(downloadResult.uri, { encoding: 'base64' });
+      return `data:image/jpeg;base64,${base64}`;
+    } catch (error) {
+      console.error('Error downloading or converting image:', error);
+      return ''; // O usa un logo por defecto local
     }
+  };
 
-    useEffect(() => {
-        getInvoice();
-    }, []);
+  const generateHTML = (base64Image: any) => `
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400|Roboto:400,500&display=swap" rel="stylesheet">
+      <style>
+        body {
+          font-family: 'Roboto', 'Montserrat', Arial, sans-serif;
+          background: #f7f8fa;
+          margin: 0;
+          padding: 0;
+          color: #222;
+        }
+        .container {
+          max-width: 800px;
+          margin: 40px auto;
+          background: #fff;
+          border-radius: 18px;
+          box-shadow: 0 8px 32px rgba(60,60,120,0.12);
+          overflow: hidden;
+          padding: 0 0 32px 0;
+        }
+        .header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: linear-gradient(90deg, #4f8cff 0%, #6ed6ff 100%);
+          padding: 32px 32px 24px 32px;
+          border-bottom-left-radius: 32px;
+          border-bottom-right-radius: 32px;
+        }
+        .logo {
+          width: 90px;
+          height: 90px;
+          border-radius: 16px;
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          object-fit: contain;
+        }
+        .business-info {
+          text-align: right;
+          color: #fff;
+        }
+        .business-info .name {
+          font-family: 'Montserrat', Arial, sans-serif;
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+        .business-info .details {
+          font-size: 1rem;
+          font-weight: 400;
+          margin-bottom: 2px;
+        }
+        .invoice-title {
+          font-size: 1.3rem;
+          font-weight: 700;
+          margin-top: 12px;
+          letter-spacing: 1px;
+        }
+        .invoice-number {
+          font-size: 1rem;
+          font-weight: 500;
+          margin-top: 4px;
+        }
+        .date {
+          font-size: 0.95rem;
+          margin-top: 2px;
+          opacity: 0.85;
+        }
+        .details-section {
+          display: flex;
+          justify-content: space-between;
+          background: #f2f6fc;
+          padding: 24px 32px;
+          border-radius: 0 0 18px 18px;
+          margin-bottom: 24px;
+        }
+        .bill-to {
+          font-weight: 700;
+          font-size: 1.1rem;
+          margin-bottom: 8px;
+          color: #4f8cff;
+        }
+        .client-info {
+          font-size: 1rem;
+          color: #222;
+        }
+        .table-section {
+          padding: 0 32px;
+        }
+        table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+          margin-top: 12px;
+          background: #fff;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        th, td {
+          padding: 14px 12px;
+          text-align: left;
+        }
+        th {
+          background: #eaf3ff;
+          color: #4f8cff;
+          font-weight: 700;
+          font-size: 1rem;
+          border-bottom: 2px solid #dbeafe;
+        }
+        tr {
+          transition: background 0.2s;
+        }
+        tr:nth-child(even) {
+          background: #f7f8fa;
+        }
+        td.right {
+          text-align: right;
+          font-weight: 500;
+        }
+        .footer-section {
+          padding: 24px 32px;
+          background: #f2f6fc;
+          border-radius: 18px;
+          margin: 32px 32px 0 32px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 1.1rem;
+          margin-bottom: 8px;
+        }
+        .summary-label {
+          color: #4f8cff;
+          font-weight: 700;
+        }
+        .summary-value {
+          font-weight: 700;
+        }
+        .pay-btn {
+          display: inline-block;
+          margin-top: 18px;
+          padding: 12px 32px;
+          background: linear-gradient(90deg, #4f8cff 0%, #6ed6ff 100%);
+          color: #fff;
+          font-size: 1.1rem;
+          font-weight: 700;
+          border-radius: 8px;
+          text-decoration: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          transition: background 0.2s;
+        }
+        .pay-btn:hover {
+          background: linear-gradient(90deg, #6ed6ff 0%, #4f8cff 100%);
+        }
+        .qr-section {
+          margin-top: 18px;
+          text-align: center;
+        }
+        .qr-label {
+          font-size: 0.95rem;
+          color: #4f8cff;
+          margin-bottom: 6px;
+          display: block;
+        }
+        .qr-img {
+          margin-top: 8px;
+          width: 120px;
+          height: 120px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <img src="${base64Image}" alt="logo-image" class="logo" />
+          <div class="business-info">
+            <div class="name">${business.name}</div>
+            <div class="details">${business.address}</div>
+            <div class="details">${business.phone}</div>
+            <div class="details">${business.email}</div>
+            <div class="invoice-title">Invoice</div>
+            <div class="invoice-number">#${invoice.number}</div>
+            <div class="date">${formatDate(new Date(invoice.date))}</div>
+          </div>
+        </div>
+        <div class="details-section">
+          <div>
+            <div class="bill-to">Bill to:</div>
+            <div class="client-info">${client.name}</div>
+            <div class="client-info">${client.email}</div>
+            <div class="client-info">${client.phone}</div>
+            <div class="client-info">${client.address}</div>
+          </div>
+        </div>
+        <div class="table-section">
+          <table>
+            <tr>
+              <th>Description</th>
+              <th class="right">Amount</th>
+            </tr>
+            ${charges
+              .map(
+                (item: { description: any; amount: any }) => `
+              <tr>
+                <td>${item.description}</td>
+                <td class="right">$${item.amount}</td>
+              </tr>
+            `,
+              )
+              .join('')}
+          </table>
+        </div>
+        <div class="footer-section">
+          <div class="summary-row">
+            <span class="summary-label">Total:</span>
+            <span class="summary-value">$${invoice.total}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">PAID:</span>
+            <span class="summary-value">$${invoice.paid}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Balance Due:</span>
+            <span class="summary-value">$${invoice.due}</span>
+          </div>
+          <a class="pay-btn" href="${invoice.payUrl || `https://abt.qbared.com/jobs/invoice/${invoice.number}/`}">Pay Now</a>
+          <div class="qr-section">
+            <span class="qr-label">Or scan to pay:</span>
+            <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+              invoice.payUrl || `https://abt.qbared.com/jobs/invoice/${invoice.number}/`,
+            )}" alt="QR Pay" />
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
 
-    const convertImageToBase64 = async (uri:any) => {
-        const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-        return `data:image/jpeg;base64,${base64}`;
-    };
-
-    const generateHTML  = (base64Image:any) => `
-        <html>
-            <head>
-            <style>
-                body {
-                    font-family: 'Arial', sans-serif;
-                    padding: 20px;
-                    background-color: #f4f4f4;
-                    color: #333;
-                    max-width: 1024px;
-                    margin: auto;
-                }
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    background-color: #fff;
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-                .invoice-title {
-                    font-size: 28px;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 10px;
-                    text-align: right;
-                }
-                .invoice-number {
-                    font-size: 20px;
-                    font-weight: bold;
-                    margin: 5px;
-                    text-align: right;
-                }
-                .business-section {
-                    text-align: right;
-                }
-                .business-details {
-                    font-size: 16px;
-                    margin: 1px;
-                    text-align: right;
-                }
-                .details {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-top: 10px;
-                    background-color: #fff;
-                    padding: 20px;
-                    margin-bottom: 10px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-                .details p {
-                    margin: 5px 0;
-                    text-align: right;
-                }
-                .table-div {
-                    background-color: #fff;
-                    padding: 20px;
-                    min-height: 300px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-                .table {
-                    width: 80%;
-                    margin: auto;
-                    border-collapse: collapse;
-                    background-color: #fff;
-                    border-radius: 8px;
-                    overflow: hidden;
-                }
-                .table th, .table td {
-                    padding: 12px;
-                }
-                .table th {
-                    background-color: #f7f7f7;
-                    color: #333;
-                    font-weight: bold;
-                    text-align: center;
-                    border-bottom: 1px solid #1e1e1e;
-                }
-                .table tr:nth-child(even) {
-                    background-color: #f9f9f9;
-                    border-bottom: 1px solid #1e1e1e;
-                }
-                .right-td {
-                    text-align: right;
-                }
-                .footer {
-                    margin-top: 10px;
-                    text-align: right;
-                    background-color: #fff;
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-                .footer p {
-                    margin: 10px;
-                }
-                a {
-                    text-decoration: none;
-                    border-radius: 5px;
-                    background-color: #007bff;
-                    padding: 10px 20px;
-                    margin: 10px;
-                    color: #fff;
-                    font-weight: bold;
-                    transition: background-color 0.3s ease;
-                }
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <img src=${base64Image} alt="logo-image" style="width: 150px; height: 150px"/>
-                    <div>
-                        <p class="invoice-title">${businessName}</p>
-                        <p class="business-details">${business.address}</p>
-                        <p class="business-details">${business.phone}</p>
-                        <p class="business-details">${business.email}</p>
-                        <p class="invoice-number">Invoice #${invoice.number}</p>
-                        <p class="business-details">${formatDate(new Date(invoice.date))}</p>
-                    </div>
-                </div>
-                <div class="details">
-                    <p><strong>Bill to:</strong></p>
-                    <div>
-                        <p>${client.name}</p>
-                        <p>${client.email}</p>
-                        <p>${client.phone}</p>
-                        <p>${client.address}</p>
-                    </div>
-                </div>
-                <div class="table-div">
-                    <table class="table">
-                        <tr>
-                            <th>Description</th>
-                            <th>Amount</th>
-                        </tr>
-                        ${charges.map((item: { description: any; amount: any; }) => `
-                        <tr>
-                            <td>${item.description}</td>
-                            <td class="right-td">$ ${item.amount}</td>
-                        </tr>
-                        `).join('')}
-                    </table>
-                </div>
-                <div class="footer">
-                    <p><strong>Total:</strong> $ ${invoice.total}</p>
-                    <p><strong>PAID:</strong> $ ${invoice.paid}</p>
-                    <p><strong>Balance Due:</strong> $ ${invoice.due}</p>
-                    <a href="https://abt.qbared.com/jobs/invoice/${invoice.number}/">Pay Now</a>
-                </div>
-            </body>
-        </html>
-    `;
-
-    /* const sendEmailWithAttachment = async () => {
+  /* const sendEmailWithAttachment = async () => {
         const apiKey = SENDGRID_API_KEY;
         const htmlContent = generateHTML();
         const { uri } = await Print.printToFileAsync({ html: htmlContent });
@@ -262,91 +385,140 @@ export default function Invoice() {
         }
     }; */
 
-    const createAndSendInvoice = async () => {
-        try {
-            const base64Image = await convertImageToBase64(businessLogo);
-            const htmlContent = generateHTML(base64Image);
-            const { uri } = await Print.printToFileAsync({ html: htmlContent});
-            if (uri) {
-                const newFileUri = FileSystem.documentDirectory + `${businessName} Invoice ${invoice.number}.pdf`;
-                console.log(newFileUri);
-                await FileSystem.moveAsync({
-                    from: uri,
-                    to: newFileUri,
-                });
-                if (newFileUri) {
-                    await Sharing.shareAsync(newFileUri);
-                }
-                // Delete the file after sharing
-                // await FileSystem.deleteAsync(newFileUri);
-            }
-        } catch (error) {
-            console.error('Error al generar o enviar el PDF:', error);
+  const createAndSendInvoice = async () => {
+    try {
+      const base64Image = await getBase64FromUrl(business.logo);
+      const htmlContent = generateHTML(base64Image);
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      if (uri) {
+        const newFileUri =
+          FileSystem.documentDirectory + `${business.name} Invoice ${invoice.number}.pdf`;
+        console.log(newFileUri);
+        await FileSystem.moveAsync({
+          from: uri,
+          to: newFileUri,
+        });
+        if (newFileUri) {
+          await Sharing.shareAsync(newFileUri);
         }
-    };
+        // Delete the file after sharing
+        // await FileSystem.deleteAsync(newFileUri);
+      }
+    } catch (error) {
+      console.error('Error al generar o enviar el PDF:', error);
+    }
+  };
 
-    const formatDate = (date: Date) => {
-        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-    };
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
 
-    return (
-        loading ?
-        <ActivityIndicator style={styles.loading} color={color} size="large" />
-        :
-        invoice ? 
-        <ThemedView style={styles.container}>
-            <ScrollView>
-                <ThemedSecondaryView style={styles.invoice}>
-                    <View style={styles.header}>
-                        <ThemedText style={styles.bussinessname}>{businessName}</ThemedText>
-                        <ThemedText style={styles.invoiceTitle}>Invoice #{invoice.number}</ThemedText>
-                        <ThemedText  style={styles.data}>{formatDate(new Date(invoice.date))}</ThemedText>
-                    </View>
-                    <View style={styles.details}>
-                        <ThemedText style={styles.bold}>Bill to:</ThemedText>
-                        <ThemedText style={styles.data}>{client.name}</ThemedText>
-                        <ThemedText style={styles.data}>{client.email}</ThemedText>
-                        <ThemedText style={styles.data}>{client.phone}</ThemedText>
-                        <ThemedText style={styles.data}>{client.address}</ThemedText>
-                    </View>
-                    <View style={styles.table}>
-                        <View style={styles.tableRow}>
-                        <ThemedText style={styles.tableHeader}>Description</ThemedText>
-                        <ThemedText style={styles.tableHeader}>Amount</ThemedText>
-                        </View>
-                        { charges ?
-                        charges.map((item: { description: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; amount: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
-                        <View style={styles.tableRow} key={index}>
-                            <ThemedText>{item.description}</ThemedText>
-                            <ThemedText>${item.amount}</ThemedText>
-                        </View>
-                        )) : 
-                        <View style={styles.tableRow}>
-                            <ThemedText>No charges created.</ThemedText>
-                            <ThemedText>$0</ThemedText>
-                        </View>
-                        }
-                    </View>
-                    <View style={styles.footer}>
-                        <ThemedText style={styles.data}>Total: ${invoice.total}</ThemedText>
-                        <ThemedText style={styles.data}>PAID: ${invoice.paid}</ThemedText>
-                        <ThemedText style={styles.data}>Balance Due: ${invoice.due}</ThemedText>
-                    </View>
-                    {/* <Button title="Email Invoice" onPress={() => sendEmailWithAttachment()} /> */}
-                    <View style={styles.tableRow}>
-                        { invoice.closed ?
-                        <Button  title='Closed'/>
-                        :
-                        <TouchableOpacity style={[styles.button, {borderColor: color, margin: 'auto', backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => router.push('invoiceUpdate')}>
-                            <ThemedText type="subtitle" style={{color: color}}>Change</ThemedText>
-                        </TouchableOpacity>
-                        }
-                        <TouchableOpacity style={[styles.button, {borderColor: color, width: 120, margin: 'auto', backgroundColor: darkTheme ? darkThirdColor : lightMainColor}]} onPress={() => createAndSendInvoice()}>
-                        <ThemedText type="subtitle" style={{color: color}}>Send Invoice</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-                    {/* <Modal
+  return loading ? (
+    <ActivityIndicator style={styles.loading} color={color} size="large" />
+  ) : invoice ? (
+    <ThemedView style={styles.container}>
+      <ScrollView>
+        <ThemedSecondaryView style={styles.invoice}>
+          <View style={styles.header}>
+            <ThemedText style={styles.bussinessname}>{business.name}</ThemedText>
+            <ThemedText style={styles.invoiceTitle}>Invoice #{invoice.number}</ThemedText>
+            <ThemedText style={styles.data}>{formatDate(new Date(invoice.date))}</ThemedText>
+          </View>
+          <View style={styles.details}>
+            <ThemedText style={styles.bold}>Bill to:</ThemedText>
+            <ThemedText style={styles.data}>{client.name}</ThemedText>
+            <ThemedText style={styles.data}>{client.email}</ThemedText>
+            <ThemedText style={styles.data}>{client.phone}</ThemedText>
+            <ThemedText style={styles.data}>{client.address}</ThemedText>
+          </View>
+          <View style={styles.table}>
+            <View style={styles.tableRow}>
+              <ThemedText style={styles.tableHeader}>Description</ThemedText>
+              <ThemedText style={styles.tableHeader}>Amount</ThemedText>
+            </View>
+            {charges ? (
+              charges.map(
+                (
+                  item: {
+                    description:
+                      | string
+                      | number
+                      | boolean
+                      | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+                      | Iterable<React.ReactNode>
+                      | React.ReactPortal
+                      | null
+                      | undefined;
+                    amount:
+                      | string
+                      | number
+                      | boolean
+                      | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+                      | Iterable<React.ReactNode>
+                      | React.ReactPortal
+                      | null
+                      | undefined;
+                  },
+                  index: React.Key | null | undefined,
+                ) => (
+                  <View style={styles.tableRow} key={index}>
+                    <ThemedText>{item.description}</ThemedText>
+                    <ThemedText>${item.amount}</ThemedText>
+                  </View>
+                ),
+              )
+            ) : (
+              <View style={styles.tableRow}>
+                <ThemedText>No charges created.</ThemedText>
+                <ThemedText>$0</ThemedText>
+              </View>
+            )}
+          </View>
+          <View style={styles.footer}>
+            <ThemedText style={styles.data}>Total: ${invoice.total}</ThemedText>
+            <ThemedText style={styles.data}>PAID: ${invoice.paid}</ThemedText>
+            <ThemedText style={styles.data}>Balance Due: ${invoice.due}</ThemedText>
+          </View>
+          {/* <Button title="Email Invoice" onPress={() => sendEmailWithAttachment()} /> */}
+          <View style={styles.tableRow}>
+            {invoice.closed ? (
+              <Button title="Closed" />
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  {
+                    borderColor: color,
+                    margin: 'auto',
+                    backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
+                  },
+                ]}
+                onPress={() => router.navigate('/(app)/(jobs)/invoiceUpdate')}
+              >
+                <ThemedText type="subtitle" style={{ color: color }}>
+                  Change
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                {
+                  borderColor: color,
+                  width: 120,
+                  margin: 'auto',
+                  backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
+                },
+              ]}
+              onPress={() => createAndSendInvoice()}
+            >
+              <ThemedText type="subtitle" style={{ color: color }}>
+                Send Invoice
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+          {/* <Modal
                         animationType="slide"
                         transparent={true}
                         visible={modalVisibleInvoice}
@@ -375,83 +547,95 @@ export default function Invoice() {
                         }
                         </View>
                     </Modal> */}
-                </ThemedSecondaryView>
-            </ScrollView>
-        </ThemedView>
-        :
-        <ThemedView style={styles.container}>
-            <ThemedText style={[styles.invoiceTitle, {textAlign: 'center', margin: 'auto'}]}>{error}</ThemedText> 
-            <TouchableOpacity style={[styles.button, {borderColor: color, margin: 'auto'}]} onPress={() => router.push('invoiceCreate')}>
-                <ThemedText type="subtitle" style={{color: color, textAlign: 'center'}}>Create</ThemedText>
-            </TouchableOpacity>
-        </ThemedView>
-    );
-};
+        </ThemedSecondaryView>
+      </ScrollView>
+    </ThemedView>
+  ) : (
+    <ThemedView style={styles.container}>
+      <ThemedText style={[styles.invoiceTitle, { textAlign: 'center', margin: 'auto' }]}>
+        {error}
+      </ThemedText>
+      <TouchableOpacity
+        style={[
+          styles.button,
+          {
+            borderColor: color,
+            margin: 'auto',
+            backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
+          },
+        ]}
+        onPress={() => router.navigate('/(app)/(jobs)/invoiceCreate')}
+      >
+        <ThemedText style={{ color: color, textAlign: 'center' }}>Create</ThemedText>
+      </TouchableOpacity>
+    </ThemedView>
+  );
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 10,
-    },
-    invoice: {
-        margin: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#ddd', 
-    },
-    header: {
-        padding: 10,
-    },
-    bussinessname: {
-      fontSize: 24,
-      fontWeight: 'bold',
-    },
-    invoiceTitle: {
-        textAlign:  'right',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    details: {
-        padding: 10,
-    },
-    bold: {
-      fontWeight: 'bold',
-      fontSize: 16,
-    },
-    data: {
-        fontSize: 15,
-        textAlign: 'right',
-    },
-    table: {
-        margin: 'auto',
-        width: '90%',
-        marginVertical: 20,
-    },
-    tableRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: '#ddd',
-    },
-    tableHeader: {
-      fontWeight: 'bold',
-    },
-    footer: {
-        padding: 10,
-    },
-    button: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        width: 100,
-        borderRadius: 10,
-        borderBottomWidth: 1,
-        borderRightWidth: 1,
-    },
-    loading: {
-        flex: 1,
-        marginTop: 20,
-        verticalAlign: 'middle',
-        alignSelf: 'center',
-    },
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  invoice: {
+    margin: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  header: {
+    padding: 10,
+  },
+  bussinessname: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  invoiceTitle: {
+    textAlign: 'right',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  details: {
+    padding: 10,
+  },
+  bold: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  data: {
+    fontSize: 15,
+    textAlign: 'right',
+  },
+  table: {
+    margin: 'auto',
+    width: '90%',
+    marginVertical: 20,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  tableHeader: {
+    fontWeight: 'bold',
+  },
+  footer: {
+    padding: 10,
+  },
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
+    width: 100,
+    borderRadius: 10,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+  },
+  loading: {
+    flex: 1,
+    marginTop: 20,
+    verticalAlign: 'middle',
+    alignSelf: 'center',
+  },
 });
