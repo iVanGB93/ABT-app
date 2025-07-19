@@ -117,7 +117,7 @@ export default function JobCard({id, status, client, address, description, price
   const handleInvoice = () => {
     let pickedClient = clients.find((pickedClient: { name: any; }) => pickedClient.name === client);
     dispatch(setClient(pickedClient));
-    router.push('(app)/(jobs)/invoice');
+    router.navigate('/(app)/(jobs)/invoice');
   };
 
   const toggleImageSize = () => {
@@ -166,7 +166,7 @@ export default function JobCard({id, status, client, address, description, price
             <TouchableOpacity onPress={toggleImageSize}>
               <Image 
               style={commonStylesCards.imageJob} 
-              source={{ uri: imageObj.uri }}
+              source={{ uri: image }}
               onError={() => setImageError(true)}
               />
             </TouchableOpacity>
@@ -252,7 +252,7 @@ export default function JobCard({id, status, client, address, description, price
         <View style={commonStylesCards.modalContainer}>
           <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
             <Image
-              source={{ uri: imageObj.uri }}
+              source={{ uri: image }}
               style={commonStylesCards.expandedImage}
             />
           </TouchableOpacity>

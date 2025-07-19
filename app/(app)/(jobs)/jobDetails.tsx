@@ -1,13 +1,11 @@
 import {
-  StyleSheet,
   Text,
   View,
   ActivityIndicator,
   RefreshControl,
-  Platform,
   FlatList,
   TouchableOpacity,
-  Alert,
+  Vibration,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
@@ -18,12 +16,14 @@ import { ThemedView } from '@/components/ThemedView';
 import JobCard from '@/components/jobs/JobCard';
 import SpentCard from '@/components/jobs/SpentCard';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import { setJob } from '@/app/(redux)/jobSlice';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
 import axiosInstance from '@/axios';
 import { setItemMessage, setUsedItems } from '@/app/(redux)/itemSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import { commonStyles } from '@/constants/commonStyles';
+import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
+import { setBusiness } from '@/app/(redux)/settingSlice';
+
 
 export default function JobDetail() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
@@ -40,14 +40,29 @@ export default function JobDetail() {
     await axiosInstance
       .get(`jobs/spents/list/${job.id}/`)
       .then(function (response) {
+        Vibration.vibrate(15);
         if (response.data) {
           dispatch(setUsedItems(response.data));
         }
         setIsLoading(false);
       })
       .catch(function (error) {
+        Vibration.vibrate(60);
         console.error('Error fetching spents:', error);
-        dispatch(setItemMessage(error.response));
+        if (typeof error.response === 'undefined') {
+          setError(
+            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
+          );
+        } else {
+          if (error.status === 401) {
+            dispatch(authSetMessage('Unauthorized, please login againg'));
+            dispatch(setBusiness([]));
+            dispatch(authLogout());
+            router.replace('/');
+          } else {
+            setError('Error getting your spents.');
+          }
+        }
         setIsLoading(false);
       });
   };
@@ -123,9 +138,7 @@ export default function JobDetail() {
                 ]}
                 onPress={() => router.push('/(app)/(jobs)/spentCreate')}
               >
-                <Text style={[commonStylesDetails.headerText, { color: color }]}>
-                  + Spent
-                </Text>
+                <Text style={[commonStylesDetails.headerText, { color: color }]}>+ Spent</Text>
               </TouchableOpacity>
             ) : null
           }

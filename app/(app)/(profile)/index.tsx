@@ -10,14 +10,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import { setBusiness, setColor } from '@/app/(redux)/settingSlice';
+import { setBusiness } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
-import axiosInstance from '@/axios';
 import {
   baseImageURL,
   darkSecondColor,
@@ -35,109 +32,9 @@ import { commonStylesDetails } from '@/constants/commonStylesDetails';
 export default function Profile() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
-  const [newName, setNewName] = useState(business.business_name);
-  const [newLogo, setNewLogo] = useState<any>(business.logo);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const dispatch = useAppDispatch();
-
-  const downloadLogo = async () => {
-    try {
-      const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory!);
-      console.log('Archivos en documentDirectory:', files);
-      const oldLogo = FileSystem.documentDirectory + 'logo.jpeg';
-      await FileSystem.deleteAsync(oldLogo);
-      const fileUrl = baseImageURL + business.logo;
-      const fileUri = FileSystem.documentDirectory + 'logo.jpeg';
-      const { uri } = await FileSystem.downloadAsync(fileUrl, fileUri);
-      dispatch(setBusinessLogo(uri));
-    } catch (error) {
-      console.error('Error al listar archivos:', error);
-    }
-  };
-
-  /* const getAccount = async () => {
-        await axiosInstance
-        .get(`user/account/${userName}/`)
-        .then(function(response) {
-            if (response.data) {
-                dispatch(setBusiness(response.data));
-                setLoading(false);
-            } else {
-                setError(response.data.message);
-                setLoading(false);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error getting account:', error);
-            if (typeof error.response === 'undefined') {
-                setError('A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.');
-            } else {
-                setError(error.message);
-            };
-            setLoading(false);
-        });
-    };
-
-    useEffect(() => {
-        getAccount();
-    }, []); */
-
-  const handleBN = async () => {
-    setLoading(true);
-    const formData = new FormData();
-    formData.append('business_name', newName);
-    const uriParts = newLogo.split('.');
-    const fileType = uriParts[uriParts.length - 1];
-    const fileName = `${userName}BusinessLogo.${fileType}`;
-    formData.append('business_logo', {
-      uri: newLogo,
-      name: fileName,
-      type: `image/${fileType}`,
-    } as unknown as Blob);
-    await axiosInstance
-      .post(`user/account/${userName}/`, formData, {
-        headers: {
-          'content-Type': 'multipart/form-data',
-        },
-      })
-      .then(function (response) {
-        if (response.data) {
-          dispatch(setBusinessName(newName));
-          dispatch(setBusiness(response.data));
-          dispatch(setBusinessLogo(newLogo));
-          //downloadLogo();
-          setLoading(false);
-        } else {
-          setError(response.data.message);
-          setLoading(false);
-        }
-      })
-      .catch(function (error) {
-        console.error('Error fetching jobs:', error);
-        try {
-          const message = error.data.message;
-          setError(message);
-          setLoading(false);
-        } catch (e) {
-          setError('Error getting your jobs.');
-          setLoading(false);
-        }
-      });
-  };
-
-  const handleImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setNewLogo(result.assets[0].uri);
-    }
-  };
 
   const handleLogout = async () => {
     dispatch(setBusiness({}));
@@ -228,7 +125,7 @@ export default function Profile() {
                 {business.phone ? business.phone : 'no phone saved'}
               </Text>
             </View>
-            <View style={styles.rowContainer}>
+            <View style={styles.rowContainerLast}>
               <Text
                 style={[styles.optionText, { color: darkTheme ? darkTtextColor : lightTextColor }]}
               >
@@ -241,14 +138,23 @@ export default function Profile() {
                 />{' '}
                 Address
               </Text>
-              <Text
-                style={[
-                  styles.optionTextRight,
-                  { color: darkTheme ? darkTtextColor : lightTextColor },
-                ]}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ maxWidth: '60%' }}
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
               >
-                {business.address ? business.address : 'no address saved'}
-              </Text>
+                <Text
+                  style={[
+                    styles.optionTextRight,
+                    { color: darkTheme ? darkTtextColor : lightTextColor },
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {business.address ? business.address : 'no address saved'}
+                </Text>
+              </ScrollView>
             </View>
           </ThemedSecondaryView>
           <ThemedSecondaryView style={styles.sectionContainer}>
@@ -356,7 +262,7 @@ const styles = StyleSheet.create({
     padding: 10,
     margin: 5,
     borderRadius: 15,
-    width: '90%',
+    width: '95%',
     alignItems: 'center',
     alignSelf: 'center',
   },

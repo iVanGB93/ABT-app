@@ -1,13 +1,10 @@
 import {
-  Image,
-  Text,
   Modal,
   View,
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
@@ -32,27 +29,26 @@ import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import axiosInstance from '@/axios';
 import ExtrasCard from '@/components/business/ExtrasCard';
 import { Ionicons } from '@expo/vector-icons';
+import { jobFail, setJobs } from '@/app/(redux)/jobSlice';
+import { setBusiness } from '@/app/(redux)/settingSlice';
+import { authLogout } from '@/app/(redux)/authSlice';
 
 export default function BusinessDetails() {
   const [activeTab, setActiveTab] = useState<'expenses' | 'income'>('expenses');
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { jobs } = useSelector((state: RootState) => state.job);
+  const [isLoadingJob, setIsLoadingJob] = useState(true);
+  const [difference, setDifference] = useState(0);
   const { businessMessage, extraExpenses, extraIncome } = useSelector(
     (state: RootState) => state.business,
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const totalIncome =
-    extraIncome?.reduce((sum: any, item: any) => sum + (Number(item.amount) || 0), 0) || 0;
-  const totalExpenses =
-    extraExpenses?.reduce((sum: any, item: any) => sum + (Number(item.amount) || 0), 0) || 0;
-  const difference = totalIncome - totalExpenses;
-
   const getExtras = async () => {
-    setIsLoading(true);
     await axiosInstance
       .get(`business/extras/${business.name}/`)
       .then(function (response) {
@@ -70,12 +66,37 @@ export default function BusinessDetails() {
           dispatch(businessSetMessage('Error fetching extras, undefined'));
         } else {
           if (error.response.status === 401) {
-            router.push('/');
+            dispatch(setBusiness([]))
+            dispatch(authLogout());
+            router.replace('/');
           } else {
-            dispatch(businessSetMessage(error.message));
+            dispatch(businessSetMessage('Error fetching extras, undefined'));
           }
         }
         setIsLoading(false);
+      });
+  };
+
+  const getJobs = async () => {
+    await axiosInstance
+      .get(`jobs/list/${business.name}/`)
+      .then(function (response) {
+        if (response.data) {
+          dispatch(setJobs(response.data));
+        } else {
+          dispatch(jobFail(response.data.message));
+        }
+        setIsLoadingJob(false);
+      })
+      .catch(function (error) {
+        console.error('Error fetching jobs:', error);
+        try {
+          const message = error.data.message;
+          dispatch(jobFail(message));
+        } catch (e) {
+          dispatch(jobFail('Error getting your jobs.'));
+        }
+        setIsLoadingJob(false);
       });
   };
 
@@ -84,7 +105,6 @@ export default function BusinessDetails() {
       router.push('/(businessSelect)');
       return;
     }
-
     if (businessMessage) {
       Toast.show({
         type: 'success',
@@ -94,7 +114,25 @@ export default function BusinessDetails() {
       dispatch(businessSetMessage(null));
     }
     getExtras();
+    getJobs();
   }, [business]);
+
+  useEffect(() => {
+    if (Array.isArray(jobs) && Array.isArray(extraIncome) && Array.isArray(extraExpenses)) {
+      const totalJobs = jobs.reduce((sum: number, job: any) => sum + (Number(job.price) || 0), 0);
+      const totalIncome = extraIncome.reduce(
+        (sum: any, item: any) => sum + (Number(item.amount) || 0),
+        0,
+      );
+      const totalExpenses = extraExpenses.reduce(
+        (sum: any, item: any) => sum + (Number(item.amount) || 0),
+        0,
+      );
+      setDifference(totalIncome + totalJobs - totalExpenses);
+    } else {
+      setDifference(0);
+    }
+  }, [jobs, extraIncome, extraExpenses]);
 
   return (
     <ThemedView
@@ -143,18 +181,22 @@ export default function BusinessDetails() {
           >
             {'.'.repeat(50)}
           </ThemedText>
-          <ThemedText
-            type="subtitle"
-            style={{
-              color: difference >= 0 ? 'green' : 'red',
-              fontWeight: 'bold',
-              fontSize: 18,
-              marginBottom: 8,
-              textAlign: 'center',
-            }}
-          >
-            {difference >= 0 ? '+' : '-'}${Math.abs(difference).toFixed(2)}
-          </ThemedText>
+          {isLoadingJob ? (
+            <ActivityIndicator color={color} />
+          ) : (
+            <ThemedText
+              type="subtitle"
+              style={{
+                color: difference >= 0 ? 'green' : 'red',
+                fontWeight: 'bold',
+                fontSize: 18,
+                marginBottom: 8,
+                textAlign: 'center',
+              }}
+            >
+              {difference >= 0 ? '+' : '-'}${Math.abs(difference).toFixed(2)}
+            </ThemedText>
+          )}
         </View>
         {/* Tabs */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>

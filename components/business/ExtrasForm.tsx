@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
   Text,
-  Platform,
-  ActivityIndicator,
   Image,
-  ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,7 +16,6 @@ import {
   lightTextColor,
 } from '@/settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
@@ -188,12 +182,12 @@ export default function ExtraForm({
       { formImage ? 
       <Image
         source={{ uri: formImage.uri }}
-        style={commonStyles.image}
+        style={commonStyles.imageCircle}
         onError={() => setFormImage(null)}
       /> : image ? (
         <Image
           source={{ uri: imageObj }}
-          style={commonStyles.image}
+          style={commonStyles.imageCircle}
           onError={() => setImage(null)}
         />
       ) : (

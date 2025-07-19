@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
@@ -14,18 +13,12 @@ import {
 } from "react-native";
 import axiosInstance from '@/axios';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from "@expo/vector-icons";
 import { RootState, useAppDispatch } from "@/app/(redux)/store";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { baseImageURL, darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from "@/settings";
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedSecondaryView } from "@/components/ThemedSecondaryView";
 import { ThemedText } from "@/components/ThemedText";
-import { commonStyles } from "@/constants/commonStyles";
-import { clientSetMessage, setClient } from "@/app/(redux)/clientSlice";
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-number-input';
 import { businessSetMessage } from "@/app/(redux)/businessSlice";
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import BusinessForm from "@/components/business/BusinessForm";

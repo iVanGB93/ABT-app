@@ -1,12 +1,10 @@
 import {
-  StyleSheet,
   View,
   ActivityIndicator,
-  Text,
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Platform,
+  Vibration,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
@@ -24,10 +22,11 @@ import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from
 import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage } from '@/app/(redux)/clientSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
+import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
+import { setBusiness } from '@/app/(redux)/settingSlice';
 
 export default function ClientDetail() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
   const { clientMessage, client } = useSelector((state: RootState) => state.client);
   const { jobs } = useSelector((state: RootState) => state.job);
   const [stateJobs, setStateJobs] = useState<any>([]);
@@ -41,6 +40,7 @@ export default function ClientDetail() {
     await axiosInstance
       .get(`jobs/list/${business.name}/`)
       .then(function (response) {
+        Vibration.vibrate(15);
         if (response.data) {
           dispatch(setJobs(response.data));
         } else {
@@ -49,14 +49,20 @@ export default function ClientDetail() {
         setIsLoading(false);
       })
       .catch(function (error) {
-        console.error('Error fetching jobs:', error);
+        Vibration.vibrate(60);
+        console.error('Error fetching spents:', error);
         if (typeof error.response === 'undefined') {
-          setError('Error fetching jobs, undefinded');
+          setError(
+            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
+          );
         } else {
-          if (error.response.status === 401) {
-            router.push('/');
+          if (error.status === 401) {
+            dispatch(authSetMessage('Unauthorized, please login againg'));
+            dispatch(setBusiness([]));
+            dispatch(authLogout());
+            router.replace('/');
           } else {
-            setError(error.message);
+            setError('Error getting your spents.');
           }
         }
         setIsLoading(false);
@@ -84,7 +90,7 @@ export default function ClientDetail() {
       let jobList = jobs.filter((jobs: { client: any }) => jobs.client === client.name);
       setStateJobs(jobList);
     }
-  }, []);
+  }, [clientMessage, jobs]);
 
   const handlePressable = (id: string) => {
     let job = jobs.find((job: { id: string }) => job.id === id);
@@ -112,7 +118,7 @@ export default function ClientDetail() {
       <View style={commonStylesDetails.bottom}>
         <ThemedText type="subtitle">Jobs</ThemedText>
         {isLoading ? (
-          <ActivityIndicator style={commonStylesDetails.loading} color={color} size="large" />
+          <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
         ) : (
           <View style={commonStylesDetails.list}>
             <FlatList

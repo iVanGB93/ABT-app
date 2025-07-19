@@ -72,7 +72,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
           :
           <Image 
           style={{width: 30, height: 30, borderRadius: 75}} 
-          source={{ uri: imageObj }}
+          source={{ uri: image }}
           onError={() => setImageError(true)}
           />
           }
@@ -104,7 +104,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
         <TouchableOpacity onPress={toggleImageSize}>
           <Image 
           style={commonStylesCards.imageUser} 
-          source={{ uri: imageObj }}
+          source={{ uri: image }}
           onError={() => setImageError(true)}
           />
         </TouchableOpacity>
@@ -148,7 +148,7 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
         <View style={commonStylesCards.modalContainer}>
           <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
             <Image
-              source={{ uri: imageObj }}
+              source={{ uri: image }}
               style={commonStylesCards.expandedImage}
             />
           </TouchableOpacity>

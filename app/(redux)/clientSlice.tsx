@@ -5,6 +5,7 @@ export interface ClientState {
     client: any;
     clients: any;
     clientMessage: string | null;
+    clientError?: string | null;
 };
 
 const initialState: ClientState = {
@@ -26,11 +27,15 @@ export const clientSlice = createSlice({
         setClients: (state, action: PayloadAction<any>) => {
             state.clients = action.payload;
         },
+        clientFail: (state, action: PayloadAction<string>) => {
+            state.clientError = action.payload;
+            state.clientMessage = null;
+        },
     }
 });
 
 
-export const { clientSetMessage, setClient, setClients } = clientSlice.actions;
+export const { clientSetMessage, setClient, setClients, clientFail } = clientSlice.actions;
 
 export const clientReducer = clientSlice.reducer;
 

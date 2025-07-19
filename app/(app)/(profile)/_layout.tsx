@@ -5,7 +5,7 @@ import { RootState } from '../../(redux)/store';
 import { darkSecondColor, lightSecondColor } from '@/settings';
 
 export default function ProfileLayout() {
-  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { darkTheme, business } = useSelector((state: RootState) => state.settings);
   const token = useSelector((state: RootState) => state.auth.token);
 
   if (!token) {

@@ -28,7 +28,7 @@ function BusinessNameHeader({ name }: { name: string }) {
 
 export default function ItemLayout() {
   const token = useSelector((state: RootState) => state.auth.token);
-  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
+  const { darkTheme, business} = useSelector((state:RootState) => state.settings);
   
   if (!token) {
     return <Redirect href="/" />;

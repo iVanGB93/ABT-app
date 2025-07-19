@@ -3,14 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
 
 import { darkSecondColor, darkTtextColor, lightSecondColor, lightTextColor } from "@/settings";
-import { Pressable } from "react-native";
-import { ThemedText } from "@/components/ThemedText";
+import { Pressable, View } from "react-native";
 import { setBusiness } from "@/app/(redux)/settingSlice";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemedText } from "@/components/ThemedText";
 
 
 export default function BusinessLayout() {
-  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
+  const {darkTheme, business} = useSelector((state:RootState) => state.settings);
   const token = useSelector((state: RootState) => state.auth.token);
   const dispatch = useDispatch();
 
@@ -35,7 +35,10 @@ export default function BusinessLayout() {
     >
       <Stack.Screen name="businessDetails" options={{headerTitle: 'Details', headerRight: () => (
         <Pressable onPress={() => {handleChangeBusiness()}} style={{marginRight: 10}}>
-          <Ionicons name="exit" size={24} color={darkTheme ? darkTtextColor : lightTextColor} />
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <ThemedText>Exit</ThemedText>
+            <Ionicons name="exit" size={24} color={darkTheme ? darkTtextColor : lightTextColor} />
+          </View>
         </Pressable>
       )}}/>
       <Stack.Screen name="businessExpenseCreate" options={{headerTitle: 'Add New Business Expense'}}/>
@@ -45,4 +48,4 @@ export default function BusinessLayout() {
       <Stack.Screen name="businessUpdate" options={{headerTitle: 'Update Business'}}/>
     </Stack>
   );
-}
+};

@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 9.2.0"
+    "version": ">= 9.2.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -15,7 +16,8 @@
     "production": {
       "android": {
         "buildType": "app-bundle",
-        "withoutCredentials": false
+        "withoutCredentials": false,
+        "autoIncrement": true
       },
       "ios": {
         "simulator": false,

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
   View,
   RefreshControl,
   FlatList,
@@ -19,8 +18,9 @@ import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { clientSetMessage, setClient, setClients } from '@/app/(redux)/clientSlice';
 import ClientCard from '@/components/clients/ClientCard';
 import axiosInstance from '@/axios';
-import { setMessage } from '@/app/(redux)/settingSlice';
+import { setBusiness, setMessage } from '@/app/(redux)/settingSlice';
 import { commonStyles } from '@/constants/commonStyles';
+import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 
 export default function Clients() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -35,9 +35,9 @@ export default function Clients() {
     await axiosInstance
       .get(`clients/${business.name}/`)
       .then(function (response) {
+        Vibration.vibrate(15);
         if (response.data) {
           dispatch(setClients(response.data));
-          Vibration.vibrate(15);
           setIsLoading(false);
         } else {
           dispatch(clientSetMessage(response.data.message));
@@ -51,17 +51,17 @@ export default function Clients() {
           setError(
             'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
           );
-          setIsLoading(false);
         } else {
           if (error.status === 401) {
-            setIsLoading(false);
-            dispatch(setMessage('Unauthorized, please login againg'));
-            router.push('/');
+            dispatch(authSetMessage('Unauthorized, please login againg'));
+            dispatch(setBusiness([]));
+            dispatch(authLogout());
+            router.replace('/');
           } else {
             setError('Error getting your clients.');
-            setIsLoading(false);
           }
         }
+        setIsLoading(false);
       });
   };
 
@@ -89,7 +89,7 @@ export default function Clients() {
   const handlePressable = (id: string) => {
     let client = clients.find((client: { id: string }) => client.id === id);
     dispatch(setClient(client));
-    router.push('/(app)/(clients)/clientDetails');
+    router.navigate('/(app)/(clients)/clientDetails');
   };
 
   return (

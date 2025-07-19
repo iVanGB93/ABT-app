@@ -26,7 +26,7 @@ function BusinessNameHeader({ name }: { name: string }) {
 }
 
 export default function JobLayout() {
-  const {color, darkTheme, business} = useSelector((state:RootState) => state.settings);
+  const { darkTheme, business} = useSelector((state:RootState) => state.settings);
   const token = useSelector((state: RootState) => state.auth.token);
 
   if (!token) {
@@ -48,6 +48,7 @@ export default function JobLayout() {
         name="index"
         options={{
           headerTitle: 'Jobs',
+          headerLeft: () => null,
           headerRight: () => <BusinessNameHeader name={business.name} />,
         }}
       />

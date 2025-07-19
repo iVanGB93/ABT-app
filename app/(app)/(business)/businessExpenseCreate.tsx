@@ -23,7 +23,6 @@ export default function BusinessExpenseCreate() {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [image, setImage] = useState<any>(null);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   return (
