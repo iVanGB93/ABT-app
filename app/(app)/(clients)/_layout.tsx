@@ -2,6 +2,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
 import { ScrollView, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 import { darkSecondColor, lightSecondColor } from '@/settings';
 import { ThemedText } from '@/components/ThemedText';
@@ -37,24 +38,27 @@ export default function ClientLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-        },
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          headerTitle: 'Clients',
-          headerLeft: () => null,
-          headerRight: () => <BusinessNameHeader name={business.name} />,
+    <>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+          },
         }}
-      />
-      <Stack.Screen name="clientDetails" options={{ headerTitle: 'Client Details' }} />
-      <Stack.Screen name="clientCreate" options={{ headerTitle: 'Add New Client' }} />
-      <Stack.Screen name="clientUpdate" options={{ headerTitle: 'Update Client' }} />
-    </Stack>
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            headerTitle: 'Clients',
+            headerLeft: () => null,
+            headerRight: () => <BusinessNameHeader name={business.name} />,
+          }}
+        />
+        <Stack.Screen name="clientDetails" options={{ headerTitle: 'Client Details' }} />
+        <Stack.Screen name="clientCreate" options={{ headerTitle: 'Add New Client' }} />
+        <Stack.Screen name="clientUpdate" options={{ headerTitle: 'Update Client' }} />
+      </Stack>
+    </>
   );
 }

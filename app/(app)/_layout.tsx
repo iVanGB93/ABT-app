@@ -3,7 +3,6 @@ import { Tabs, Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
 import { Vibration } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
 import { darkSecondColor, lightSecondColor } from '@/settings';
 
@@ -21,8 +20,6 @@ export default function TabLayout() {
   const vibrateTab = () => Vibration.vibrate(30);
 
   return (
-    <>
-    <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: color,
@@ -87,6 +84,5 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </>
   );
 }

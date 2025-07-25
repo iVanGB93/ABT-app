@@ -74,7 +74,7 @@ export default function VerifyCode() {
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
-        <ScrollView> 
+        <ScrollView keyboardShouldPersistTaps='handled'> 
           <ThemedText style={commonStyles.text_action} type="subtitle">{userEmail}</ThemedText>
           <ThemedText style={commonStyles.text_action} type="subtitle">Code</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>

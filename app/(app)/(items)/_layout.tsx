@@ -1,11 +1,11 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
-import { ScrollView, View } from "react-native";
+import { ScrollView, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
-import { darkSecondColor, lightSecondColor } from "@/settings";
-import { ThemedText } from "@/components/ThemedText";
-
+import { darkSecondColor, lightSecondColor } from '@/settings';
+import { ThemedText } from '@/components/ThemedText';
 
 function BusinessNameHeader({ name }: { name: string }) {
   return (
@@ -28,33 +28,36 @@ function BusinessNameHeader({ name }: { name: string }) {
 
 export default function ItemLayout() {
   const token = useSelector((state: RootState) => state.auth.token);
-  const { darkTheme, business} = useSelector((state:RootState) => state.settings);
-  
+  const { darkTheme, business } = useSelector((state: RootState) => state.settings);
+
   if (!token) {
     return <Redirect href="/" />;
   }
   if (!business || Object.keys(business).length === 0) {
     return <Redirect href="/(businessSelect)" />;
   }
-  
+
   return (
-    <Stack 
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-        },
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          headerTitle: 'Items',
-          headerRight: () => <BusinessNameHeader name={business.name} />,
+    <>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+          },
         }}
-      />
-      <Stack.Screen name="itemDetails" options={{headerTitle: 'Item Details'}}/>
-      <Stack.Screen name="itemCreate" options={{headerTitle: 'Add new Item'}}/>
-      <Stack.Screen name="itemUpdate" options={{headerTitle: 'Update Item'}}/>
-    </Stack>
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            headerTitle: 'Items',
+            headerRight: () => <BusinessNameHeader name={business.name} />,
+          }}
+        />
+        <Stack.Screen name="itemDetails" options={{ headerTitle: 'Item Details' }} />
+        <Stack.Screen name="itemCreate" options={{ headerTitle: 'Add new Item' }} />
+        <Stack.Screen name="itemUpdate" options={{ headerTitle: 'Update Item' }} />
+      </Stack>
+    </>
   );
 }

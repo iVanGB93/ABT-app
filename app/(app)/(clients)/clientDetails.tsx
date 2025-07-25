@@ -30,6 +30,7 @@ export default function ClientDetail() {
   const { clientMessage, client } = useSelector((state: RootState) => state.client);
   const { jobs } = useSelector((state: RootState) => state.job);
   const [stateJobs, setStateJobs] = useState<any>([]);
+  const [fetchTimes, setFetchTimes] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const dispatch = useAppDispatch();
@@ -84,7 +85,10 @@ export default function ClientDetail() {
       });
       dispatch(clientSetMessage(null));
     }
-    if (jobs.length === 0) {
+    if (jobs.length === 0 && fetchTimes === 0) {
+      setFetchTimes(fetchTimes + 1);
+      console.log(fetchTimes);
+      
       fetchJobs();
     } else {
       let jobList = jobs.filter((jobs: { client: any }) => jobs.client === client.name);

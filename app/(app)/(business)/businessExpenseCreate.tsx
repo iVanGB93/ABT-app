@@ -6,7 +6,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
 import {
   darkMainColor,
   lightMainColor,
@@ -18,8 +17,7 @@ import ExtrasForm from '@/components/business/ExtrasForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 
 export default function BusinessExpenseCreate() {
-  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const [isEnabled, setIsEnabled] = useState<any>(false);
+  const { darkTheme } = useSelector((state: RootState) => state.settings);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [image, setImage] = useState<any>(null);
@@ -28,7 +26,7 @@ export default function BusinessExpenseCreate() {
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      keyboardVerticalOffset={100}
       style={[
         commonStyles.container,
         { backgroundColor: darkTheme ? darkMainColor : lightMainColor },

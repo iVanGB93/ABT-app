@@ -20,6 +20,7 @@ export const clientSlice = createSlice({
     reducers: {
         clientSetMessage: (state, action: PayloadAction<string | null>) => {
             state.clientMessage = action.payload;
+            state.clientError = null;
         },
         setClient: (state, action: PayloadAction<any>) => {
             state.client = action.payload;

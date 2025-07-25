@@ -265,12 +265,13 @@ export default function Profile() {
                   backgroundColor: darkTheme ? darkSecondColor : '#fff',
                   padding: 20,
                   borderRadius: 16,
+                  marginHorizontal: 10,
                   minWidth: 250,
                   alignItems: 'center',
                 }}
               >
                 <ThemedText type="subtitle">
-                  For questions, suggestions or feedback, please contact me:
+                  For questions, suggestions, feedback or bugs, please contact me:
                 </ThemedText>
                 <View style={[commonStylesCards.dataContainer, { margin: 10 }]}>
                   <ThemedText

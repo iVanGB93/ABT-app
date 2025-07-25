@@ -5,6 +5,7 @@ export interface SettingState {
     darkTheme: boolean,
     business: any,
     message: string | null,
+    error: string | null,
 };
 
 const initialState: SettingState = {
@@ -12,6 +13,7 @@ const initialState: SettingState = {
     darkTheme: true,
     business: {},
     message: null,
+    error: null,
 };
 
 export const settingSlice = createSlice({
@@ -28,12 +30,17 @@ export const settingSlice = createSlice({
             state.darkTheme = action.payload
         },
         setMessage: (state, action: PayloadAction<string | null>) => {
-            state.message = action.payload
+            state.message = action.payload;
+            state.error = null;
+        },
+        setError: (state, action: PayloadAction<string | null>) => {
+            state.error = action.payload;
+            state.message = null;
         },
     }
 });
 
-export const {setBusiness, setColor, setDarkTheme, setMessage} = settingSlice.actions;
+export const {setBusiness, setColor, setDarkTheme, setMessage, setError} = settingSlice.actions;
 
 export const settingReducer = settingSlice.reducer;
 export default settingSlice.reducer;

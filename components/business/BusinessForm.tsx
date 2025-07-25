@@ -1,15 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { View, TextInput, Modal, Text, TouchableOpacity, Switch } from 'react-native';
+import React, { act, useEffect, useState } from 'react';
+import {
+  View,
+  TextInput,
+  Modal,
+  Text,
+  TouchableOpacity,
+  Switch,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/app/(redux)/store';
+import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { Ionicons } from '@expo/vector-icons';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput, { ICountry, isValidPhoneNumber } from 'react-native-international-phone-number';
+import PhoneInput, {
+  ICountry,
+  getCountryByPhoneNumber,
+} from 'react-native-international-phone-number';
 import Constants from 'expo-constants';
 const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
-import Toast from 'react-native-toast-message';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
+import axiosInstance from '@/axios';
 import {
   darkTtextColor,
   lightTextColor,
@@ -20,51 +34,52 @@ import {
 import { commonStyles } from '@/constants/commonStyles';
 import { ThemedView } from '../ThemedView';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
+import { businessSetError, businessSetMessage } from '@/app/(redux)/businessSlice';
+import { setBusiness } from '@/app/(redux)/settingSlice';
+import { commonStylesForm } from '@/constants/commonStylesForm';
+import { commonStylesCards } from '@/constants/commonStylesCard';
 
-interface BusinessFormProps {
-  owners?: string[];
-  setOwners?: any;
+interface Errors {
   name?: string;
-  setName?: any;
-  description?: string;
-  setDescription?: any;
-  phone?: string;
-  setPhone?: any;
   email?: string;
-  setEmail?: any;
+  phone?: string;
   address?: string;
-  setAddress?: any;
+  description?: string;
   website?: string;
-  setWebsite?: any;
-  errors?: any;
 }
 
-export default function BusinessForm({
-  owners,
-  setOwners,
-  name,
-  setName,
-  description,
-  setDescription,
-  phone,
-  setPhone,
-  email,
-  setEmail,
-  address,
-  setAddress,
-  website,
-  setWebsite,
-  errors,
-}: BusinessFormProps) {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+interface BusinessFormProps {
+  action?: any;
+  isLoading?: boolean;
+  setIsLoading?: any;
+}
+
+export default function BusinessForm({ action, isLoading, setIsLoading }: BusinessFormProps) {
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { businessError } = useSelector((state: RootState) => state.business);
   const { userName, userEmail } = useSelector((state: RootState) => state.auth);
+  const [name, setName] = useState(action === 'create' ? '' : business.name);
+  const [phone, setPhone] = useState(action === 'create' ? '' : business.phone);
+  const [email, setEmail] = useState(action === 'create' ? '' : business.email);
+  const [address, setAddress] = useState(action === 'create' ? '' : business.address);
+  const [description, setDescription] = useState(action === 'create' ? '' : business.description);
+  const [website, setWebsite] = useState(action === 'create' ? '' : business.website);
+  const [image, setImage] = useState<string | null>(
+    action === 'create' ? null : business.logo || null,
+  );
+  const [owners, setOwners] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Errors>({});
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [inputValue, setInputValue] = useState<string>('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteError, setInviteError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
   const [useAccountPhone, setUseAccountPhone] = useState(false);
   const [useAccountEmail, setUseAccountEmail] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   /* useEffect(() => {
     if (useAccountPhone) setPhone(userPhone ?? '');
@@ -75,7 +90,6 @@ export default function BusinessForm({
   /* useEffect(() => {
     if (useAccountAddress) setAddress(userAddress ?? '');
   }, [useAccountAddress, userAddress]); */
-  
 
   function handleInputValue(phoneNumber: string) {
     setInputValue(phoneNumber);
@@ -84,6 +98,26 @@ export default function BusinessForm({
   function handleSelectedCountry(country: ICountry) {
     setSelectedCountry(country);
   }
+
+  function removeCountryCode(phone: string, callingCode: string): string {
+    if (phone.startsWith('+' + callingCode)) {
+      return phone.slice(callingCode.length + 1);
+    }
+    if (phone.startsWith(callingCode)) {
+      return phone.slice(callingCode.length);
+    }
+    return phone;
+  }
+
+  useEffect(() => {
+    if (phone) {
+      const localNumber = removeCountryCode(
+        phone,
+        getCountryByPhoneNumber(phone)?.callingCode || '',
+      );
+      setPhone(localNumber);
+    }
+  }, [phone]);
 
   function handleAddOwner() {
     if (!inviteEmail || !inviteEmail.includes('@')) {
@@ -100,8 +134,128 @@ export default function BusinessForm({
     setInviteModalVisible(false);
   }
 
+  const validateForm = () => {
+    let errors: Errors = {};
+    if (!name) errors.name = 'Name is required';
+    //if (!description) errors.description = 'Description is required';
+    if (!email) errors.email = 'Email is required';
+    if (email) {
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        errors.email = 'Email is invalid!';
+      }
+    }
+    //if (!phone) errors.phone = "Phone is required";
+    //if (!address) errors.address = 'Address is required';
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleImage = async () => {
+    let result: ImagePicker.ImagePickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const deleteBusiness = async () => {
+    setLoading(true);
+    await axiosInstance
+      .post(
+        `business/delete/${business.id}/`,
+        { action: 'delete' },
+        {
+          headers: {
+            'content-Type': 'multipart/form-data',
+          },
+        },
+      )
+      .then(function (response) {
+        if (response.data.OK) {
+          dispatch(businessSetMessage(response.data.message));
+          router.replace('/(businessSelect)');
+        }
+      })
+      .catch(function (error) {
+        dispatch(businessSetError(error.message));
+        setLoading(false);
+        console.error('Error deleting a business:', error);
+      });
+  };
+
+  const handleDelete = () => {
+    setModalDeleteVisible(true);
+  };
+
+  const handleSubmit = async () => {
+    if (validateForm()) {
+      const formData = new FormData();
+      formData.append('action', action === 'create' ? 'new' : 'update');
+      formData.append('id', business.id || '');
+      formData.append('owners', owners ? JSON.stringify(owners) : '');
+      formData.append('name', name);
+      formData.append('description', description);
+      formData.append('phone', phone ? selectedCountry?.callingCode + phone : '');
+      formData.append('email', email);
+      formData.append('address', address);
+      if (image !== null) {
+        const uriParts = image.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        const fileName = `${name}BusinessLogo.${fileType}`;
+        formData.append('image', {
+          uri: image,
+          name: fileName,
+          type: `image/${fileType}`,
+        } as unknown as Blob);
+      }
+      setIsLoading(true);
+      await axiosInstance
+        .post(`business/${action}/${userName}/`, formData, {
+          headers: {
+            'content-Type': 'multipart/form-data',
+          },
+        })
+        .then(function (response) {
+          let data = response.data;
+          if (data.OK) {
+            dispatch(setBusiness(data.business));
+            dispatch(businessSetMessage(data.message));
+            router.navigate('/(app)/(business)/businessDetails');
+          } else {
+            dispatch(businessSetError(data.message));
+          }
+          setIsLoading(false);
+        })
+        .catch(function (error) {
+          console.error(
+            `Error ${action === 'create' ? 'creating' : 'updating'} a business:`,
+            error,
+          );
+          if (typeof error.response === 'undefined') {
+            dispatch(
+              businessSetError(
+                `Error ${action === 'create' ? 'creating' : 'updating'} a business, undefined`,
+              ),
+            );
+          } else {
+            if (error.response.status === 401) {
+              router.replace('/');
+            } else {
+              dispatch(businessSetError(error.message));
+            }
+          }
+          setIsLoading(false);
+        });
+    }
+  };
+
   return (
     <View>
+      {businessError ? <ThemedText style={commonStyles.errorMsg}>{businessError}</ThemedText> : null}
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Name
       </ThemedText>
@@ -120,18 +274,18 @@ export default function BusinessForm({
         />
       </View>
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
-      
+
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Phone
       </ThemedText>
       <PhoneInput
         defaultCountry="US"
-        value={phone ?? ''}
+        value={phone}
         onChangePhoneNumber={setPhone}
         selectedCountry={selectedCountry}
         onChangeSelectedCountry={handleSelectedCountry}
         theme={darkTheme ? 'dark' : 'light'}
-        placeholder="Enter business's phone"
+        placeholder={phone ? phone : "Enter business's phone"}
         phoneInputStyles={{
           flagContainer: {
             margin: 0,
@@ -163,21 +317,28 @@ export default function BusinessForm({
           </Text>
         </View> */}
       </View>
-        <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', flex: 1 }]}>
-          <Ionicons
-            style={{ marginBottom: 5, fontSize: 16 }}
-            name="mail"
-            color={darkTheme ? darkTtextColor : lightTextColor}
-          />
-          <TextInput
-            style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
-            placeholder="Enter business's email"
-            placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
-            value={email}
-            onChangeText={setEmail}
-            editable={!useAccountEmail}
-          />
-        </View>
+      <View
+        style={[
+          commonStyles.action,
+          { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', flex: 1 },
+        ]}
+      >
+        <Ionicons
+          style={{ marginBottom: 5, fontSize: 16 }}
+          name="mail"
+          color={darkTheme ? darkTtextColor : lightTextColor}
+        />
+        <TextInput
+          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          placeholder="Enter business's email"
+          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          value={email}
+          onChangeText={setEmail}
+          editable={!useAccountEmail}
+          keyboardType="email-address"
+          autoCapitalize='none'
+        />
+      </View>
       {errors.email ? <Text style={commonStyles.errorMsg}>{errors.email}</Text> : null}
 
       <ThemedText style={commonStyles.text_action} type="subtitle">
@@ -190,6 +351,7 @@ export default function BusinessForm({
           color={darkTheme ? darkTtextColor : lightTextColor}
         />
         <GooglePlacesAutocomplete
+          keyboardShouldPersistTaps="always"
           predefinedPlaces={[]}
           placeholder={address ? address : "Business's address"}
           minLength={2}
@@ -260,7 +422,7 @@ export default function BusinessForm({
         />
       </View>
       <ThemedText style={commonStyles.text_action} type="subtitle">
-        Owner(s)  {userName}
+        Owner(s) {userName}
       </ThemedText>
       <View
         style={{
@@ -280,7 +442,9 @@ export default function BusinessForm({
                 {email}
               </ThemedText>
               {email !== userName && (
-                <TouchableOpacity onPress={() => setOwners((owners ?? []).filter((o) => o !== email))}>
+                <TouchableOpacity
+                  onPress={() => setOwners((owners ?? []).filter((o) => o !== email))}
+                >
                   <Ionicons
                     name="close-circle-outline"
                     size={20}
@@ -296,6 +460,83 @@ export default function BusinessForm({
           <Ionicons name="add-circle-outline" size={28} color={color} />
         </TouchableOpacity>
       </View>
+      <View
+        style={{
+          width: '100%',
+          flexDirection: 'row',
+          justifyContent: 'space-evenly',
+          alignItems: 'center',
+          marginTop: 15,
+        }}
+      >
+        <TouchableOpacity
+          style={[
+            commonStyles.button,
+            {
+              borderColor: color,
+              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+            },
+          ]}
+          onPress={() => handleImage()}
+        >
+          <ThemedText style={{ color: color }}>Add Logo</ThemedText>
+        </TouchableOpacity>
+        {image && <Image source={{ uri: image }} style={commonStylesForm.image} />}
+      </View>
+      <View
+        style={{
+          width: '100%',
+          flexDirection: 'row',
+          justifyContent: 'space-evenly',
+          marginTop: 15,
+        }}
+      >
+        <TouchableOpacity
+          style={[
+            commonStyles.button,
+            {
+              borderColor: color,
+              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+            },
+          ]}
+          onPress={() => handleSubmit()}
+        >
+          <ThemedText style={{ color: color }}>
+            {action === 'create' ? 'Create' : 'Update'}
+          </ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            commonStyles.button,
+            {
+              borderColor: 'red',
+              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+            },
+          ]}
+          onPress={() => router.back()}
+        >
+          <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+        </TouchableOpacity>
+      </View>
+      {action === 'update' ? (
+        <View
+          style={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'space-evenly',
+            marginTop: 15,
+          }}
+        >
+          <TouchableOpacity
+            style={[commonStyles.button, { borderColor: 'red' }]}
+            onPress={() => handleDelete()}
+          >
+            <ThemedText style={{ color: 'red' }}>
+              Delete
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      ) : null}
       <Modal
         visible={inviteModalVisible}
         animationType="slide"
@@ -376,6 +617,43 @@ export default function BusinessForm({
               </TouchableOpacity>
             </View>
           </ThemedSecondaryView>
+        </View>
+      </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalDeleteVisible}
+        onRequestClose={() => setModalDeleteVisible(!modalDeleteVisible)}
+      >
+        <View style={commonStylesCards.centeredView}>
+          {loading ? (
+            <ActivityIndicator color={color} size="large" />
+          ) : (
+            <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>
+              <ThemedText style={[commonStylesCards.name, { padding: 10 }]}>
+                Do you want to delete {name}?
+              </ThemedText>
+              <View
+                style={[
+                  commonStylesCards.dataContainer,
+                  { padding: 10, justifyContent: 'space-evenly' },
+                ]}
+              >
+                <TouchableOpacity
+                  style={[commonStylesCards.button, { borderColor: color }]}
+                  onPress={() => setModalDeleteVisible(!modalDeleteVisible)}
+                >
+                  <ThemedText style={{ color: color }}>Cancel</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStylesCards.button, { borderColor: 'red' }]}
+                  onPress={() => deleteBusiness()}
+                >
+                  <Text style={{ color: 'red', textAlign: 'center' }}>DELETE</Text>
+                </TouchableOpacity>
+              </View>
+            </ThemedSecondaryView>
+          )}
         </View>
       </Modal>
     </View>

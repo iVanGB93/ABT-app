@@ -66,7 +66,7 @@ export default function BusinessDetails() {
           dispatch(businessSetMessage('Error fetching extras, undefined'));
         } else {
           if (error.response.status === 401) {
-            dispatch(setBusiness([]))
+            dispatch(setBusiness([]));
             dispatch(authLogout());
             router.replace('/');
           } else {
@@ -243,6 +243,8 @@ export default function BusinessDetails() {
                     description={item.description}
                     amount={item.amount}
                     date={item.date}
+                    category={item.category}
+                    deductible={item.tax_deductible}
                     income={activeTab === 'income'}
                     image={item.image}
                   />
@@ -306,6 +308,8 @@ export default function BusinessDetails() {
                 amount={selectedItem.amount}
                 date={selectedItem.date}
                 image={selectedItem.image}
+                category={selectedItem.category}
+                deductible={selectedItem.tax_deductible}
                 income={activeTab === 'income'}
                 inDetail={true}
               />

@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import { setBusiness, setBusinessLogo, setBusinessName, setColor } from '@/app/(redux)/settingSlice';
+import { setBusiness, setColor } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
 import axiosInstance from '@/axios';
 import { baseImageURL, darkMainColor, darkSecondColor, darkTtextColor, lightMainColor, lightSecondColor, lightTextColor } from '@/settings';
@@ -18,16 +18,16 @@ import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 
 
 export default function Profile () {
-    const { color, darkTheme, business, businessLogo } = useSelector((state: RootState) => state.settings);
+    const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
     const { userName } = useSelector((state: RootState) => state.auth);
     const [newName, setNewName] = useState(business.business_name);
-    const [newLogo, setNewLogo] = useState<any>(businessLogo);
+    const [newLogo, setNewLogo] = useState<any>(business.logo);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
 
-    const downloadLogo = async () => {
+    /* const downloadLogo = async () => {
         try {
             const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory!);
             console.log('Archivos en documentDirectory:', files);
@@ -95,20 +95,20 @@ export default function Profile () {
         if (!result.canceled) {
             setNewLogo(result.assets[0].uri);
         }
-    };
+    }; */
 
     return (
         <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            style={[styles.container, {backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
+            style={[commonStyles.containerCentered, {backgroundColor: darkTheme ? darkMainColor : lightMainColor}]}
         >
             {loading ?
             <ActivityIndicator size="large" color={color} />
             :
             <ScrollView>
                 <ThemedSecondaryView style={styles.sectionContainer}>
-                    <View style={styles.rowContainer}>
+                    {/* <View style={styles.rowContainer}>
                         { newLogo === '@/assets/images/logoDefault.png' ?
                         <Image source={require('@/assets/images/logoDefault.png')} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
                         :
@@ -124,6 +124,9 @@ export default function Profile () {
                         <TouchableOpacity style={[commonStyles.button, {borderColor: color, width: 100}]} onPress={() => handleBN()}>
                             <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                         </TouchableOpacity>
+                    </View> */}
+                    <View style={styles.rowContainer}>
+                        <ThemedText type='subtitle'>Pick a Color</ThemedText>
                     </View>
                     <View style={styles.rowContainerLast}>
                         <View style={commonStyles.colorsContainer}>
@@ -141,9 +144,6 @@ export default function Profile () {
 };
 
 const styles = StyleSheet.create ({
-    container: {
-        flex: 1, 
-    },
     image: {
         width: 100, 
         height: 100, 
@@ -174,24 +174,6 @@ const styles = StyleSheet.create ({
         marginBottom: 5,
         padding: 10,
         borderRadius: 5,
-    },
-    button: {
-        padding: 10,
-        borderRadius: 16,
-        margin: 5,
-        width: 100,
-        alignItems: 'center',
-        ...Platform.select({
-            ios: {
-            shadowOffset: { width: 2, height: 2 },
-            shadowColor: "#333",
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            },
-            android: {
-            elevation: 5,
-            },
-        }),
     },
     rowContainerLast: {
         flexDirection: "row",

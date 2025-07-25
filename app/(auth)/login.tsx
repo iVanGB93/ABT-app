@@ -116,7 +116,7 @@ export default function Login() {
         </ThemedText>
       </View>
       <ThemedSecondaryView style={[commonStyles.footer, { borderColor: color }]}>
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps='handled'>
           <ThemedText style={commonStyles.text_action} type="subtitle">
             Username
           </ThemedText>

@@ -108,7 +108,7 @@ export default function Register() {
           { backgroundColor: darkTheme ? darkSecondColor : lightSecondColor, borderColor: color },
         ]}
       >
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps='handled'>
           <ThemedText style={commonStyles.text_action} type="subtitle">
             Email
           </ThemedText>
@@ -125,6 +125,7 @@ export default function Register() {
                 { color: darkTheme ? darkTtextColor : lightTextColor },
               ]}
               autoCapitalize="none"
+              keyboardType='email-address'
             />
             {!errors.email && email ? (
               <Ionicons name="checkmark-circle-outline" color={color} />

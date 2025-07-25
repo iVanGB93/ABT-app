@@ -53,22 +53,22 @@ export default function Register() {
     .then(function(response) {
       if (response.data.access !== undefined) {
         dispatch(authSuccess({username: username, token: response.data.access, refreshToken: response.data.refresh}));
+        router.push('/(businessSelect)');
         setAlertVisible(false);
         setLoading(false);
-        router.push('/(businessSelect)');
       } else {
         dispatch(authSetMessage("Account created but error loggin in."));
+        router.push('/');
         setAlertVisible(false);
         setLoading(false);
-        router.push('/');
       }
     })
     .catch(function(error) {
       console.error('Error logging in:', error.response, error.message);
       dispatch(authSetMessage("Account created but error loggin in."));
+      router.push('/');
       setAlertVisible(false);
       setLoading(false);
-      router.push('/');
     });
   };
 
@@ -110,7 +110,7 @@ export default function Register() {
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>Advance Business Tools</ThemedText>
       </View>     
       <View style={[commonStyles.footer, {backgroundColor:darkTheme ? darkSecondColor: lightSecondColor, borderColor: color}]}>
-        <ScrollView>  
+        <ScrollView keyboardShouldPersistTaps='handled'>  
           <ThemedText style={commonStyles.text_action} type="subtitle">Set your username and password</ThemedText>
           <ThemedText style={commonStyles.text_action} type="subtitle">User</ThemedText>
           <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000'}]}>

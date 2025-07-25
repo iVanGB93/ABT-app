@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import { Stack, Redirect } from 'expo-router';
 import { RootState } from '../../(redux)/store';
+import { StatusBar } from 'expo-status-bar';
 
 import { darkSecondColor, lightSecondColor } from '@/settings';
 
@@ -16,6 +17,8 @@ export default function ProfileLayout() {
   }
 
   return (
+    <>
+    <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <Stack
       screenOptions={{
         headerStyle: {
@@ -27,5 +30,6 @@ export default function ProfileLayout() {
       <Stack.Screen name="businessSettings" options={{ headerTitle: 'Update Business' }} />
       <Stack.Screen name="styleSettings" options={{ headerTitle: 'Update Style' }} />
     </Stack>
+    </>
   );
 }

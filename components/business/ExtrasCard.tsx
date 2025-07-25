@@ -42,8 +42,10 @@ interface ItemCardProps {
   amount: any;
   date: any;
   image: any;
+  category?: any;
   income?: boolean;
   inDetail?: boolean;
+  deductible?: any;
 }
 
 export default function ExtrasCard({
@@ -53,13 +55,14 @@ export default function ExtrasCard({
   date,
   income = false,
   image,
+  category = '',
   inDetail = false,
+  deductible = false,
 }: ItemCardProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const [modalVisible, setModalVisible] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const imageObj = baseImageURL + image;
   const [isBig, setIsBig] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -69,8 +72,6 @@ export default function ExtrasCard({
   };
 
   const handleDelete = () => {
-    console.log(imageObj);
-    
     setModalVisible(true);
   };
 
@@ -170,17 +171,23 @@ export default function ExtrasCard({
         </ThemedText>
       </View>
       {inDetail ? (
-        <>
+        <> 
+          {income ? null : (
+            <>
+              <ThemedText style={{ alignSelf: 'flex-end' }} type="subtitle">{category}</ThemedText>
+              {deductible ? <ThemedText style={{ alignSelf: 'flex-end' }} >Deductible</ThemedText> : null}
+            </>
+          )}
           <View style={{ alignContent: 'center', margin: 10 }}>
             {imageError ? (
               <ThemedText style={[commonStylesCards.LabelText, { alignSelf: 'center' }]}>
                 image not found{' '}
               </ThemedText>
             ) : (
-              <TouchableOpacity onPress={toggleImageSize} >
+              <TouchableOpacity onPress={toggleImageSize}>
                 <Image
                   style={commonStylesCards.imageJob}
-                  source={{ uri: imageObj }}
+                  source={{ uri: image }}
                   onError={() => setImageError(true)}
                 />
               </TouchableOpacity>
@@ -193,7 +200,7 @@ export default function ExtrasCard({
                   pathname: income
                     ? '/(app)/(business)/businessIncomeUpdate'
                     : '/(app)/(business)/businessExpenseUpdate',
-                  params: { id: id }
+                  params: { id: id },
                 })
               }
             >
@@ -251,7 +258,7 @@ export default function ExtrasCard({
       <Modal transparent={true} animationType="fade" visible={isBig}>
         <View style={commonStylesCards.modalContainer}>
           <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
-            <Image source={{ uri: imageObj }} style={commonStylesCards.expandedImage} />
+            <Image source={{ uri: image }} style={commonStylesCards.expandedImage} />
           </TouchableOpacity>
           <Pressable
             style={[commonStylesCards.button, { marginHorizontal: 5, flex: 1 }]}

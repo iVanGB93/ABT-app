@@ -4,6 +4,7 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 export interface BusinessState {
     businesses: any;
     businessMessage: string | null;
+    businessError?: string | null;
     extraExpenses: any;
     extraIncome: any;
 };
@@ -11,6 +12,7 @@ export interface BusinessState {
 const initialState: BusinessState = {
     businesses: [],
     businessMessage: null,
+    businessError: null,
     extraExpenses: [],
     extraIncome: [],
 };
@@ -21,6 +23,11 @@ export const businessSlice = createSlice({
     reducers: {
         businessSetMessage: (state, action: PayloadAction<string | null>) => {
             state.businessMessage = action.payload;
+            state.businessError = null;
+        },
+        businessSetError: (state, action: PayloadAction<string | null>) => {
+            state.businessError = action.payload;
+            state.businessMessage = null;
         },
         setBusinesses: (state, action: PayloadAction<any>) => {
             state.businesses = action.payload;
@@ -35,7 +42,7 @@ export const businessSlice = createSlice({
 });
 
 
-export const { businessSetMessage, setBusinesses, setExtraExpenses, setExtraIncome } = businessSlice.actions;
+export const { businessSetMessage, businessSetError, setBusinesses, setExtraExpenses, setExtraIncome } = businessSlice.actions;
 
 export const businessReducer = businessSlice.reducer;
 

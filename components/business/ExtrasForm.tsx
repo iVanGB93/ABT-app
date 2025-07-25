@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  Image,
-} from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, Image, Switch } from 'react-native';
 import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import {
   baseImageURL,
   darkMainColor,
+  darkSecondColor,
   darkTtextColor,
   lightMainColor,
+  lightSecondColor,
   lightTextColor,
 } from '@/settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
@@ -21,6 +17,7 @@ import { commonStyles } from '@/constants/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import axiosInstance from '@/axios';
+import SelectDropdown from 'react-native-select-dropdown';
 
 interface Errors {
   description?: string;
@@ -52,14 +49,15 @@ export default function ExtraForm({
   action,
   isLoading,
   setIsLoading,
-  id= '',
+  id = '',
 }: ExtraFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const [category, setCategory] = useState<string>('other');
+  const [isDeductible, setIsDeductible] = useState(true);
   const [isEnabled, setIsEnabled] = useState<any>(false);
   const [formImage, setFormImage] = useState<any>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState('');
-  const imageObj = baseImageURL + image;
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -67,7 +65,7 @@ export default function ExtraForm({
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: 'images',
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [3, 5],
       quality: 1,
     });
     if (!result.canceled) {
@@ -85,7 +83,7 @@ export default function ExtraForm({
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: 'images',
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [3, 5],
       quality: 1,
     });
     if (!result.canceled) {
@@ -110,6 +108,8 @@ export default function ExtraForm({
       formData.append('type', type);
       formData.append('description', description);
       formData.append('amount', amount);
+      formData.append('category', category);
+      formData.append('deductible', isDeductible.toString());
       if (formImage !== null) {
         const uriParts = formImage.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
@@ -143,6 +143,19 @@ export default function ExtraForm({
         });
     }
   };
+
+  const categories = [
+    'Office Supplies',
+    'Fuel',
+    'Training',
+    'Medical Insurance',
+    'Marketing',
+    'Travel',
+    'Meals',
+    'Utilities',
+    'Maintenance',
+    'Other',
+  ];
 
   return (
     <View>
@@ -179,19 +192,88 @@ export default function ExtraForm({
         )}
       </View>
       {errors.amount ? <Text style={commonStyles.errorMsg}>{errors.amount}</Text> : null}
-      { formImage ? 
-      <Image
-        source={{ uri: formImage.uri }}
-        style={commonStyles.imageCircle}
-        onError={() => setFormImage(null)}
-      /> : image ? (
+      {type === 'expense' ? (
+        <>
+          <ThemedText style={commonStyles.text_action} type="subtitle">
+            Category
+          </ThemedText>
+          <View style={{ marginBottom: 10 }}>
+            <SelectDropdown
+              data={categories}
+              onSelect={(selectedItem) => setCategory(selectedItem)}
+              defaultValue={category}
+              renderButton={(selectedItem, isOpened) => {
+                return (
+                  <View
+                    style={{
+                      width: '100%',
+                      backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+                      borderRadius: 8,
+                      borderBottomWidth: 1,
+                      borderRightWidth: 1,
+                      borderColor: darkTheme ? '#fff' : '#000',
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ThemedText>{selectedItem || `Select ${type}'s category`}</ThemedText>
+                  </View>
+                );
+              }}
+              renderItem={(item, index, isSelected) => (
+                <View
+                  style={{
+                    padding: 10,
+                    backgroundColor: isSelected
+                      ? darkTheme
+                        ? darkMainColor
+                        : lightMainColor
+                      : darkTheme
+                      ? darkSecondColor
+                      : lightSecondColor,
+                  }}
+                >
+                  <ThemedText
+                    style={{
+                      color: darkTheme ? darkTtextColor : lightTextColor,
+                      fontSize: 16,
+                    }}
+                  >
+                    {item}
+                  </ThemedText>
+                </View>
+              )}
+            />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+            <Switch
+              value={isDeductible}
+              onValueChange={setIsDeductible}
+              thumbColor={isDeductible ? color : '#ccc'}
+            />
+            <ThemedText
+              style={{ marginLeft: 8, color: darkTheme ? darkTtextColor : lightTextColor }}
+            >
+              Deductible
+            </ThemedText>
+          </View>
+        </>
+      ) : null}
+      {formImage ? (
         <Image
-          source={{ uri: imageObj }}
-          style={commonStyles.imageCircle}
+          source={{ uri: formImage.uri }}
+          style={commonStyles.imageSquare}
+          onError={() => setFormImage(null)}
+        />
+      ) : image ? (
+        <Image
+          source={{ uri: image }}
+          style={commonStyles.imageSquare}
           onError={() => setImage(null)}
         />
       ) : (
-        <ThemedText style={{ alignSelf: 'center' }}>image not found </ThemedText>
+        <ThemedText style={{ alignSelf: 'center' }}>No image selected </ThemedText>
       )}
       <View
         style={{
