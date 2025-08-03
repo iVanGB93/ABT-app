@@ -2,7 +2,7 @@
   "expo": {
     "name": "ABT",
     "slug": "advance-business-tools",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "advance-business-tools",
