@@ -1,33 +1,11 @@
 import { Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
-import { ScrollView, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
-import { darkSecondColor, lightSecondColor } from '@/settings';
-import { ThemedText } from '@/components/ThemedText';
 
-function BusinessNameHeader({ name }: { name: string }) {
-  return (
-    <View style={{ minWidth: 120, maxWidth: 250, marginLeft: 40, paddingRight: 8 }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <ThemedText
-          numberOfLines={1}
-          style={{
-            fontWeight: 'bold',
-            fontSize: 18,
-            textAlign: 'right',
-          }}
-        >
-          {name}
-        </ThemedText>
-      </ScrollView>
-    </View>
-  );
-}
 
 export default function JobLayout() {
-  const { darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { business } = useSelector((state: RootState) => state.settings);
   const token = useSelector((state: RootState) => state.auth.token);
 
   if (!token) {
@@ -38,31 +16,15 @@ export default function JobLayout() {
   }
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-          },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerTitle: 'Jobs',
-            headerLeft: () => null,
-            headerRight: () => <BusinessNameHeader name={business.name} />,
-          }}
-        />
-        <Stack.Screen name="jobDetails" options={{ headerTitle: 'Job Details' }} />
-        <Stack.Screen name="jobCreate" options={{ headerTitle: 'Add New Job' }} />
-        <Stack.Screen name="jobUpdate" options={{ headerTitle: 'Update Job' }} />
-        <Stack.Screen name="invoice" options={{ headerTitle: 'Invoice' }} />
-        <Stack.Screen name="invoiceCreate" options={{ headerTitle: 'Create Invoice' }} />
-        <Stack.Screen name="invoiceUpdate" options={{ headerTitle: 'Update Invoice' }} />
-        <Stack.Screen name="spentCreate" options={{ headerTitle: 'Add new Spent' }} />
-      </Stack>
-    </>
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="jobDetails" options={{ headerShown: false }} />
+      <Stack.Screen name="jobCreate" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="jobUpdate" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="invoice" options={{ headerShown: false }} />
+      <Stack.Screen name="invoiceCreate" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="invoiceUpdate" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="spentCreate" options={{ headerShown: false, animation: 'fade' }} />
+    </Stack>
   );
 }

@@ -20,21 +20,9 @@ import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/
 import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
-import { setBusiness } from '@/app/(redux)/settingSlice';
+import { setBusiness, setMessage } from '@/app/(redux)/settingSlice';
 
-interface ClientFormProps {
-  name?: any;
-  setName?: any;
-  lastName?: any;
-  setLastName?: any;
-  phone?: any;
-  setPhone?: any;
-  email?: any;
-  setEmail?: any;
-  address?: any;
-  setAddress?: any;
-  image: any;
-  setImage?: any;
+interface ProfileFormProps {
   action?: any;
   id?: string;
   isLoading?: boolean;
@@ -43,41 +31,29 @@ interface ClientFormProps {
 
 interface Errors {
   name?: string;
-  lastName?: string;
   phone?: string;
   email?: string;
   address?: string;
 }
 
-export default function ClientForm({
-  name,
-  setName,
-  lastName,
-  setLastName,
-  phone,
-  setPhone,
-  email,
-  setEmail,
-  address,
-  setAddress,
-  image,
-  setImage,
+export default function ProfileForm({
   isLoading,
   setIsLoading,
   action,
   id = '',
-}: ClientFormProps) {
-  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+}: ProfileFormProps) {
+  const { color, darkTheme, profile } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
+  const [name, setName] = useState(profile.user || '');
+  const [email, setEmail] = useState(profile.email || '');
+  const [phone, setPhone] = useState(profile.phone || '');
+  const [address, setAddress] = useState(profile.address || '');
+  const [image, setImage] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  /* function handlePhoneInputValue(phoneNumber: string) {
-    setPhone(selectedCountry?.callingCode + phoneNumber);
-  } */
 
   function handleSelectedCountry(country: ICountry) {
     setSelectedCountry(country);
@@ -95,7 +71,10 @@ export default function ClientForm({
 
   useEffect(() => {
     if (phone) {
-      const localNumber = removeCountryCode(phone, getCountryByPhoneNumber(phone)?.callingCode || '');
+      const localNumber = removeCountryCode(
+        phone,
+        getCountryByPhoneNumber(phone)?.callingCode || '',
+      );
       setPhone(localNumber);
     }
   }, [phone]);
@@ -149,9 +128,7 @@ export default function ClientForm({
       const formData = new FormData();
       formData.append('action', action);
       formData.append('id', id);
-      formData.append('business', business.name);
       formData.append('name', name);
-      formData.append('last_name', lastName);
       formData.append('phone', phone ? selectedCountry?.callingCode + phone : '');
       formData.append('email', email);
       formData.append('address', address);
@@ -167,7 +144,7 @@ export default function ClientForm({
       }
       setIsLoading(true);
       await axiosInstance
-        .post(`clients/${action === 'new' ? 'create' : 'update'}/${userName}/`, formData, {
+        .post(`user/account/${action === 'new' ? 'create' : 'update'}/${userName}/`, formData, {
           headers: {
             'content-Type': 'multipart/form-data',
           },
@@ -175,14 +152,9 @@ export default function ClientForm({
         .then(function (response) {
           Vibration.vibrate(15);
           let data = response.data;
-          if (data.OK) {
-            dispatch(clientSetMessage(data.message));
-            if (action === 'new') {
-              router.replace('/(app)/(clients)');
-            } else {
-              dispatch(setClient(data.client));
-              router.replace('/(app)/(clients)/clientDetails');
-            }
+          if (response.status === 200) {
+            dispatch(setMessage(data.message));
+            router.replace('/(app)/(profile)');
           } else {
             setError(data.message);
           }
@@ -217,7 +189,7 @@ export default function ClientForm({
     <View>
       {error ? <ThemedText style={commonStyles.errorMsg}>{error}</ThemedText> : null}
       <ThemedText style={commonStyles.text_action} type="subtitle">
-        Name
+        Username
       </ThemedText>
       <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons
@@ -227,31 +199,15 @@ export default function ClientForm({
         />
         <TextInput
           style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
-          placeholder={name ? name : "Enter client's name"}
+          placeholder={name ? name : "Enter your username"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
           onChangeText={setName}
+          editable={false}
         />
       </View>
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Last Name
-      </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons
-          style={{ marginBottom: 5, fontSize: 16 }}
-          name="person-add"
-          color={darkTheme ? darkTextColor : lightTextColor}
-        />
-        <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
-          placeholder={lastName ? lastName : "Enter client's last name"}
-          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-          value={lastName}
-          onChangeText={setLastName}
-        />
-      </View>
-      {errors.lastName ? <Text style={commonStyles.errorMsg}>{errors.lastName}</Text> : null}
+
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Phone
       </ThemedText>
@@ -262,7 +218,7 @@ export default function ClientForm({
         selectedCountry={selectedCountry}
         onChangeSelectedCountry={handleSelectedCountry}
         theme={darkTheme ? 'dark' : 'light'}
-        placeholder={phone ? phone : "Enter client's phone"}
+        placeholder={phone ? phone : "Enter your phone"}
         phoneInputStyles={{
           flagContainer: {
             margin: 0,
@@ -290,7 +246,7 @@ export default function ClientForm({
         />
         <TextInput
           style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
-          placeholder="Enter client's email"
+          placeholder="Enter your email"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -314,9 +270,9 @@ export default function ClientForm({
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <GooglePlacesAutocomplete
-          keyboardShouldPersistTaps='always'
+          keyboardShouldPersistTaps="always"
           predefinedPlaces={[]}
-          placeholder={address ? address : "Client's address"}
+          placeholder={address ? address : "Enter your address"}
           minLength={2}
           timeout={1000}
           textInputProps={{
@@ -411,7 +367,9 @@ export default function ClientForm({
               backgroundColor: darkTheme ? darkMainColor : lightMainColor,
             },
           ]}
-          onPress={action === 'new' ? () => router.replace('/(app)/(clients)') : () => router.back()}
+          onPress={
+            action === 'new' ? () => router.replace('/(app)/(clients)') : () => router.back()
+          }
         >
           <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
         </TouchableOpacity>

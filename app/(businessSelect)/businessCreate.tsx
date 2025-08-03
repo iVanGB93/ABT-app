@@ -5,7 +5,7 @@ import { RootState } from '@/app/(redux)/store';
 
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
-import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from '@/settings';
+import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import BusinessForm from '@/components/business/BusinessForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';

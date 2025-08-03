@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  RefreshControl,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import { View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Redirect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -17,7 +10,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { businessSetMessage, setBusinesses } from '@/app/(redux)/businessSlice';
 import axiosInstance from '@/axios';
-import { setBusiness, setMessage } from '@/app/(redux)/settingSlice';
+import { setBusiness, setMessage, cleanSettings } from '@/app/(redux)/settingSlice';
 import BusinessCard from '@/components/business/BusinessCard';
 import { commonStyles } from '@/constants/commonStyles';
 import { darkSecondColor, lightSecondColor } from '@/settings';
@@ -47,7 +40,7 @@ export default function BusinessSelect() {
         }
       })
       .catch(function (error) {
-        console.error('Error fetching business:', error);
+        console.error('Error fetching business:', error.config);
         if (typeof error.response === 'undefined') {
           setError(
             'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
@@ -90,6 +83,7 @@ export default function BusinessSelect() {
 
   const handleLogout = async () => {
     dispatch(authLogout());
+    dispatch(cleanSettings());
     router.replace('/(auth)/login');
   };
 
@@ -109,7 +103,20 @@ export default function BusinessSelect() {
             ]}
             onPress={() => getBusinesses()}
           >
-            <ThemedText>Try againg</ThemedText>
+            <ThemedText>Try again</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              commonStyles.button,
+              {
+                borderColor: color,
+                marginTop: 50,
+                backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+              },
+            ]}
+            onPress={() => handleLogout()}
+          >
+            <ThemedText>Log Out</ThemedText>
           </TouchableOpacity>
         </>
       ) : isLoading ? (
@@ -147,12 +154,8 @@ export default function BusinessSelect() {
                   : 'No business found, pull to refresh or create one'}
               </ThemedText>
             }
-            ListHeaderComponent={<View style={{ margin: 5 }} />}
-            ListFooterComponent={
-              <TouchableOpacity style={[commonStyles.button, { borderColor: color, margin: 15 }]} onPress={() => handleLogout()}>
-                <ThemedText>Change user</ThemedText>
-              </TouchableOpacity>
-            }
+            ListHeaderComponent={<View style={{ margin: 5 }} />}         
+            ListFooterComponent={<View style={{ margin: 5 }} />}   
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}
@@ -162,6 +165,20 @@ export default function BusinessSelect() {
               />
             }
           />
+          <TouchableOpacity
+                style={[
+                  commonStyles.button,
+                  {
+                    position: 'absolute',
+                    bottom: 30,
+                    borderColor: color,
+                    backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+                  },
+                ]}
+                onPress={() => handleLogout()}
+              >
+                <ThemedText>Log Out</ThemedText>
+              </TouchableOpacity>
           <TouchableOpacity
             style={[commonStyles.createButton, { backgroundColor: color }]}
             onPress={() => router.navigate('/(businessSelect)/businessCreate')}

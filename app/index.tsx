@@ -7,17 +7,18 @@ import 'react-native-get-random-values';
 
 import { RootState, useAppDispatch } from "./(redux)/store";
 import { setDarkTheme } from "./(redux)/settingSlice";
-import axiosInstance from '@/axios';
 import { ActivityIndicator } from "react-native";
+import { commonStyles } from "@/constants/commonStyles";
 
 
 SplashScreen.preventAutoHideAsync();
 
-export default function Login() {
-  const {token, userName} = useSelector((state: RootState) => state.auth);
-  const dispatch = useAppDispatch();
-  const theme = useTheme()
+export default function Index() {
+  const {token} = useSelector((state: RootState) => state.auth);
+  const { color } = useSelector((state: RootState) => state.settings);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const dispatch = useAppDispatch();
+  const theme = useTheme();
 
   useEffect(() => {
     if (theme.dark) {
@@ -25,28 +26,18 @@ export default function Login() {
     } else {
       dispatch(setDarkTheme(false));
     }
-
-    const verifyAuth = async () => {
-      if (!token) {
-        setIsAuthenticated(false);
-        SplashScreen.hideAsync();
-        return;
-      }
-      try {
-        await axiosInstance.get(`business/${userName ? userName : 'TestingLogin'}/`);
-        setIsAuthenticated(true);
-      } catch {
-        setIsAuthenticated(false);
-      } finally {
-        SplashScreen.hideAsync();
-      }
-    };
-    verifyAuth();
+    if (token) {
+      setIsAuthenticated(true);
+      SplashScreen.hideAsync();
+    } else {
+      setIsAuthenticated(false);
+      SplashScreen.hideAsync();
+    }
   }, [token]);
 
   if (isAuthenticated === null) {
-    return <ActivityIndicator size="large" color={theme.colors.primary} />;
-  }
+    return <ActivityIndicator size="large" style={commonStyles.loading} color={color} />;
+  };
 
   return (
     isAuthenticated ? (

@@ -21,7 +21,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
-import { darkMainColor, darkTtextColor, lightMainColor, lightTextColor } from '@/settings';
+import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
 import axiosInstance from '@/axios';
 import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { clientSetMessage, setClients } from '@/app/(redux)/clientSlice';
@@ -264,23 +264,21 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
                 { backgroundColor: darkTheme ? darkMainColor : lightMainColor, borderColor: color },
               ]}
             >
-              <Ionicons name="person-add-outline" color={color} size={28} />
+              <Ionicons name="person-add-outline" color={darkTheme ? '#fff' : '#000'} size={28} />
             </TouchableOpacity>
           </View>
           {errors.client ? <Text style={commonStyles.errorMsg}>{errors.client}</Text> : null}
         </>
-      ) : (
-        <ThemedText type="subtitle">Job for {job.client}</ThemedText>
-      )}
+      ) : null}
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Description
       </ThemedText>
       <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons name="text" color={darkTheme ? darkTtextColor : lightTextColor} />
+        <Ionicons name="text" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={description ? description : "Enter job's description"}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={description}
           onChangeText={setDescription}
         />
@@ -300,6 +298,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
               alignItems: 'center',
             }}
           >
+            <ThemedText>use client's address</ThemedText>
             <Switch
               trackColor={{ false: '#3e3e3e', true: '#3e3e3e' }}
               thumbColor={isEnabled ? color : darkTheme ? lightMainColor : darkMainColor}
@@ -307,20 +306,19 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
               onValueChange={toggleSwitch}
               value={isEnabled}
             />
-            <ThemedText>use client's address</ThemedText>
           </View>
         )}
       </View>
       {isEnabled ? (
         <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-          <Ionicons name="location" color={darkTheme ? darkTtextColor : lightTextColor} />
+          <Ionicons name="location" color={darkTheme ? darkTextColor : lightTextColor} />
           <ThemedText style={[commonStyles.textInput, { marginLeft: 10, height: 26 }]}>
             {clientAddress()}
           </ThemedText>
         </View>
       ) : (
         <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-          <Ionicons name="location" color={darkTheme ? darkTtextColor : lightTextColor} />
+          <Ionicons name="location" color={darkTheme ? darkTextColor : lightTextColor} />
           <GooglePlacesAutocomplete
             keyboardShouldPersistTaps="always"
             predefinedPlaces={[]}
@@ -328,7 +326,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
             minLength={2}
             timeout={1000}
             textInputProps={{
-              placeholderTextColor: darkTheme ? darkTtextColor : lightTextColor,
+              placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
             }}
             onPress={(data, details = null) => {
               setAddress(data.description);
@@ -348,7 +346,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
                 backgroundColor: 'transparent',
               },
               predefinedPlacesDescription: {
-                color: darkTheme ? darkTtextColor : lightTextColor,
+                color: darkTheme ? darkTextColor : lightTextColor,
               },
             }}
             enablePoweredByContainer={false}
@@ -363,13 +361,13 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
         Price
       </ThemedText>
       <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor : lightTextColor} />
+        <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={price ? String(price) : "Enter job's price"}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={price}
-          onChangeText={setPrice}
+          onChangeText={text => setPrice(text.replace(',', '.'))}
           keyboardType="numeric"
         />
       </View>
@@ -392,7 +390,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           ]}
           onPress={() => handleImage()}
         >
-          <ThemedText style={{ color: color }}>Add image</ThemedText>
+          <ThemedText>Add image</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -401,7 +399,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           ]}
           onPress={() => takePhoto()}
         >
-          <ThemedText style={{ color: color }}>Take Photo</ThemedText>
+          <ThemedText>Take Photo</ThemedText>
         </TouchableOpacity>
       </View>
       <View
@@ -422,7 +420,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           ]}
           onPress={() => handleSubmit()}
         >
-          <ThemedText style={{ color: color }}>{action === 'new' ? 'Create' : 'Update'}</ThemedText>
+          <ThemedText>{action === 'new' ? 'Create' : 'Update'}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[

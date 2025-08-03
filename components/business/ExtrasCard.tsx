@@ -18,7 +18,7 @@ import Toast from 'react-native-toast-message';
 import {
   baseImageURL,
   darkSecondColor,
-  darkTtextColor,
+  darkTextColor,
   lightSecondColor,
   lightTextColor,
 } from '@/settings';
@@ -129,7 +129,7 @@ export default function ExtrasCard({
       <View
         style={[
           commonStylesCards.nameContainer,
-          { borderBottomColor: darkTheme ? darkTtextColor : lightTextColor },
+          { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
         ]}
       >
         <ThemedText style={[commonStylesCards.name, { paddingLeft: 10 }]}>{description}</ThemedText>
@@ -150,7 +150,7 @@ export default function ExtrasCard({
           style={{
             flex: 1,
             textAlign: 'center',
-            color: darkTheme ? darkTtextColor : lightTextColor,
+            color: darkTheme ? darkTextColor : lightTextColor,
             fontWeight: 'bold',
             letterSpacing: 2,
             fontSize: 18,
@@ -175,7 +175,7 @@ export default function ExtrasCard({
           {income ? null : (
             <>
               <ThemedText style={{ alignSelf: 'flex-end' }} type="subtitle">{category}</ThemedText>
-              {deductible ? <ThemedText style={{ alignSelf: 'flex-end' }} >Deductible</ThemedText> : null}
+              <ThemedText style={{ alignSelf: 'flex-end' }} >{deductible ? 'Deductible' : 'Non-Deductible'}</ThemedText>
             </>
           )}
           <View style={{ alignContent: 'center', margin: 10 }}>
@@ -206,7 +206,7 @@ export default function ExtrasCard({
             >
               <FontAwesome
                 name="edit"
-                color={darkTheme ? darkTtextColor : lightTextColor}
+                color={darkTheme ? darkTextColor : lightTextColor}
                 size={30}
               />
             </Pressable>

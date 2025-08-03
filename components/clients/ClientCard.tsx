@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { baseImageURL } from "@/settings";
 import axiosInstance from "../../axios";
 import { clientSetMessage } from '../../app/(redux)/clientSlice';
-import { darkTtextColor, lightTextColor } from '../../settings';
+import { darkTextColor, lightTextColor } from '../../settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { FontAwesome } from '@expo/vector-icons';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
@@ -65,10 +65,10 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
 
   return (
     <ThemedSecondaryView style={[commonStylesCards.card, {borderColor: color, shadowColor: darkTheme ? '#fff' : '#000'}]}>
-      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
-          <Text style={[commonStylesCards.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name} {last_name ? last_name  : null}</Text>
+      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTextColor: lightTextColor}]}>
+          <Text style={[commonStylesCards.name, {color:darkTheme ? darkTextColor: lightTextColor}]}>{name} {last_name ? last_name  : null}</Text>
           { inDetail ?
-          <TouchableOpacity onPress={() => router.push('/(app)/(clients)/clientUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTtextColor: lightTextColor} size={30} /></TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(app)/(clients)/clientUpdate')}><FontAwesome name="edit" color={darkTheme ? darkTextColor: lightTextColor} size={30} /></TouchableOpacity>
           :
           <Image 
           style={{width: 30, height: 30, borderRadius: 75}} 
@@ -78,19 +78,19 @@ export default function ClientCard({image, id, name, last_name, address, phone, 
           }
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Address: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
             <ThemedText style={commonStylesCards.dataText}>{address ? address : 'No address saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Phone: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}>
             <ThemedText style={commonStylesCards.dataText}>{phone ? phone : 'No phone saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Email: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`mailto:${email}`)}>
             <ThemedText style={commonStylesCards.dataText} type='default'>{email ? email : 'No email saved'}</ThemedText>
           </TouchableOpacity>

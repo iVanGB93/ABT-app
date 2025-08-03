@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
+import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -24,6 +25,7 @@ import { clientSetMessage } from '@/app/(redux)/clientSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ClientDetail() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -88,7 +90,7 @@ export default function ClientDetail() {
     if (jobs.length === 0 && fetchTimes === 0) {
       setFetchTimes(fetchTimes + 1);
       console.log(fetchTimes);
-      
+
       fetchJobs();
     } else {
       let jobList = jobs.filter((jobs: { client: any }) => jobs.client === client.name);
@@ -103,87 +105,101 @@ export default function ClientDetail() {
   };
 
   return (
-    <ThemedView
-      style={[
-        commonStylesDetails.container,
-        { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
-      ]}
-    >
-      <ClientCard
-        id={client.id}
-        image={client.image}
-        name={client.name}
-        last_name={client.last_name}
-        address={client.address}
-        phone={client.phone}
-        email={client.email}
-        inDetail={true}
-      />
-      <View style={commonStylesDetails.bottom}>
-        <ThemedText type="subtitle">Jobs</ThemedText>
-        {isLoading ? (
-          <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-        ) : (
-          <View style={commonStylesDetails.list}>
-            <FlatList
-              data={stateJobs}
-              renderItem={({ item }) => {
-                return (
-                  <TouchableOpacity onPress={() => handlePressable(item.id)}>
-                    <JobCard
-                      id={item.id}
-                      status={item.status}
-                      client={item.client}
-                      address={item.address}
-                      description={item.description}
-                      price={item.price}
-                      inDetail={false}
-                      image={item.image}
-                      date={item.date}
-                      isList={false}
-                    />
+    <>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.replace('/(app)/(clients)');
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Client Details</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
+      <ThemedView
+        style={[
+          commonStylesDetails.container,
+          { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
+        ]}
+      >
+        <ClientCard
+          id={client.id}
+          image={client.image}
+          name={client.name}
+          last_name={client.last_name}
+          address={client.address}
+          phone={client.phone}
+          email={client.email}
+          inDetail={true}
+        />
+        <View style={commonStylesDetails.bottom}>
+          <ThemedText type="subtitle">Jobs</ThemedText>
+          {isLoading ? (
+            <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
+          ) : (
+            <View style={commonStylesDetails.list}>
+              <FlatList
+                data={stateJobs}
+                renderItem={({ item }) => {
+                  return (
+                    <TouchableOpacity onPress={() => handlePressable(item.id)}>
+                      <JobCard
+                        id={item.id}
+                        status={item.status}
+                        client={item.client}
+                        address={item.address}
+                        description={item.description}
+                        price={item.price}
+                        inDetail={false}
+                        image={item.image}
+                        date={item.date}
+                        isList={false}
+                      />
+                    </TouchableOpacity>
+                  );
+                }}
+                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+                ListEmptyComponent={
+                  <View>
+                    <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>
+                      No jobs found, pull to refresh
+                    </ThemedText>
+                  </View>
+                }
+                ListHeaderComponent={<View style={{ margin: 5 }} />}
+                ListFooterComponent={
+                  <TouchableOpacity
+                    style={[
+                      commonStyles.button,
+                      {
+                        margin: 15,
+                        borderColor: color,
+                        backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+                      },
+                    ]}
+                    onPress={() => router.push('/(app)/(jobs)/jobCreate')}
+                  >
+                    <ThemedText>+ Job</ThemedText>
                   </TouchableOpacity>
-                );
-              }}
-              ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-              ListEmptyComponent={
-                <View>
-                  <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>
-                    No jobs found, pull to refresh
-                  </ThemedText>
-                </View>
-              }
-              ListHeaderComponent={<View style={{ margin: 5 }} />}
-              ListFooterComponent={
-                <TouchableOpacity
-                  style={[
-                    commonStyles.button,
-                    {
-                      margin: 15,
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-                    },
-                  ]}
-                  onPress={() => router.push('/(app)/(jobs)/jobCreate')}
-                >
-                  <ThemedText style={{ color: color }}>+ Job</ThemedText>
-                </TouchableOpacity>
-              }
-              refreshControl={
-                <RefreshControl
-                  refreshing={isLoading}
-                  onRefresh={() => fetchJobs()}
-                  colors={[color]} // Colores del indicador de carga
-                  tintColor={color} // Color del indicador de carga en iOS
-                />
-              }
-            />
-          </View>
-        )}
-        {/*  {errorJobs ? (
+                }
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={() => fetchJobs()}
+                    colors={[color]} // Colores del indicador de carga
+                    tintColor={color} // Color del indicador de carga en iOS
+                  />
+                }
+              />
+            </View>
+          )}
+          {/*  {errorJobs ? (
                     <Text style={styles.errorText}>{errorJobs}</Text>
                 ) : null} */}
-      </View>
-    </ThemedView>
+        </View>
+      </ThemedView>
+    </>
   );
 }

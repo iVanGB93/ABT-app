@@ -2,29 +2,25 @@ import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   ActivityIndicator,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
+import { RootState } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 import { darkMainColor, lightMainColor } from '@/settings';
-import { RootState } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStyles } from '@/constants/commonStyles';
 import { commonStylesForm } from '@/constants/commonStylesForm';
-import ExtrasForm from '@/components/business/ExtrasForm';
+import ProfileForm from '@/components/profile/ProfileForm';
 import { ThemedView } from '@/components/ThemedView';
-import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function BusinessIncomeCreate() {
+export default function ProfileSettings() {
   const { darkTheme } = useSelector((state: RootState) => state.settings);
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<string>('other');
-  const [image, setImage] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -47,7 +43,7 @@ export default function BusinessIncomeCreate() {
           >
             <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
           </TouchableOpacity>
-          <ThemedText type="subtitle">Add Income</ThemedText>
+          <ThemedText type="subtitle">Edit Profile</ThemedText>
           <ThemedText type="subtitle"></ThemedText>
         </ThemedView>
         {isLoading ? (
@@ -56,21 +52,11 @@ export default function BusinessIncomeCreate() {
           <ThemedSecondaryView
             style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
           >
-            <ScrollView>
-              <ExtrasForm
-                description={description}
-                setDescription={setDescription}
-                amount={amount}
-                setAmount={setAmount}
-                image={image}
-                setImage={setImage}
-                category={category}
-                setCategory={setCategory}
-                type="income"
-                action="new"
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-              />
+            <ScrollView
+              keyboardShouldPersistTaps={'handled'}
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
+              <ProfileForm action="update" isLoading={isLoading} setIsLoading={setIsLoading} />
             </ScrollView>
           </ThemedSecondaryView>
         )}

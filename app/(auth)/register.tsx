@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Text,
   View,
@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAppDispatch, RootState } from '../(redux)/store';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -22,8 +22,8 @@ import { ThemedText } from '@/components/ThemedText';
 import {
   darkSecondColor,
   darkThirdColor,
-  darkTtextColor,
-  darkTtextSecondColor,
+  darkTextColor,
+  darkTextSecondColor,
   lightMainColor,
   lightSecondColor,
   lightTextColor,
@@ -35,8 +35,8 @@ interface Errors {
 }
 
 export default function Register() {
-  const { token } = useSelector((state: RootState) => state.auth);
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+  const { token } = useSelector((state: RootState) => state.auth);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -44,6 +44,12 @@ export default function Register() {
   const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  useEffect(() => {
+    if (token) {
+      router.replace('/(businessSelect)');
+    }
+  }, [token]);
 
   const validateEmail = () => {
     let errors: Errors = {};
@@ -89,9 +95,7 @@ export default function Register() {
     }
   };
 
-  return token ? (
-    <Redirect href={'/(businessSelect)'} />
-  ) : (
+  return (
     <ThemedView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <Image style={commonStyles.imageCircle} source={require('../../assets/images/logo.png')} />
@@ -104,28 +108,28 @@ export default function Register() {
       </View>
       <View
         style={[
-          commonStyles.footer,
+          commonStyles.footerLeft,
           { backgroundColor: darkTheme ? darkSecondColor : lightSecondColor, borderColor: color },
         ]}
       >
-        <ScrollView keyboardShouldPersistTaps='handled'>
+        <ScrollView keyboardShouldPersistTaps="handled">
           <ThemedText style={commonStyles.text_action} type="subtitle">
             Email
           </ThemedText>
           <View
             style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
           >
-            <Ionicons name="mail" color={darkTheme ? darkTtextColor : lightTextColor} size={18} />
+            <Ionicons name="mail" color={darkTheme ? darkTextColor : lightTextColor} size={18} />
             <TextInput
               onChangeText={setEmail}
               placeholder="type your email..."
-              placeholderTextColor={darkTheme ? darkTtextSecondColor : lightTextColor}
+              placeholderTextColor={darkTheme ? darkTextSecondColor : lightTextColor}
               style={[
                 commonStyles.textInput,
-                { color: darkTheme ? darkTtextColor : lightTextColor },
+                { color: darkTheme ? darkTextColor : lightTextColor },
               ]}
               autoCapitalize="none"
-              keyboardType='email-address'
+              keyboardType="email-address"
             />
             {!errors.email && email ? (
               <Ionicons name="checkmark-circle-outline" color={color} />
@@ -133,7 +137,11 @@ export default function Register() {
           </View>
           {errors.email ? <Text style={commonStyles.errorMsg}>{errors.email}</Text> : null}
           {loading ? (
-            <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
+            <ActivityIndicator
+              style={[commonStyles.loading, { marginTop: 50 }]}
+              size="large"
+              color={color}
+            />
           ) : (
             <>
               <TouchableOpacity
@@ -147,9 +155,7 @@ export default function Register() {
                 ]}
                 onPress={handleSubmit}
               >
-                <ThemedText type="subtitle" style={{ color: color }}>
-                  Register
-                </ThemedText>
+                <ThemedText type="subtitle">Register</ThemedText>
               </TouchableOpacity>
               <View style={commonStyles.linkSection}>
                 <ThemedText type="subtitle">Do you have an account? </ThemedText>
@@ -162,7 +168,7 @@ export default function Register() {
             </>
           )}
         </ScrollView>
-        <ThemedText style={{ position: 'absolute', bottom: 5, right: 5 }}>{version}</ThemedText>
+        <ThemedText style={{ position: 'absolute', bottom: 5, left: 5 }}>{version}</ThemedText>
       </View>
       <CustomAlert
         title="Registration"

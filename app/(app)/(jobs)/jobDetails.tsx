@@ -1,5 +1,4 @@
 import {
-  Text,
   View,
   ActivityIndicator,
   RefreshControl,
@@ -10,6 +9,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -23,12 +23,12 @@ import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import { commonStyles } from '@/constants/commonStyles';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
+import { Ionicons } from '@expo/vector-icons';
 
 
 export default function JobDetail() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { clients } = useSelector((state: RootState) => state.client);
-  const { jobs, jobError, job } = useSelector((state: RootState) => state.job);
+  const { job } = useSelector((state: RootState) => state.job);
   const { usedItems } = useSelector((state: RootState) => state.item);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,6 +72,19 @@ export default function JobDetail() {
   }, []);
 
   return (
+    <>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.replace('/(app)/(jobs)');
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Job Details</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
     <ThemedView
       style={[
         commonStylesDetails.container,
@@ -138,7 +151,7 @@ export default function JobDetail() {
                 ]}
                 onPress={() => router.push('/(app)/(jobs)/spentCreate')}
               >
-                <Text style={[commonStylesDetails.headerText, { color: color }]}>+ Spent</Text>
+                <ThemedText>+ Spent</ThemedText>
               </TouchableOpacity>
             ) : null
           }
@@ -153,5 +166,6 @@ export default function JobDetail() {
         />
       )}
     </ThemedView>
+    </>
   );
 }

@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Button,
-  Text,
   StyleSheet,
   ScrollView,
   Modal,
-  Pressable,
   TouchableOpacity,
-  Platform,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -32,6 +28,9 @@ import {
 } from '@/settings';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
+import { StatusBar } from 'expo-status-bar';
+import { commonStyles } from '@/constants/commonStyles';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Invoice() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -414,10 +413,23 @@ export default function Invoice() {
     return date.toLocaleDateString('en-US', options);
   };
 
-  return loading ? (
-    <ActivityIndicator style={styles.loading} color={color} size="large" />
+  return (
+  <>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Invoice Details</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
+  {loading ? (
+    <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
   ) : invoice ? (
-    <ThemedView style={styles.container}>
       <ScrollView>
         <ThemedSecondaryView style={styles.invoice}>
           <View style={styles.header}>
@@ -496,7 +508,7 @@ export default function Invoice() {
                 ]}
                 onPress={() => router.navigate('/(app)/(jobs)/invoiceUpdate')}
               >
-                <ThemedText type="subtitle" style={{ color: color }}>
+                <ThemedText>
                   Change
                 </ThemedText>
               </TouchableOpacity>
@@ -513,7 +525,7 @@ export default function Invoice() {
               ]}
               onPress={() => createAndSendInvoice()}
             >
-              <ThemedText type="subtitle" style={{ color: color }}>
+              <ThemedText>
                 Send Invoice
               </ThemedText>
             </TouchableOpacity>
@@ -549,9 +561,8 @@ export default function Invoice() {
                     </Modal> */}
         </ThemedSecondaryView>
       </ScrollView>
-    </ThemedView>
   ) : (
-    <ThemedView style={styles.container}>
+    <>
       <ThemedText style={[styles.invoiceTitle, { textAlign: 'center', margin: 'auto' }]}>
         {error}
       </ThemedText>
@@ -566,17 +577,15 @@ export default function Invoice() {
         ]}
         onPress={() => router.navigate('/(app)/(jobs)/invoiceCreate')}
       >
-        <ThemedText style={{ color: color, textAlign: 'center' }}>Create</ThemedText>
+        <ThemedText style={{ textAlign: 'center' }}>Create</ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+      </>
+  )}
+  </> 
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-  },
   invoice: {
     margin: 10,
     borderTopWidth: 1,

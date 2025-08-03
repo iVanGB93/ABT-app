@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  RefreshControl,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import { View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 import { Vibration } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -93,65 +88,72 @@ export default function Clients() {
   };
 
   return (
-    <ThemedView style={commonStyles.container}>
-      {isLoading ? (
-        <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-      ) : error ? (
-        <View style={commonStyles.containerCentered}>
-          <ThemedText>{error}</ThemedText>
-          <TouchableOpacity
-            style={[commonStyles.button, { borderColor: color }]}
-            onPress={() => fetchClients()}
-          >
-            <ThemedText>Try againg</ThemedText>
-          </TouchableOpacity>
+    <>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+      <ThemedView style={commonStyles.container}>
+        <View style={commonStyles.tabHeader}>
+          <ThemedText type="subtitle">Clients</ThemedText>
+          <ThemedText type="subtitle">{business.name}</ThemedText>
         </View>
-      ) : (
-        <>
-          <FlatList
-            data={clients}
-            renderItem={({ item }) => {
-              return (
-                <TouchableOpacity onPress={() => handlePressable(item.id)}>
-                  <ClientCard
-                    id={item.id}
-                    name={item.name}
-                    last_name={item.last_name}
-                    address={item.address}
-                    phone={item.phone}
-                    email={item.email}
-                    image={item.image}
-                  />
-                </TouchableOpacity>
-              );
-            }}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-            ListEmptyComponent={
-              <ThemedText style={commonStyles.loading}>
-                {clientMessage
-                  ? clientMessage.toString() + ', pull to refresh'
-                  : 'No clients found, pull to refresh or create a new one'}
-              </ThemedText>
-            }
-            ListHeaderComponent={<View style={{ margin: 5 }} />}
-            ListFooterComponent={<View style={{ margin: 5 }} />}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading}
-                onRefresh={() => getClients()}
-                colors={[color]} // Colores del indicador de carga
-                tintColor={color} // Color del indicador de carga en iOS
-              />
-            }
-          />
-          <TouchableOpacity
-            style={[commonStyles.createButton, { backgroundColor: color }]}
-            onPress={() => router.push('/(app)/(clients)/clientCreate')}
-          >
-            <Ionicons name="add" size={30} color="#FFF" />
-          </TouchableOpacity>
-        </>
-      )}
-    </ThemedView>
+        {isLoading ? (
+          <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
+        ) : error ? (
+          <View style={commonStyles.containerCentered}>
+            <ThemedText>{error}</ThemedText>
+            <TouchableOpacity
+              style={[commonStyles.button, { borderColor: color }]}
+              onPress={() => fetchClients()}
+            >
+              <ThemedText>Try againg</ThemedText>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <FlatList
+              data={clients}
+              renderItem={({ item }) => {
+                return (
+                  <TouchableOpacity onPress={() => handlePressable(item.id)}>
+                    <ClientCard
+                      id={item.id}
+                      name={item.name}
+                      last_name={item.last_name}
+                      address={item.address}
+                      phone={item.phone}
+                      email={item.email}
+                      image={item.image}
+                    />
+                  </TouchableOpacity>
+                );
+              }}
+              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+              ListEmptyComponent={
+                <ThemedText style={commonStyles.loading}>
+                  {clientMessage
+                    ? clientMessage.toString() + ', pull to refresh'
+                    : 'No clients found, pull to refresh or create a new one'}
+                </ThemedText>
+              }
+              ListHeaderComponent={<View style={{ margin: 5 }} />}
+              ListFooterComponent={<View style={{ margin: 5 }} />}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoading}
+                  onRefresh={() => getClients()}
+                  colors={[color]} // Colores del indicador de carga
+                  tintColor={color} // Color del indicador de carga en iOS
+                />
+              }
+            />
+            <TouchableOpacity
+              style={[commonStyles.createButton, { backgroundColor: color }]}
+              onPress={() => router.navigate('/(app)/(clients)/clientCreate')}
+            >
+              <Ionicons name="add" size={30} color="#FFF" />
+            </TouchableOpacity>
+          </>
+        )}
+      </ThemedView>
+    </>
   );
 }

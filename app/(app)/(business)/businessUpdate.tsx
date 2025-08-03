@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
@@ -24,7 +23,7 @@ export default function BusinessUpdate() {
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      keyboardVerticalOffset={100}
       style={[commonStyles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor }]}
     >
       {isLoading ? (

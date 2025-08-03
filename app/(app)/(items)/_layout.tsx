@@ -1,34 +1,12 @@
 import { Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../(redux)/store';
-import { ScrollView, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
-import { darkSecondColor, lightSecondColor } from '@/settings';
-import { ThemedText } from '@/components/ThemedText';
 
-function BusinessNameHeader({ name }: { name: string }) {
-  return (
-    <View style={{ minWidth: 120, maxWidth: 250, marginLeft: 40, paddingRight: 8 }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <ThemedText
-          numberOfLines={1}
-          style={{
-            fontWeight: 'bold',
-            fontSize: 18,
-            textAlign: 'right',
-          }}
-        >
-          {name}
-        </ThemedText>
-      </ScrollView>
-    </View>
-  );
-}
 
 export default function ItemLayout() {
   const token = useSelector((state: RootState) => state.auth.token);
-  const { darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { business } = useSelector((state: RootState) => state.settings);
 
   if (!token) {
     return <Redirect href="/" />;
@@ -38,26 +16,11 @@ export default function ItemLayout() {
   }
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-          },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerTitle: 'Items',
-            headerRight: () => <BusinessNameHeader name={business.name} />,
-          }}
-        />
-        <Stack.Screen name="itemDetails" options={{ headerTitle: 'Item Details' }} />
-        <Stack.Screen name="itemCreate" options={{ headerTitle: 'Add new Item' }} />
-        <Stack.Screen name="itemUpdate" options={{ headerTitle: 'Update Item' }} />
-      </Stack>
-    </>
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="itemDetails" options={{ headerShown: false }} />
+      <Stack.Screen name="itemCreate" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="itemUpdate" options={{ headerShown: false, animation: 'fade' }} />
+    </Stack>
   );
 }

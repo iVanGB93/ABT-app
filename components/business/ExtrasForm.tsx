@@ -6,7 +6,7 @@ import {
   baseImageURL,
   darkMainColor,
   darkSecondColor,
-  darkTtextColor,
+  darkTextColor,
   lightMainColor,
   lightSecondColor,
   lightTextColor,
@@ -31,10 +31,14 @@ interface ExtraFormProps {
   setAmount?: any;
   image: any;
   setImage?: any;
+  category: any;
+  setCategory?: any;
   type: string;
   action: string;
   isLoading: boolean;
   setIsLoading: any;
+  isDeductible?: boolean;
+  setIsDeductible?: any;
   id?: any;
 }
 
@@ -45,15 +49,17 @@ export default function ExtraForm({
   setAmount,
   image,
   setImage,
+  category,
+  setCategory,
   type,
   action,
   isLoading,
   setIsLoading,
+  isDeductible = true,
+  setIsDeductible,
   id = '',
 }: ExtraFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const [category, setCategory] = useState<string>('other');
-  const [isDeductible, setIsDeductible] = useState(true);
   const [isEnabled, setIsEnabled] = useState<any>(false);
   const [formImage, setFormImage] = useState<any>(null);
   const [errors, setErrors] = useState<Errors>({});
@@ -133,12 +139,8 @@ export default function ExtraForm({
           }
           setIsLoading(false);
         })
-        .catch(function (error) {
-          console.error('Error creating a expense:', error);
-          /* dispatch({
-                    type: CHANGE_ERROR,
-                    payload: error.message
-                }) */
+        .catch(function (err) {
+          setError(`An error occurred while creating the ${err.message}.`);
           setIsLoading(false);
         });
     }
@@ -159,15 +161,16 @@ export default function ExtraForm({
 
   return (
     <View>
+      {error ? <Text style={commonStyles.errorMsg}>{error}</Text> : null}
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Description
       </ThemedText>
       <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons name="text" color={darkTheme ? darkTtextColor : lightTextColor} />
+        <Ionicons name="text" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={description ? description : `Enter ${type}'s description`}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={description}
           onChangeText={setDescription}
         />
@@ -177,16 +180,16 @@ export default function ExtraForm({
         Amount
       </ThemedText>
       <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons name="cash-outline" color={darkTheme ? darkTtextColor : lightTextColor} />
+        <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
         {isEnabled ? (
           <ThemedText> $ {amount}</ThemedText>
         ) : (
           <TextInput
-            style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+            style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
             placeholder={amount ? amount.toString() : `Enter ${type}'s amount`}
-            placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+            placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
             value={amount ? amount.toString() : ''}
-            onChangeText={setAmount}
+            onChangeText={text => setAmount(text.replace(',', '.'))}
             keyboardType="numeric"
           />
         )}
@@ -236,7 +239,7 @@ export default function ExtraForm({
                 >
                   <ThemedText
                     style={{
-                      color: darkTheme ? darkTtextColor : lightTextColor,
+                      color: darkTheme ? darkTextColor : lightTextColor,
                       fontSize: 16,
                     }}
                   >
@@ -253,7 +256,7 @@ export default function ExtraForm({
               thumbColor={isDeductible ? color : '#ccc'}
             />
             <ThemedText
-              style={{ marginLeft: 8, color: darkTheme ? darkTtextColor : lightTextColor }}
+              style={{ marginLeft: 8, color: darkTheme ? darkTextColor : lightTextColor }}
             >
               Deductible
             </ThemedText>
@@ -293,7 +296,7 @@ export default function ExtraForm({
           ]}
           onPress={() => handleImage()}
         >
-          <ThemedText style={{ color: color }}>Add image</ThemedText>
+          <ThemedText>Add image</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -305,7 +308,7 @@ export default function ExtraForm({
           ]}
           onPress={() => takePhoto()}
         >
-          <ThemedText style={{ color: color }}>Take Photo</ThemedText>
+          <ThemedText>Take Photo</ThemedText>
         </TouchableOpacity>
       </View>
       <View
@@ -326,7 +329,7 @@ export default function ExtraForm({
           ]}
           onPress={() => handleSubmit()}
         >
-          <ThemedText style={{ color: color }}>{action === 'new' ? 'Create' : 'Update'}</ThemedText>
+          <ThemedText>{action === 'new' ? 'Create' : 'Update'}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[

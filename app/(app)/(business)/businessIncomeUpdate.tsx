@@ -1,34 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import {
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
+
 import {
   darkMainColor,
   lightMainColor,
 } from '@/settings';
-import { RootState, useAppDispatch } from '@/app/(redux)/store';
+import { RootState } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStyles } from '@/constants/commonStyles';
 import { useLocalSearchParams } from 'expo-router';
 import ExtrasForm from '@/components/business/ExtrasForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
-
+import { ThemedView } from '@/components/ThemedView';
+import { Ionicons } from '@expo/vector-icons';
+import { ThemedText } from '@/components/ThemedText';
 
 export default function BusinessIncomeUpdate() {
-  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { darkTheme } = useSelector((state: RootState) => state.settings);
   const { extraIncome } = useSelector((state: RootState) => state.business);
-  const [isEnabled, setIsEnabled] = useState<any>(false);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [image, setImage] = useState<any>(null);
-  const [error, setError] = useState('');
+  const [category, setCategory] = useState<string>('other');
   const [isLoading, setIsLoading] = useState(false);
   const params = useLocalSearchParams();
   const incomeId = params.id;
+  const router = useRouter();
 
   useEffect(() => {
     if (incomeId) {
@@ -42,13 +47,26 @@ export default function BusinessIncomeUpdate() {
   }, [incomeId, extraIncome]);
 
   return (
+    <>
+          <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <KeyboardAvoidingView
       behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      keyboardVerticalOffset={100}
       style={[commonStyles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor }]}
     >
+      <ThemedView style={commonStyles.tabHeader}>
+          <TouchableOpacity
+            onPress={() => {
+              router.back();
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+          </TouchableOpacity>
+          <ThemedText type="subtitle">Add Income</ThemedText>
+          <ThemedText type="subtitle"></ThemedText>
+        </ThemedView>
       {isLoading ? (
-        <ActivityIndicator style={commonStyles.loading} size="large" />
+        <ActivityIndicator style={commonStyles.containerCentered} size="large" />
       ) : (
         <ThemedSecondaryView style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}>
           <ScrollView>
@@ -59,6 +77,8 @@ export default function BusinessIncomeUpdate() {
               setAmount={setAmount}
               image={image}
               setImage={setImage}
+              category={category}
+              setCategory={setCategory}
               type="income"
               action="update"
               isLoading={isLoading}
@@ -69,5 +89,6 @@ export default function BusinessIncomeUpdate() {
         </ThemedSecondaryView>
       )}
     </KeyboardAvoidingView>
+    </>
   );
 };

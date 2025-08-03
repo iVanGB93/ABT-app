@@ -1,32 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import {
+  Text,
   View,
   TouchableOpacity,
-  Text,
   TextInput,
   ActivityIndicator,
-  Image,
   ScrollView,
+  Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { useSelector } from 'react-redux';
+import { useRouter, usePathname } from 'expo-router';
+import { useAppDispatch, RootState } from '../(redux)/store';
 
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
-import { RootState, useAppDispatch } from '../(redux)/store';
-import { authSuccess } from '../(redux)/authSlice';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { commonStyles } from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from '@/axios';
+import { authSetMessage, setCodeAndEmail } from '../(redux)/authSlice';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
 import {
+  darkSecondColor,
   darkThirdColor,
   darkTextColor,
   darkTextSecondColor,
   lightMainColor,
+  lightSecondColor,
   lightTextColor,
-  version,
 } from '@/settings';
 
 interface Errors {
@@ -34,29 +34,30 @@ interface Errors {
   password?: string;
 }
 
-export default function Login() {
+export default function UsernameAndPassword() {
+  const { userEmail, token } = useSelector((state: RootState) => state.auth);
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { token } = useSelector((state: RootState) => state.auth);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (token) {
-      router.navigate('/accountDetails');
+      router.replace('/(businessSelect)');
     }
   }, [token]);
 
   const validateForm = () => {
     let errors: Errors = {};
     if (!username) errors.username = 'Username is required!';
-    if (!password) errors.password = 'Password is required!';
+    if (password.length < 8) errors.password = 'Password must be at least 8 characters!';
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -65,36 +66,33 @@ export default function Login() {
     if (validateForm()) {
       setLoading(true);
       await axiosInstance
-        .post('token/', { username: username, password: password })
+        .post('user/register/', {
+          username: username,
+          password: password,
+          email: userEmail,
+          action: 'new',
+        })
         .then(function (response) {
-          if (response.data.access !== undefined) {
-            dispatch(
-              authSuccess({
-                username: username,
-                token: response.data.access,
-                refreshToken: response.data.refresh,
-              }),
-            );
-            setLoading(false);
-            router.navigate('/accountDetails');
-          } else {
+          if (response.status === 201) {
+            dispatch(authSetMessage('Account created, please login!'));
+            dispatch(setCodeAndEmail({ code: null, email: null }));
+            router.replace('/');
+          }
+          if (response.status === 203) {
             setError(response.data.message);
             setAlertVisible(true);
             setLoading(false);
           }
         })
         .catch(function (error) {
+          console.error('Error registering:', error.response, error.message);
           if (typeof error.response === 'undefined') {
             setError(
               'A server/network error occurred. ' +
                 'Sorry about this - try againg in a few minutes.',
             );
           } else {
-            if (error.response.status === 401) {
-              setError('Username or Password incorrect');
-            } else {
-              setError(error.message);
-            }
+            setError(error.message);
           }
           setAlertVisible(true);
           setLoading(false);
@@ -107,16 +105,24 @@ export default function Login() {
       <View style={commonStyles.header}>
         <Image style={commonStyles.imageCircle} source={require('../../assets/images/logo.png')} />
         <ThemedText type="title" style={commonStyles.text_header}>
-          Welcome!
+          Account details!
         </ThemedText>
         <ThemedText type="subtitle" style={commonStyles.sub_text_header}>
           Advance Business Tools
         </ThemedText>
       </View>
-      <ThemedSecondaryView style={[commonStyles.footer, { borderColor: color }]}>
+      <View
+        style={[
+          commonStyles.footer,
+          { backgroundColor: darkTheme ? darkSecondColor : lightSecondColor, borderColor: color },
+        ]}
+      >
         <ScrollView keyboardShouldPersistTaps="handled">
           <ThemedText style={commonStyles.text_action} type="subtitle">
-            Username
+            Create your username and password
+          </ThemedText>
+          <ThemedText style={commonStyles.text_action} type="subtitle">
+            User
           </ThemedText>
           <View
             style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
@@ -148,7 +154,6 @@ export default function Login() {
             />
             <TextInput
               onChangeText={setPassword}
-              value={password}
               placeholder="type your password..."
               placeholderTextColor={darkTheme ? darkTextSecondColor : lightTextColor}
               secureTextEntry={secureTextEntry ? true : false}
@@ -176,7 +181,11 @@ export default function Login() {
           </View>
           {errors.password ? <Text style={commonStyles.errorMsg}>{errors.password}</Text> : null}
           {loading ? (
-            <ActivityIndicator style={[commonStyles.loading, { marginTop: 50 }]} size="large" color={color} />
+            <ActivityIndicator
+              style={[commonStyles.loading, { marginTop: 50 }]}
+              size="large"
+              color={color}
+            />
           ) : (
             <>
               <TouchableOpacity
@@ -190,24 +199,22 @@ export default function Login() {
                 ]}
                 onPress={handleSubmit}
               >
-                <ThemedText type="subtitle">Login</ThemedText>
+                <ThemedText type="subtitle">Save</ThemedText>
               </TouchableOpacity>
               <View style={commonStyles.linkSection}>
-                <ThemedText type="subtitle">I'm new, </ThemedText>
-                <TouchableOpacity onPress={() => router.navigate('./register')}>
+                <ThemedText type="subtitle">Cancel and </ThemedText>
+                <TouchableOpacity onPress={() => router.push('/')}>
                   <ThemedText type="subtitle" style={{ color: color }}>
-                    {' '}
-                    create account!!
+                    Login!!
                   </ThemedText>
                 </TouchableOpacity>
               </View>
             </>
           )}
         </ScrollView>
-        <ThemedText style={{ position: 'absolute', bottom: 5, right: 5 }}>{version}</ThemedText>
-      </ThemedSecondaryView>
+      </View>
       <CustomAlert
-        title="Login error"
+        title="Registration"
         visible={alertVisible}
         message={error}
         onClose={() => setAlertVisible(false)}

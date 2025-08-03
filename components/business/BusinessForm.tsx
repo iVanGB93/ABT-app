@@ -1,4 +1,4 @@
-import React, { act, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   TextInput,
@@ -25,14 +25,12 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import axiosInstance from '@/axios';
 import {
-  darkTtextColor,
+  darkTextColor,
   lightTextColor,
   darkMainColor,
-  darkSecondColor,
   lightMainColor,
 } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
-import { ThemedView } from '../ThemedView';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { businessSetError, businessSetMessage } from '@/app/(redux)/businessSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
@@ -55,7 +53,7 @@ interface BusinessFormProps {
 }
 
 export default function BusinessForm({ action, isLoading, setIsLoading }: BusinessFormProps) {
-  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { color, darkTheme, business, profile } = useSelector((state: RootState) => state.settings);
   const { businessError } = useSelector((state: RootState) => state.business);
   const { userName, userEmail } = useSelector((state: RootState) => state.auth);
   const [name, setName] = useState(action === 'create' ? '' : business.name);
@@ -78,18 +76,31 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
   const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
   const [useAccountPhone, setUseAccountPhone] = useState(false);
   const [useAccountEmail, setUseAccountEmail] = useState(false);
+  const [useAccountAddress, setUseAccountAddress] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  /* useEffect(() => {
-    if (useAccountPhone) setPhone(userPhone ?? '');
-  }, [useAccountPhone, userPhone]); */
   useEffect(() => {
-    if (useAccountEmail) setEmail(userEmail ?? email);
-  }, [useAccountEmail, userEmail]);
-  /* useEffect(() => {
-    if (useAccountAddress) setAddress(userAddress ?? '');
-  }, [useAccountAddress, userAddress]); */
+    if (useAccountPhone) {
+      setPhone(profile.phone ?? '');
+    } else {
+      setPhone('');
+    }
+  }, [useAccountPhone, profile.phone]);
+  useEffect(() => {
+    if (useAccountEmail) {
+      setEmail(profile.email ?? email);
+    } else {
+      setEmail('');
+    }
+  }, [useAccountEmail, profile.email]);
+  useEffect(() => {
+    if (useAccountAddress) {
+      setAddress(profile.address ?? '');
+    } else {
+      setAddress('');
+    }
+  }, [useAccountAddress, profile.address]);
 
   function handleInputValue(phoneNumber: string) {
     setInputValue(phoneNumber);
@@ -255,7 +266,9 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
 
   return (
     <View>
-      {businessError ? <ThemedText style={commonStyles.errorMsg}>{businessError}</ThemedText> : null}
+      {businessError ? (
+        <ThemedText style={commonStyles.errorMsg}>{businessError}</ThemedText>
+      ) : null}
       <ThemedText style={commonStyles.text_action} type="subtitle">
         Name
       </ThemedText>
@@ -263,21 +276,39 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person"
-          color={darkTheme ? darkTtextColor : lightTextColor}
+          color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={name ? name : "Enter business's name"}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
           onChangeText={setName}
         />
       </View>
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
 
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Phone
-      </ThemedText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <ThemedText style={commonStyles.text_action} type="subtitle">
+          Phone
+        </ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+          <Text
+            style={{
+              marginLeft: 5,
+              color: darkTheme ? darkTextColor : lightTextColor,
+              fontSize: 12,
+            }}
+          >
+            Use my phone
+          </Text>
+          <Switch
+            value={useAccountPhone}
+            onValueChange={setUseAccountPhone}
+            thumbColor={useAccountPhone ? color : '#ccc'}
+          />
+        </View>
+      </View>
       <PhoneInput
         defaultCountry="US"
         value={phone}
@@ -306,16 +337,22 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         <ThemedText style={commonStyles.text_action} type="subtitle">
           Email
         </ThemedText>
-        {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+          <Text
+            style={{
+              marginLeft: 5,
+              color: darkTheme ? darkTextColor : lightTextColor,
+              fontSize: 12,
+            }}
+          >
+            Use my email
+          </Text>
           <Switch
             value={useAccountEmail}
             onValueChange={setUseAccountEmail}
             thumbColor={useAccountEmail ? color : '#ccc'}
           />
-          <Text style={{ marginLeft: 5, color: darkTheme ? darkTtextColor : lightTextColor, fontSize: 12 }}>
-            Use my email
-          </Text>
-        </View> */}
+        </View>
       </View>
       <View
         style={[
@@ -326,29 +363,48 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="mail"
-          color={darkTheme ? darkTtextColor : lightTextColor}
+          color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder="Enter business's email"
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={email}
           onChangeText={setEmail}
           editable={!useAccountEmail}
           keyboardType="email-address"
-          autoCapitalize='none'
+          autoCapitalize="none"
         />
       </View>
       {errors.email ? <Text style={commonStyles.errorMsg}>{errors.email}</Text> : null}
 
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Address
-      </ThemedText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <ThemedText style={commonStyles.text_action} type="subtitle">
+          Address
+        </ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+          <Text
+            style={{
+              marginLeft: 5,
+              color: darkTheme ? darkTextColor : lightTextColor,
+              fontSize: 12,
+            }}
+          >
+            Use my address
+          </Text>
+          <Switch
+            value={useAccountAddress}
+            onValueChange={setUseAccountAddress}
+            thumbColor={useAccountAddress ? color : '#ccc'}
+          />
+        </View>
+      </View>
+
       <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="location"
-          color={darkTheme ? darkTtextColor : lightTextColor}
+          color={darkTheme ? darkTextColor : lightTextColor}
         />
         <GooglePlacesAutocomplete
           keyboardShouldPersistTaps="always"
@@ -357,7 +413,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           minLength={2}
           timeout={1000}
           textInputProps={{
-            placeholderTextColor: darkTheme ? darkTtextColor : lightTextColor,
+            placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
           }}
           onPress={(data, details = null) => {
             setAddress(data.description);
@@ -377,7 +433,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
               backgroundColor: 'transparent',
             },
             predefinedPlacesDescription: {
-              color: darkTheme ? darkTtextColor : lightTextColor,
+              color: darkTheme ? darkTextColor : lightTextColor,
             },
           }}
           enablePoweredByContainer={false}
@@ -393,12 +449,12 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person-add"
-          color={darkTheme ? darkTtextColor : lightTextColor}
+          color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={description ? description : "Enter business's desciption"}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={description}
           onChangeText={setDescription}
         />
@@ -411,12 +467,12 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="globe"
-          color={darkTheme ? darkTtextColor : lightTextColor}
+          color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTtextColor : lightTextColor }]}
+          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={website ? website : "Enter business's website"}
-          placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={website}
           onChangeText={setWebsite}
         />
@@ -479,7 +535,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           ]}
           onPress={() => handleImage()}
         >
-          <ThemedText style={{ color: color }}>Add Logo</ThemedText>
+          <ThemedText>Add Logo</ThemedText>
         </TouchableOpacity>
         {image && <Image source={{ uri: image }} style={commonStylesForm.image} />}
       </View>
@@ -501,7 +557,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           ]}
           onPress={() => handleSubmit()}
         >
-          <ThemedText style={{ color: color }}>
+          <ThemedText>
             {action === 'create' ? 'Create' : 'Update'}
           </ThemedText>
         </TouchableOpacity>
@@ -531,9 +587,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
             style={[commonStyles.button, { borderColor: 'red' }]}
             onPress={() => handleDelete()}
           >
-            <ThemedText style={{ color: 'red' }}>
-              Delete
-            </ThemedText>
+            <ThemedText style={{ color: 'red' }}>Delete</ThemedText>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -561,15 +615,15 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
               <Ionicons
                 style={{ marginBottom: 5, fontSize: 16 }}
                 name="mail"
-                color={darkTheme ? darkTtextColor : lightTextColor}
+                color={darkTheme ? darkTextColor : lightTextColor}
               />
               <TextInput
                 style={[
                   commonStyles.textInput,
-                  { color: darkTheme ? darkTtextColor : lightTextColor },
+                  { color: darkTheme ? darkTextColor : lightTextColor },
                 ]}
                 placeholder="Enter owner's email"
-                placeholderTextColor={darkTheme ? darkTtextColor : lightTextColor}
+                placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
                 value={inviteEmail}
                 onChangeText={setInviteEmail}
                 keyboardType="email-address"
@@ -611,7 +665,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
                 ]}
                 onPress={handleAddOwner}
               >
-                <ThemedText type="link" style={{ color }}>
+                <ThemedText>
                   Add
                 </ThemedText>
               </TouchableOpacity>

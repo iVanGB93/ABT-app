@@ -26,11 +26,15 @@ export const authSlice = createSlice({
             state.token = action.payload.token;
             state.refreshToken = action.payload.refreshToken;
             state.userName = action.payload.username
+            state.authMessage = "Login successful";
         },
         authLogout: (state) => {
             state.token = null;
             state.refreshToken = null;
             state.userName = null;
+            state.userEmail = null;
+            state.code = null;
+            state.authMessage = "Logged out successfully";
         },
         authSetMessage: (state, action: PayloadAction<string | null>) => {
             state.authMessage = action.payload

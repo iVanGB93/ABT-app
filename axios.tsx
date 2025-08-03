@@ -3,6 +3,7 @@ import axios from 'axios';
 import { baseURL } from '@/settings';
 import { store } from './app/(redux)/store';
 import { authLogout, setTokensAction } from './app/(redux)/authSlice';
+import { cleanSettings, setError } from './app/(redux)/settingSlice';
 
 const dispatch = (action: any) => store.dispatch(action);
 let count: number = 0;
@@ -41,6 +42,8 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401 && originalRequest.url === baseURL + 'token/refresh/') {
       console.log('Refresh token not valid...');
       dispatch(authLogout());
+      dispatch(cleanSettings());
+      dispatch(setError('Session expired, please login again!'));
       return Promise.reject(error);
     }
     if (error.response.data.code === 'token_not_valid' && error.response.status === 401) {
@@ -82,21 +85,29 @@ axiosInstance.interceptors.response.use(
               .catch((err) => {
                 console.log(err);
                 dispatch(authLogout());
+                dispatch(cleanSettings());
+                dispatch(setError('Session expired, please login again!'));
                 return Promise.reject(err);
               });
           } else {
             console.log('Refresh token is wrong');
             dispatch(authLogout());
+            dispatch(cleanSettings());
+            dispatch(setError('Session expired, please login again!'));
             return Promise.reject(error);
           }
         } else {
           console.log('Refresh token is expired', tokenParts.exp, now);
           dispatch(authLogout());
+          dispatch(cleanSettings());
+          dispatch(setError('Session expired, please login again!'));
           return Promise.reject(error);
         }
       } else {
         console.log('Refresh token not available.');
         dispatch(authLogout());
+        dispatch(cleanSettings());
+        dispatch(setError('Session expired, please login again!'));
         return Promise.reject(error);
       }
     }

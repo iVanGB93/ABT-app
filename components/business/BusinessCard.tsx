@@ -5,11 +5,11 @@ import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import { baseImageURL } from "@/settings";
-import { darkTtextColor, lightTextColor } from '../../settings';
+import { darkTextColor, lightTextColor } from '../../settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesCards } from '@/constants/commonStylesCard';
-import { setBusiness } from '@/app/(redux)/businessSlice';
+import { setBusiness } from '@/app/(redux)/settingSlice';
 
 
 interface BusinessCardProps {
@@ -33,7 +33,6 @@ export default function BusinessCard({logo, id, name, description, address, phon
     const [modalVisible, setModalVisible] = useState(false);
     const [imageError, setImageError] = useState(false);
     const [loading, setLoading] = useState(false);
-    const imageObj = baseImageURL + logo;
     const [isBig, setIsBig] = useState(false);
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -56,38 +55,38 @@ export default function BusinessCard({logo, id, name, description, address, phon
 
   return (
     <ThemedSecondaryView style={[commonStylesCards.card, {borderColor: color, shadowColor: darkTheme ? '#fff' : '#000'}]}>
-      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTtextColor: lightTextColor}]}>
-          <Text style={[commonStylesCards.name, {color:darkTheme ? darkTtextColor: lightTextColor}]}>{name}</Text>
+      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTextColor: lightTextColor}]}>
+          <Text style={[commonStylesCards.name, {color:darkTheme ? darkTextColor: lightTextColor}]}>{name}</Text>
           <Image 
           style={{width: 30, height: 30, borderRadius: 75}} 
-          source={{ uri: imageObj }}
+          source={{ uri: logo }}
           onError={() => setImageError(true)}
           />
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Address: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Address: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
             <ThemedText style={commonStylesCards.dataText}>{address ? address : 'No address saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Phone: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Phone: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}>
             <ThemedText style={commonStylesCards.dataText}>{phone ? phone : 'No phone saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Email: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Email: </Text>
           <TouchableOpacity onPress={() => Linking.openURL(`mailto:${email}`)}>
             <ThemedText style={commonStylesCards.dataText}>{email ? email : 'No email saved'}</ThemedText>
           </TouchableOpacity>
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Website: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Website: </Text>
           <ThemedText style={commonStylesCards.dataText}>{website ? website : 'No website saved'}</ThemedText>
       </View>
       <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTtextColor: lightTextColor}]}>Owners: </Text>
+          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Owners: </Text>
           <ThemedText style={commonStylesCards.dataText}>{owners && owners.length > 0 ? owners.join(', ') : 'No owners saved'}</ThemedText>
       </View>
       {inDetail ?
@@ -110,7 +109,7 @@ export default function BusinessCard({logo, id, name, description, address, phon
         <View style={commonStylesCards.modalContainer}>
           <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
             <Image
-              source={{ uri: imageObj }}
+              source={{ uri: logo }}
               style={commonStylesCards.expandedImage}
             />
           </TouchableOpacity>
