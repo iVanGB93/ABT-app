@@ -17,7 +17,7 @@ export const SecondaryColors = {
   },
   dark: {
     text: '#ECEDEE',
-    background: '#1e1e1e',
+    background: '#23272e',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',

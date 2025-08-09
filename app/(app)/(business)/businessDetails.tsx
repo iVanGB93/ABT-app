@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Image, // <-- añadido
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
@@ -33,6 +34,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { jobFail, setJobs } from '@/app/(redux)/jobSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
+import { ThemedSecondaryView } from '@/components/ThemedSecondaryView'; // <-- añadido
 
 export default function BusinessDetails() {
   const [activeTab, setActiveTab] = useState<'expenses' | 'income'>('expenses');
@@ -48,6 +50,12 @@ export default function BusinessDetails() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!business || Object.keys(business).length === 0) {
+      router.replace('/(app)/(business)');
+    }
+  }, [business]);
 
   const handleChangeBusiness = async () => {
     dispatch(setBusiness({}));
@@ -106,10 +114,6 @@ export default function BusinessDetails() {
   };
 
   useEffect(() => {
-    if (business === undefined) {
-      router.push('/(businessSelect)');
-      return;
-    }
     if (businessMessage) {
       Toast.show({
         type: 'success',
@@ -118,9 +122,12 @@ export default function BusinessDetails() {
       });
       dispatch(businessSetMessage(null));
     }
+  }, [businessMessage]);
+
+  useEffect(() => {
     getExtras();
     getJobs();
-  }, [business]);
+  }, []);
 
   useEffect(() => {
     if (Array.isArray(jobs) && Array.isArray(extraIncome) && Array.isArray(extraExpenses)) {
@@ -157,20 +164,73 @@ export default function BusinessDetails() {
             </View>
           </TouchableOpacity>
         </View>
-        <BusinessCard
-          id={business.id}
-          logo={business.logo}
-          name={business.name}
-          description={business.description}
-          address={business.address}
-          phone={business.phone}
-          email={business.email}
-          inDetail={true}
-          owners={business.owners}
-          website={business.website}
-          created_at={business.created_at}
-          updated_at={business.updated_at}
-        />
+        {/* Reemplazo del BusinessCard por una tarjeta moderna */}
+        <ThemedSecondaryView
+          style={{
+            borderRadius: 16,
+            padding: 16,
+            marginHorizontal: 10,
+            marginTop: 8,
+            marginBottom: 10,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+            elevation: 6,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Logo o ícono */}
+            {business?.logo ? (
+              <Image
+                source={{ uri: business.logo }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: '#eee',
+                  marginRight: 12,
+                }}
+                resizeMode="cover"
+              />
+            ) : (
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: color + '22',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}
+              >
+                <Ionicons name="briefcase-outline" size={24} color={color} />
+              </View>
+            )}
+
+            {/* Datos principales */}
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <ThemedText type="title" style={{ fontWeight: 'bold', flex: 1 }}>
+                  {business?.display_name || business?.name}
+                </ThemedText>
+                <TouchableOpacity onPress={() => router.navigate('/(app)/(business)/businessUpdate')}>
+                  <Ionicons name="create-outline" size={20} color={color} />
+                </TouchableOpacity>
+              </View>
+              {business?.email ? (
+                <ThemedText style={{ opacity: 0.7 }}>{business.email}</ThemedText>
+              ) : null}
+              {business?.address ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                  <Ionicons name="location-outline" size={16} color={color} style={{ marginRight: 6 }} />
+                  <ThemedText style={{ flex: 1 }}>{business.address}</ThemedText>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        </ThemedSecondaryView>
         <View style={commonStylesDetails.bottom}>
           <View
             style={{

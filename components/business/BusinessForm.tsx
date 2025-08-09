@@ -12,30 +12,23 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { Ionicons } from '@expo/vector-icons';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import PhoneInput, {
   ICountry,
   getCountryByPhoneNumber,
 } from 'react-native-international-phone-number';
-import Constants from 'expo-constants';
-const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import axiosInstance from '@/axios';
-import {
-  darkTextColor,
-  lightTextColor,
-  darkMainColor,
-  lightMainColor,
-} from '@/settings';
+import { darkTextColor, lightTextColor, darkMainColor, lightMainColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { businessSetError, businessSetMessage } from '@/app/(redux)/businessSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import { commonStylesCards } from '@/constants/commonStylesCard';
+import CustomAddress from '../CustomAddress';
 
 interface Errors {
   name?: string;
@@ -155,8 +148,8 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         errors.email = 'Email is invalid!';
       }
     }
-    //if (!phone) errors.phone = "Phone is required";
-    //if (!address) errors.address = 'Address is required';
+    if (!phone) errors.phone = "Phone is required";
+    if (!address) errors.address = 'Address is required';
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -188,7 +181,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       .then(function (response) {
         if (response.data.OK) {
           dispatch(businessSetMessage(response.data.message));
-          router.replace('/(businessSelect)');
+          router.replace('/(app)/(business)');
         }
       })
       .catch(function (error) {
@@ -269,17 +262,17 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       {businessError ? (
         <ThemedText style={commonStyles.errorMsg}>{businessError}</ThemedText>
       ) : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Name
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={name ? name : "Enter business's name"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
@@ -289,19 +282,18 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <ThemedText style={commonStyles.text_action} type="subtitle">
+        <ThemedText style={commonStylesForm.label} type="subtitle">
           Phone
         </ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
-          <Text
+          <ThemedText
             style={{
               marginLeft: 5,
-              color: darkTheme ? darkTextColor : lightTextColor,
               fontSize: 12,
             }}
           >
             Use my phone
-          </Text>
+          </ThemedText>
           <Switch
             value={useAccountPhone}
             onValueChange={setUseAccountPhone}
@@ -334,19 +326,18 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       />
       {errors.phone ? <Text style={commonStyles.errorMsg}>{errors.phone}</Text> : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <ThemedText style={commonStyles.text_action} type="subtitle">
+        <ThemedText style={commonStylesForm.label} type="subtitle">
           Email
         </ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
-          <Text
+          <ThemedText
             style={{
               marginLeft: 5,
-              color: darkTheme ? darkTextColor : lightTextColor,
               fontSize: 12,
             }}
           >
             Use my email
-          </Text>
+          </ThemedText>
           <Switch
             value={useAccountEmail}
             onValueChange={setUseAccountEmail}
@@ -356,7 +347,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       </View>
       <View
         style={[
-          commonStyles.action,
+          commonStylesForm.action,
           { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', flex: 1 },
         ]}
       >
@@ -366,7 +357,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder="Enter business's email"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={email}
@@ -379,19 +370,18 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       {errors.email ? <Text style={commonStyles.errorMsg}>{errors.email}</Text> : null}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <ThemedText style={commonStyles.text_action} type="subtitle">
+        <ThemedText style={commonStylesForm.label} type="subtitle">
           Address
         </ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
-          <Text
+          <ThemedText
             style={{
               marginLeft: 5,
-              color: darkTheme ? darkTextColor : lightTextColor,
               fontSize: 12,
             }}
           >
             Use my address
-          </Text>
+          </ThemedText>
           <Switch
             value={useAccountAddress}
             onValueChange={setUseAccountAddress}
@@ -400,59 +390,30 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         </View>
       </View>
 
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="location"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
-        <GooglePlacesAutocomplete
-          keyboardShouldPersistTaps="always"
-          predefinedPlaces={[]}
+        <CustomAddress
           placeholder={address ? address : "Business's address"}
-          minLength={2}
-          timeout={1000}
-          textInputProps={{
-            placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
-          }}
-          onPress={(data, details = null) => {
-            setAddress(data.description);
-          }}
-          query={{
-            key: GOOGLE_PLACES_API_KEY,
-            language: 'en',
-          }}
-          styles={{
-            textInputContainer: {
-              height: 26,
-            },
-            textInput: {
-              height: 26,
-              color: darkTheme ? '#fff' : '#000',
-              fontSize: 16,
-              backgroundColor: 'transparent',
-            },
-            predefinedPlacesDescription: {
-              color: darkTheme ? darkTextColor : lightTextColor,
-            },
-          }}
-          enablePoweredByContainer={false}
-          disableScroll={true}
-          listEmptyComponent={<ThemedText>No results, sorry.</ThemedText>}
+          address={address}
+          setAddress={setAddress}
         />
       </View>
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Description (optional)
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person-add"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={description ? description : "Enter business's desciption"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={description}
@@ -460,24 +421,24 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         />
       </View>
       {errors.description ? <Text style={commonStyles.errorMsg}>{errors.description}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Website (optional)
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="globe"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={website ? website : "Enter business's website"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={website}
           onChangeText={setWebsite}
         />
       </View>
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Owner(s) {userName}
       </ThemedText>
       <View
@@ -557,9 +518,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           ]}
           onPress={() => handleSubmit()}
         >
-          <ThemedText>
-            {action === 'create' ? 'Create' : 'Update'}
-          </ThemedText>
+          <ThemedText>{action === 'create' ? 'Create' : 'Update'}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -665,9 +624,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
                 ]}
                 onPress={handleAddOwner}
               >
-                <ThemedText>
-                  Add
-                </ThemedText>
+                <ThemedText>Add</ThemedText>
               </TouchableOpacity>
             </View>
           </ThemedSecondaryView>

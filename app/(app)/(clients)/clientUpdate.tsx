@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import { RootState } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
-import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 import { darkMainColor, lightMainColor } from '@/settings';
@@ -33,59 +32,53 @@ export default function ClientUpdate() {
   const router = useRouter();
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
-      <KeyboardAvoidingView
-        behavior="padding"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 100}
-        style={[
-          commonStyles.container,
-          { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
-        ]}
-      >
-        <ThemedView style={commonStyles.tabHeader}>
-          <TouchableOpacity
-            onPress={() => {
-              router.back();
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
-          </TouchableOpacity>
-          <ThemedText type="subtitle">Update Client</ThemedText>
-          <ThemedText type="subtitle"></ThemedText>
-        </ThemedView>
-        {isLoading ? (
-          <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-        ) : (
-          <ThemedSecondaryView
-            style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
-          >
-            <ScrollView
-              keyboardShouldPersistTaps={'handled'}
-              contentContainerStyle={{ flexGrow: 1 }}
-            >
-              <ClientForm
-                name={name}
-                setName={setName}
-                lastName={lastName}
-                setLastName={setLastName}
-                phone={phone}
-                setPhone={setPhone}
-                email={email}
-                setEmail={setEmail}
-                address={address}
-                setAddress={setAddress}
-                image={image}
-                setImage={setImage}
-                action="update"
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                id={client.id}
-              />
-            </ScrollView>
-          </ThemedSecondaryView>
-        )}
-      </KeyboardAvoidingView>
-    </>
+    <KeyboardAvoidingView
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 100}
+      style={[
+        commonStyles.container,
+        { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
+      ]}
+    >
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Update Client</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
+      {isLoading ? (
+        <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
+      ) : (
+        <ThemedSecondaryView
+          style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
+        >
+          <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
+            <ClientForm
+              name={name}
+              setName={setName}
+              lastName={lastName}
+              setLastName={setLastName}
+              phone={phone}
+              setPhone={setPhone}
+              email={email}
+              setEmail={setEmail}
+              address={address}
+              setAddress={setAddress}
+              image={image}
+              setImage={setImage}
+              action="update"
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+              id={client.id}
+            />
+          </ScrollView>
+        </ThemedSecondaryView>
+      )}
+    </KeyboardAvoidingView>
   );
 }

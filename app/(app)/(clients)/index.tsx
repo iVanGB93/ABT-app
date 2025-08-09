@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 import { Vibration } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -18,10 +17,11 @@ import { commonStyles } from '@/constants/commonStyles';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 
 export default function Clients() {
-  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { color, business, darkTheme } = useSelector((state: RootState) => state.settings);
   const { clients, clientMessage } = useSelector((state: RootState) => state.client);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -81,6 +81,14 @@ export default function Clients() {
     fetchClients();
   }, []);
 
+  const filteredClients = [...clients].filter(
+    (client) =>
+      client.name.toLowerCase().includes(search.toLowerCase()) ||
+      client.last_name.toLowerCase().includes(search.toLowerCase()) ||
+      client.phone.toLowerCase().includes(search.toLowerCase())
+  ).sort((a, b) => a.name.localeCompare(b.name));
+
+
   const handlePressable = (id: string) => {
     let client = clients.find((client: { id: string }) => client.id === id);
     dispatch(setClient(client));
@@ -88,12 +96,26 @@ export default function Clients() {
   };
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <ThemedView style={commonStyles.container}>
         <View style={commonStyles.tabHeader}>
           <ThemedText type="subtitle">Clients</ThemedText>
           <ThemedText type="subtitle">{business.name}</ThemedText>
+        </View>
+        <View style={{ paddingHorizontal: 10, marginBottom: 5 }}>
+          <TextInput
+            placeholder="Search by name, last name or phone"
+            placeholderTextColor="#888"
+            value={search}
+            onChangeText={setSearch}
+            style={{
+              backgroundColor: darkTheme ? '#222' : '#f2f2f2',
+              color: darkTheme ? '#fff' : '#000',
+              borderRadius: 8,
+              padding: 10,
+              borderWidth: 1,
+              borderColor: darkTheme ? '#444' : '#ccc',
+            }}
+          />
         </View>
         {isLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
@@ -110,23 +132,19 @@ export default function Clients() {
         ) : (
           <>
             <FlatList
-              data={clients}
+              data={filteredClients}
               renderItem={({ item }) => {
                 return (
                   <TouchableOpacity onPress={() => handlePressable(item.id)}>
                     <ClientCard
-                      id={item.id}
                       name={item.name}
                       last_name={item.last_name}
-                      address={item.address}
-                      phone={item.phone}
-                      email={item.email}
                       image={item.image}
                     />
                   </TouchableOpacity>
                 );
               }}
-              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+              ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
               ListEmptyComponent={
                 <ThemedText style={commonStyles.loading}>
                   {clientMessage
@@ -149,11 +167,10 @@ export default function Clients() {
               style={[commonStyles.createButton, { backgroundColor: color }]}
               onPress={() => router.navigate('/(app)/(clients)/clientCreate')}
             >
-              <Ionicons name="add" size={30} color="#FFF" />
+              <Ionicons name="add" size={36} color="#FFF" />
             </TouchableOpacity>
           </>
         )}
       </ThemedView>
-    </>
   );
 }

@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
@@ -22,7 +23,6 @@ import { setMessage } from '@/app/(redux)/settingSlice';
 import { setItem, setItemMessage, setItems } from '@/app/(redux)/itemSlice';
 import ItemCard from '@/components/items/ItemCard';
 import { commonStyles } from '@/constants/commonStyles';
-import { StatusBar } from 'expo-status-bar';
 
 export default function Items() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -30,6 +30,8 @@ export default function Items() {
   const { items, itemMessage } = useSelector((state: RootState) => state.item);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -67,11 +69,6 @@ export default function Items() {
 
   const fetchItems = () => {
     getItems();
-    /* if (clients.length !== 0) {
-        console.log("SAME CLIENTS");
-    } else {
-        getClients();
-    } */
   };
 
   useEffect(() => {
@@ -92,13 +89,32 @@ export default function Items() {
     router.push('/(app)/(items)/itemDetails');
   };
 
+  const filteredItems = [...items]
+    .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <ThemedView style={commonStyles.container}>
         <View style={commonStyles.tabHeader}>
           <ThemedText type="subtitle">Items</ThemedText>
           <ThemedText type="subtitle">{business.name}</ThemedText>
+        </View>
+        <View style={{ paddingHorizontal: 10, marginBottom: 5 }}>
+          <TextInput
+            placeholder="Search by name"
+            placeholderTextColor="#888"
+            value={search}
+            onChangeText={setSearch}
+            style={{
+              backgroundColor: darkTheme ? '#222' : '#f2f2f2',
+              color: darkTheme ? '#fff' : '#000',
+              borderRadius: 8,
+              padding: 10,
+              borderWidth: 1,
+              borderColor: darkTheme ? '#444' : '#ccc',
+            }}
+          />
         </View>
         {error ? (
           <>
@@ -115,7 +131,7 @@ export default function Items() {
         ) : (
           <>
             <FlatList
-              data={items}
+              data={filteredItems}
               renderItem={({ item }) => {
                 return (
                   <TouchableOpacity onPress={() => handlePressable(item.id)}>
@@ -154,7 +170,7 @@ export default function Items() {
               style={[commonStyles.createButton, { backgroundColor: color }]}
               onPress={() => router.push('/(app)/(items)/itemCreate')}
             >
-              <Ionicons name="add" size={30} color="#FFF" />
+              <Ionicons name="add" size={36} color="#FFF" />
             </TouchableOpacity>
           </>
         )}

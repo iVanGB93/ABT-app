@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Text,
   View,
@@ -36,7 +36,6 @@ interface Errors {
 
 export default function Register() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { token } = useSelector((state: RootState) => state.auth);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -44,12 +43,6 @@ export default function Register() {
   const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  useEffect(() => {
-    if (token) {
-      router.replace('/(businessSelect)');
-    }
-  }, [token]);
 
   const validateEmail = () => {
     let errors: Errors = {};

@@ -9,39 +9,62 @@ import { RootState, useAppDispatch } from "./(redux)/store";
 import { setDarkTheme } from "./(redux)/settingSlice";
 import { ActivityIndicator } from "react-native";
 import { commonStyles } from "@/constants/commonStyles";
-
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import axiosInstance from '@/axios';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Index() {
-  const {token} = useSelector((state: RootState) => state.auth);
+  const {token, userName} = useSelector((state: RootState) => state.auth);
   const { color } = useSelector((state: RootState) => state.settings);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const dispatch = useAppDispatch();
   const theme = useTheme();
 
   useEffect(() => {
-    if (theme.dark) {
-      dispatch(setDarkTheme(true));
-    } else {
-      dispatch(setDarkTheme(false));
-    }
-    if (token) {
-      setIsAuthenticated(true);
-      SplashScreen.hideAsync();
-    } else {
-      setIsAuthenticated(false);
-      SplashScreen.hideAsync();
-    }
-  }, [token]);
+    let isMounted = true;
+
+    const init = async () => {
+      dispatch(setDarkTheme(!!theme.dark));
+
+      if (!token || !userName) {
+        if (!isMounted) return;
+        setIsAuthenticated(false);
+        await SplashScreen.hideAsync();
+        return;
+      }
+
+      try {
+        await axiosInstance.get(`user/account/${userName}/`);
+        if (!isMounted) return;
+        setIsAuthenticated(true);
+      } catch {
+        if (!isMounted) return;
+        setIsAuthenticated(false);
+      } finally {
+        await SplashScreen.hideAsync();
+      }
+    };
+
+    init();
+    return () => {
+      isMounted = false;
+    };
+  }, [token, userName, theme.dark]);
 
   if (isAuthenticated === null) {
-    return <ActivityIndicator size="large" style={commonStyles.loading} color={color} />;
+    return (
+      <ThemedView style={commonStyles.containerCentered}> 
+        <ActivityIndicator size="large" style={commonStyles.loading} color={color} />
+        <ThemedText style={commonStyles.loading} type="subtitle">Authenticating...</ThemedText>
+      </ThemedView>
+    );
   };
 
   return (
     isAuthenticated ? (
-      <Redirect href={'/(businessSelect)'}/>
+      <Redirect href={'/(app)/(business)'}/>
     ) : (
       <Redirect href={'/(auth)/login'}/>
     )

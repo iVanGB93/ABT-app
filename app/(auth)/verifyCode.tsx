@@ -34,7 +34,7 @@ interface Errors {
 }
 
 export default function VerifyCode() {
-  const { code, userEmail, authMessage, token } = useSelector((state: RootState) => state.auth);
+  const { code, userEmail, authMessage } = useSelector((state: RootState) => state.auth);
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const [stateCode, setStateCode] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -43,12 +43,6 @@ export default function VerifyCode() {
   const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  useEffect(() => {
-    if (token) {
-      router.replace('/(businessSelect)');
-    }
-  }, [token]);
 
   useEffect(() => {
     if (!code) {

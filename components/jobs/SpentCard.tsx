@@ -18,6 +18,8 @@ import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { Ionicons } from '@expo/vector-icons';
+import { ThemedView } from '../ThemedView';
+import { formatDate } from '@/utils/formatDate';
 
 interface SpentCardProps {
   image: any;
@@ -73,58 +75,43 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
     setIsBig((prev) => !prev);
   };
 
-  const newDate = new Date(date);
-  const formattedDate = newDate.toLocaleDateString('en-EN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    /* second: '2-digit', */
-  });
-
   return (
-    <ThemedSecondaryView
+    <ThemedView
       style={[
         commonStylesCards.card,
-        { borderColor: color, shadowColor: darkTheme ? '#fff' : '#000' },
+        { borderColor: color, shadowColor: darkTheme ? '#fff' : '#000', padding: 0 },
       ]}
     >
       <View
-        style={[
-          commonStylesCards.nameContainer,
-          { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
-        ]}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          borderBottomColor: darkTheme ? darkTextColor : lightTextColor,
+        }}
       >
-        <ThemedText style={commonStylesCards.name}>{description}</ThemedText>
-      </View>
-      <View style={commonStylesCards.dataContainer}>
-        <View style={commonStylesCards.dataContainer}>
-          {imageError ? (
-            <ThemedText style={[commonStylesCards.LabelText, { alignSelf: 'center' }]}>
-              image not found{' '}
-            </ThemedText>
-          ) : (
-            <Pressable onPress={toggleImageSize}>
-              <Image
-                style={[commonStylesCards.imageJob, { width: 120, height: 80 }]}
-                source={{ uri: image }}
-                onError={() => setImageError(true)}
-              />
-            </Pressable>
-          )}
-        </View>
-        <View style={{ flex: 1, paddingLeft: 5 }}>
-          <ThemedText style={commonStylesCards.LabelText}>Amount: ${amount}</ThemedText>
-          <ThemedText style={commonStylesCards.LabelText}>{formattedDate}</ThemedText>
-          <View style={[commonStylesCards.dataContainer, { justifyContent: 'flex-end' }]}>
-            {/* <Pressable onPress={() => handleEdit()}><MaterialCommunityIcons name="clipboard-edit-outline" color={darkTheme ? darkTextColor: lightTextColor} size={30} /></Pressable> */}
-            <Pressable onPress={() => handleDelete()}>
-              <Ionicons name="trash-outline" color="red" size={30} />
-            </Pressable>
+        <TouchableOpacity onPress={toggleImageSize} style={{ marginRight: 12 }}>
+          <Image
+            style={[
+              commonStylesCards.imageJob,
+              { width: 80, height: 64, borderTopRightRadius: 0, borderBottomRightRadius: 0, backgroundColor: '#eee' },
+            ]}
+            source={{ uri: image }}
+            onError={() => setImageError(true)}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onLongPress={() => handleDelete()}>
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <ThemedText style={commonStylesCards.name}>{description}</ThemedText>
+            <ThemedText style={commonStylesCards.LabelText}>Price: ${amount}</ThemedText>
+            <ThemedText style={commonStylesCards.LabelText}>{formatDate(date)}</ThemedText>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
+      {/* <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+      <Pressable onPress={handleDelete} style={{ alignSelf: 'flex-end' }}>
+        <Ionicons name="trash-outline" color="red" size={30} />
+      </Pressable>
+    </View> */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -151,7 +138,7 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
                   style={[commonStylesCards.button, { borderColor: color }]}
                   onPress={() => setModalVisible(!modalVisible)}
                 >
-                  <ThemedText style={{ textAlign: 'center', color: color }}>No</ThemedText>
+                  <ThemedText>No</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[commonStylesCards.button, { borderColor: 'red' }]}
@@ -177,6 +164,6 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
           </Pressable>
         </View>
       </Modal>
-    </ThemedSecondaryView>
+    </ThemedView>
   );
 }

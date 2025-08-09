@@ -8,14 +8,12 @@ import {
   Switch,
   Vibration,
   Image,
+  Modal,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import SelectDropdown from 'react-native-select-dropdown';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import Constants from 'expo-constants';
-const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 import * as ImagePicker from 'expo-image-picker';
 
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
@@ -27,6 +25,8 @@ import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { clientSetMessage, setClients } from '@/app/(redux)/clientSlice';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
+import CustomAddress from '../CustomAddress';
+import { ThemedSecondaryView } from '../ThemedSecondaryView';
 
 interface JobFormProps {
   action?: any;
@@ -51,12 +51,20 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
   const [description, setDescription] = useState(action === 'new' ? '' : job.description);
   const [address, setAddress] = useState(action === 'new' ? '' : job.address);
   const [price, setPrice] = useState(action === 'new' ? '' : job.price);
-  const [image, setImage] = useState(action === 'new' ? null : { uri: job.image });
+  const [image, setImage] = useState(
+    action === 'new'
+      ? 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/jobDefault.jpg'
+      : { uri: job.image ? job.image : 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/jobDefault.jpg' },
+  );
   const [error, setError] = useState('');
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+
   const [errors, setErrors] = useState<Errors>({});
   const [isEnabled, setIsEnabled] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  const handleImageOptions = () => setImageModalVisible(true);
 
   const getClients = async () => {
     await axiosInstance
@@ -175,7 +183,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       formData.append('price', price);
       formData.append('address', address);
       console.log(formData);
-      if (image !== null) {
+      if (image !== null && typeof image !== 'string' && image.uri) {
         const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
         const fileName = `${job.client}JobPicture.${fileType}`;
@@ -319,39 +327,10 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       ) : (
         <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
           <Ionicons name="location" color={darkTheme ? darkTextColor : lightTextColor} />
-          <GooglePlacesAutocomplete
-            keyboardShouldPersistTaps="always"
-            predefinedPlaces={[]}
+          <CustomAddress
             placeholder={address ? address : 'Job address'}
-            minLength={2}
-            timeout={1000}
-            textInputProps={{
-              placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
-            }}
-            onPress={(data, details = null) => {
-              setAddress(data.description);
-            }}
-            query={{
-              key: GOOGLE_PLACES_API_KEY,
-              language: 'en',
-            }}
-            styles={{
-              textInputContainer: {
-                height: 26,
-              },
-              textInput: {
-                height: 26,
-                color: darkTheme ? '#fff' : '#000',
-                fontSize: 16,
-                backgroundColor: 'transparent',
-              },
-              predefinedPlacesDescription: {
-                color: darkTheme ? darkTextColor : lightTextColor,
-              },
-            }}
-            enablePoweredByContainer={false}
-            disableScroll={true}
-            listEmptyComponent={<ThemedText>No results, sorry.</ThemedText>}
+            address={address}
+            setAddress={setAddress}
           />
         </View>
       )}
@@ -367,39 +346,39 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           placeholder={price ? String(price) : "Enter job's price"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={price}
-          onChangeText={text => setPrice(text.replace(',', '.'))}
+          onChangeText={(text) => setPrice(text.replace(',', '.'))}
           keyboardType="numeric"
         />
       </View>
       {errors.price ? <Text style={commonStyles.errorMsg}>{errors.price}</Text> : null}
-      {image && (
-        <Image source={{ uri: image.uri }} style={[commonStyles.imageSquare, { marginTop: 10 }]} />
-      )}
-      <View
-        style={{
-          width: '100%',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          marginTop: 15,
-        }}
-      >
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            { borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor },
-          ]}
-          onPress={() => handleImage()}
-        >
-          <ThemedText>Add image</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            { borderColor: color, backgroundColor: darkTheme ? darkMainColor : lightMainColor },
-          ]}
-          onPress={() => takePhoto()}
-        >
-          <ThemedText>Take Photo</ThemedText>
+      <View style={{ alignItems: 'center', marginTop: 15 }}>
+        <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>
+          <Image
+            source={{ uri: typeof image === 'string' ? image : image.uri }}
+            style={[commonStyles.imageSquare, { marginTop: 10 }]}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              backgroundColor: color,
+              borderRadius: 16,
+              width: 32,
+              height: 32,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 2,
+              borderColor: darkTheme ? darkMainColor : lightMainColor,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 2,
+              elevation: 3,
+            }}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </View>
         </TouchableOpacity>
       </View>
       <View
@@ -407,7 +386,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           width: '100%',
           flexDirection: 'row',
           justifyContent: 'space-evenly',
-          marginTop: 15,
+          marginTop: 20,
         }}
       >
         <TouchableOpacity
@@ -435,6 +414,84 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
         </TouchableOpacity>
       </View>
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ThemedSecondaryView
+            style={{
+              borderRadius: 16,
+              padding: 24,
+              minWidth: 250,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+              {action === 'new' ? 'Add Photo' : 'Change Photo'}
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <Image source={{ uri: typeof image === 'string' ? image : image.uri }} style={commonStyles.imageSquare} />
+              <View>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    handleImage();
+                  }}
+                >
+                  <Ionicons name="image" size={20} color={color} />
+                  <ThemedText>Choose from Gallery</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    takePhoto();
+                  }}
+                >
+                  <Ionicons name="camera" size={20} color={color} />
+                  <ThemedText>Take Photo</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: 'red',
+                  marginTop: 15,
+                  backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                },
+              ]}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </ThemedSecondaryView>
+        </View>
+      </Modal>
     </View>
   );
 }

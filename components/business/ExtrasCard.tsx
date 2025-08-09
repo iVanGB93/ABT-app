@@ -2,26 +2,17 @@ import { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  Platform,
   Pressable,
   Image,
   ActivityIndicator,
   Modal,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 
-import {
-  baseImageURL,
-  darkSecondColor,
-  darkTextColor,
-  lightSecondColor,
-  lightTextColor,
-} from '@/settings';
+import { darkTextColor, lightTextColor } from '@/settings';
 import axiosInstance from '@/axios';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { useRouter } from 'expo-router';
@@ -124,15 +115,23 @@ export default function ExtrasCard({
       });
   };
 
+  const amountColor = income
+    ? darkTheme
+      ? '#81C784'
+      : '#2E7D32'
+    : darkTheme
+    ? '#E57373'
+    : '#B91C1C';
+
   return (
-    <ThemedSecondaryView style={[commonStylesCards.card, { borderColor: color }]}>
+    <ThemedView style={[commonStylesCards.card, { borderColor: color }]}>
       <View
         style={[
           commonStylesCards.nameContainer,
           { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
         ]}
       >
-        <ThemedText style={[commonStylesCards.name, { paddingLeft: 10 }]}>{description}</ThemedText>
+        <ThemedText type="default">{description}</ThemedText>
       </View>
       <View
         style={{
@@ -143,7 +142,7 @@ export default function ExtrasCard({
           paddingHorizontal: 10,
         }}
       >
-        <ThemedText style={[commonStylesCards.name, { flexShrink: 0 }]}>
+        <ThemedText type="default" style={{ flexShrink: 0 }}>
           {formatDate(date)}
         </ThemedText>
         <ThemedText
@@ -164,18 +163,22 @@ export default function ExtrasCard({
         <ThemedText
           style={[
             commonStylesCards.name,
-            { textAlign: 'right', flexShrink: 0, color: income ? 'green' : 'red' },
+            { textAlign: 'right', flexShrink: 0, color: amountColor },
           ]}
         >
           $ {amount}
         </ThemedText>
       </View>
       {inDetail ? (
-        <> 
+        <>
           {income ? null : (
             <>
-              <ThemedText style={{ alignSelf: 'flex-end' }} type="subtitle">{category}</ThemedText>
-              <ThemedText style={{ alignSelf: 'flex-end' }} >{deductible ? 'Deductible' : 'Non-Deductible'}</ThemedText>
+              <ThemedText style={{ alignSelf: 'flex-end' }} type="subtitle">
+                {category}
+              </ThemedText>
+              <ThemedText style={{ alignSelf: 'flex-end' }}>
+                {deductible ? 'Deductible' : 'Non-Deductible'}
+              </ThemedText>
             </>
           )}
           <View style={{ alignContent: 'center', margin: 10 }}>
@@ -211,7 +214,7 @@ export default function ExtrasCard({
               />
             </Pressable>
             <Pressable onPress={() => handleDelete()}>
-              <Ionicons name="trash" color="red" size={30} />
+              <Ionicons name="trash" color="red" size={36} />
             </Pressable>
           </View>
         </>
@@ -268,6 +271,6 @@ export default function ExtrasCard({
           </Pressable>
         </View>
       </Modal>
-    </ThemedSecondaryView>
+    </ThemedView>
   );
 }

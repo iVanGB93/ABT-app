@@ -2,15 +2,12 @@ import React, { useState, useEffect, use } from 'react';
 import { Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, usePathname } from 'expo-router';
-import { useAppDispatch, RootState } from '../(redux)/store';
+import { useAppDispatch, RootState } from '../../(redux)/store';
 import PhoneInput, {
   ICountry,
   getCountryByPhoneNumber,
   isValidPhoneNumber,
 } from 'react-native-international-phone-number';
-import Constants from 'expo-constants';
-const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import * as ImagePicker from 'expo-image-picker';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -28,7 +25,8 @@ import {
   lightTextColor,
   darkMainColor,
 } from '@/settings';
-import { setMessage, setProfile } from '../(redux)/settingSlice';
+import { setMessage, setProfile } from '../../(redux)/settingSlice';
+import CustomAddress from '@/components/CustomAddress';
 
 interface Errors {
   phone?: string;
@@ -37,7 +35,7 @@ interface Errors {
 
 export default function AccountDetails() {
   const { color, darkTheme, profile } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
+  const { userName, token } = useSelector((state: RootState) => state.auth);
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [image, setImage] = useState<string | null>(profile.image || null);
@@ -51,8 +49,16 @@ export default function AccountDetails() {
   const router = useRouter();
 
   useEffect(() => {
+    if (token || userName) {
+      router.navigate('/accountDetails');
+    } else {
+      router.navigate('/(auth)/login');
+    }
+  }, [token, userName]);
+
+  useEffect(() => {
     if (!updateProfile) {
-      router.navigate('/(businessSelect)');
+      router.navigate('/(app)/(business)');
     }
   }, [updateProfile]);
 
@@ -155,7 +161,7 @@ export default function AccountDetails() {
           let data = response.data;
           if (response.status === 200) {
             dispatch(setMessage(data.message));
-            router.navigate('/(businessSelect)');
+            router.navigate('/(app)/(business)');
           } else {
             setError(data.message);
           }
@@ -228,76 +234,52 @@ export default function AccountDetails() {
                   name="location"
                   color={darkTheme ? darkTextColor : lightTextColor}
                 />
-                <GooglePlacesAutocomplete
-                  keyboardShouldPersistTaps="always"
-                  predefinedPlaces={[]}
+                <CustomAddress
                   placeholder={address ? address : 'Enter your address'}
-                  minLength={2}
-                  timeout={1000}
-                  textInputProps={{
-                    placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
-                  }}
-                  onPress={(data, details = null) => {
-                    setAddress(data.description);
-                  }}
-                  query={{
-                    key: GOOGLE_PLACES_API_KEY,
-                    language: 'en',
-                  }}
-                  styles={{
-                    textInputContainer: {
-                      height: 26,
-                    },
-                    textInput: {
-                      height: 26,
-                      color: darkTheme ? '#fff' : '#000',
-                      fontSize: 16,
-                      backgroundColor: 'transparent',
-                    },
-                    predefinedPlacesDescription: {
-                      color: darkTheme ? darkTextColor : lightTextColor,
-                    },
-                  }}
-                  enablePoweredByContainer={false}
-                  disableScroll={true}
-                  listEmptyComponent={<ThemedText>No results, sorry.</ThemedText>}
+                  address={address}
+                  setAddress={setAddress}
                 />
               </View>
               {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
-              {image && <Image source={{ uri: image }} style={[commonStyles.imageCircle, {marginTop: 15}]} />}
-                    <View
-                      style={{
-                        width: '100%',
-                        flexDirection: 'row',
-                        justifyContent: 'space-evenly',
-                        marginTop: 15,
-                      }}
-                    >
-                      <TouchableOpacity
-                        style={[
-                          commonStyles.button,
-                          {
-                            borderColor: color,
-                            backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                          },
-                        ]}
-                        onPress={() => handleImage()}
-                      >
-                        <ThemedText style={{ color: color }}>Add image</ThemedText>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          commonStyles.button,
-                          {
-                            borderColor: color,
-                            backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                          },
-                        ]}
-                        onPress={() => takePhoto()}
-                      >
-                        <ThemedText style={{ color: color }}>Take Photo</ThemedText>
-                      </TouchableOpacity>
-                    </View>
+              {image && (
+                <Image
+                  source={{ uri: image }}
+                  style={[commonStyles.imageCircle, { marginTop: 15 }]}
+                />
+              )}
+              <View
+                style={{
+                  width: '100%',
+                  flexDirection: 'row',
+                  justifyContent: 'space-evenly',
+                  marginTop: 15,
+                }}
+              >
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    {
+                      borderColor: color,
+                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                    },
+                  ]}
+                  onPress={() => handleImage()}
+                >
+                  <ThemedText style={{ color: color }}>Add image</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    {
+                      borderColor: color,
+                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                    },
+                  ]}
+                  onPress={() => takePhoto()}
+                >
+                  <ThemedText style={{ color: color }}>Take Photo</ThemedText>
+                </TouchableOpacity>
+              </View>
               {loading ? (
                 <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
               ) : (
@@ -319,7 +301,7 @@ export default function AccountDetails() {
                   </TouchableOpacity>
                   <View style={commonStyles.linkSection}>
                     <ThemedText type="subtitle">Skip and </ThemedText>
-                    <TouchableOpacity onPress={() => router.navigate('/(businessSelect)')}>
+                    <TouchableOpacity onPress={() => router.navigate('/(app)/(business)')}>
                       <ThemedText type="subtitle" style={{ color: color }}>
                         Continue!
                       </ThemedText>

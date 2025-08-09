@@ -10,7 +10,7 @@ export interface SettingState {
 };
 
 const initialState: SettingState = {
-    color: '#009d93',
+    color: '#00BFFF',
     darkTheme: true,
     business: {},
     profile: {},

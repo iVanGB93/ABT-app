@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, RefreshControl, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 
@@ -14,9 +14,10 @@ import { setBusiness, setMessage, cleanSettings } from '@/app/(redux)/settingSli
 import BusinessCard from '@/components/business/BusinessCard';
 import { commonStyles } from '@/constants/commonStyles';
 import { darkSecondColor, lightSecondColor } from '@/settings';
-import { authLogout } from '../(redux)/authSlice';
+import { authLogout } from '../../(redux)/authSlice';
 
-export default function BusinessSelect() {
+
+export default function IndexBusiness() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const { businesses, businessMessage } = useSelector((state: RootState) => state.business);
@@ -25,7 +26,10 @@ export default function BusinessSelect() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const hasBusiness = !!business && Object.keys(business).length > 0;
+
   const getBusinesses = async () => {
+    if (hasBusiness) return; // evita cargar lista si ya hay uno seleccionado
     setIsLoading(true);
     await axiosInstance
       .get(`business/${userName}/`)
@@ -33,37 +37,45 @@ export default function BusinessSelect() {
         if (response.data) {
           setError(null);
           dispatch(setBusinesses(response.data));
-          setIsLoading(false);
         } else {
           dispatch(businessSetMessage(response.data.message));
-          setIsLoading(false);
         }
       })
       .catch(function (error) {
-        console.error('Error fetching business:', error.config);
+        console.error('Error fetching business:', error?.config);
         if (typeof error.response === 'undefined') {
           setError(
-            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
+            'A server/network error occurred. Sorry about this - try again in a few minutes.',
           );
-          setIsLoading(false);
         } else {
-          if (error.status === 401) {
-            setIsLoading(false);
-            dispatch(setMessage('Unauthorized, please login againg'));
-            router.navigate('/');
+          if (error.response?.status === 401) {
+            dispatch(setMessage('Unauthorized, please login again'));
+            router.replace('/'); // usa replace
           } else {
             setError('Error getting your businesses.');
-            setIsLoading(false);
           }
         }
-      });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
-    if (business && Object.keys(business).length > 0) {
-      router.navigate('/(app)/(business)/businessDetails');
-      return;
+    if (!hasBusiness) {
+      if (userName) {
+        getBusinesses();
+      } else {
+        router.replace('/(auth)/login');
+      }
     }
+  }, [userName, hasBusiness]);
+
+  useEffect(() => {
+    if (hasBusiness) {
+      router.replace('/(app)/(business)/businessDetails');
+    }
+  }, [hasBusiness]);
+
+  useEffect(() => {
     if (businessMessage) {
       Toast.show({
         type: 'success',
@@ -72,13 +84,14 @@ export default function BusinessSelect() {
       });
       dispatch(businessSetMessage(null));
     }
-    getBusinesses();
-  }, []);
+  }, [businessMessage]);
 
   const handlePressable = (id: string) => {
-    let business = businesses.find((business: { id: string }) => business.id === id);
-    dispatch(setBusiness(business));
-    router.navigate('/(app)/(business)/businessDetails');
+    const picked = businesses.find((b: { id: string }) => b.id === id);
+    if (picked) {
+      dispatch(setBusiness(picked));
+      router.replace('/(app)/(business)/businessDetails');
+    }
   };
 
   const handleLogout = async () => {
@@ -87,7 +100,7 @@ export default function BusinessSelect() {
     router.replace('/(auth)/login');
   };
 
-  return (
+  return hasBusiness ? null : (
     <ThemedView style={[commonStyles.containerCentered, { marginTop: 100 }]}>
       {error ? (
         <>
@@ -154,36 +167,36 @@ export default function BusinessSelect() {
                   : 'No business found, pull to refresh or create one'}
               </ThemedText>
             }
-            ListHeaderComponent={<View style={{ margin: 5 }} />}         
-            ListFooterComponent={<View style={{ margin: 5 }} />}   
+            ListHeaderComponent={<View style={{ margin: 5 }} />}
+            ListFooterComponent={<View style={{ margin: 5 }} />}
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}
                 onRefresh={() => getBusinesses()}
-                colors={[color]} // Colores del indicador de carga
-                tintColor={color} // Color del indicador de carga en iOS
+                colors={[color]}
+                tintColor={color}
               />
             }
           />
           <TouchableOpacity
-                style={[
-                  commonStyles.button,
-                  {
-                    position: 'absolute',
-                    bottom: 30,
-                    borderColor: color,
-                    backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-                  },
-                ]}
-                onPress={() => handleLogout()}
-              >
-                <ThemedText>Log Out</ThemedText>
-              </TouchableOpacity>
+            style={[
+              commonStyles.button,
+              {
+                position: 'absolute',
+                bottom: 30,
+                borderColor: color,
+                backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+              },
+            ]}
+            onPress={() => handleLogout()}
+          >
+            <ThemedText>Log Out</ThemedText>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[commonStyles.createButton, { backgroundColor: color }]}
-            onPress={() => router.navigate('/(businessSelect)/businessCreate')}
+            onPress={() => router.navigate('/(app)/(business)/businessCreate')}
           >
-            <Ionicons name="add" size={30} color="#FFF" />
+            <Ionicons name="add" size={36} color="#FFF" />
           </TouchableOpacity>
         </>
       )}

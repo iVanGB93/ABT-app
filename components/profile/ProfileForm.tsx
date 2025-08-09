@@ -3,24 +3,21 @@ import { View, TextInput, Text, Image, TouchableOpacity, Vibration } from 'react
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { Ionicons } from '@expo/vector-icons';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import * as ImagePicker from 'expo-image-picker';
 import PhoneInput, {
   ICountry,
   getCountryByPhoneNumber,
   isValidPhoneNumber,
 } from 'react-native-international-phone-number';
-import Constants from 'expo-constants';
-const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import axiosInstance from '@/axios';
 import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
-import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness, setMessage } from '@/app/(redux)/settingSlice';
+import CustomAddress from '../CustomAddress';
 
 interface ProfileFormProps {
   action?: any;
@@ -199,7 +196,7 @@ export default function ProfileForm({
         />
         <TextInput
           style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
-          placeholder={name ? name : "Enter your username"}
+          placeholder={name ? name : 'Enter your username'}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
           onChangeText={setName}
@@ -218,7 +215,7 @@ export default function ProfileForm({
         selectedCountry={selectedCountry}
         onChangeSelectedCountry={handleSelectedCountry}
         theme={darkTheme ? 'dark' : 'light'}
-        placeholder={phone ? phone : "Enter your phone"}
+        placeholder={phone ? phone : 'Enter your phone'}
         phoneInputStyles={{
           flagContainer: {
             margin: 0,
@@ -269,39 +266,10 @@ export default function ProfileForm({
           name="location"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
-        <GooglePlacesAutocomplete
-          keyboardShouldPersistTaps="always"
-          predefinedPlaces={[]}
-          placeholder={address ? address : "Enter your address"}
-          minLength={2}
-          timeout={1000}
-          textInputProps={{
-            placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
-          }}
-          onPress={(data, details = null) => {
-            setAddress(data.description);
-          }}
-          query={{
-            key: GOOGLE_PLACES_API_KEY,
-            language: 'en',
-          }}
-          styles={{
-            textInputContainer: {
-              height: 26,
-            },
-            textInput: {
-              height: 26,
-              color: darkTheme ? '#fff' : '#000',
-              fontSize: 16,
-              backgroundColor: 'transparent',
-            },
-            predefinedPlacesDescription: {
-              color: darkTheme ? darkTextColor : lightTextColor,
-            },
-          }}
-          enablePoweredByContainer={false}
-          disableScroll={true}
-          listEmptyComponent={<ThemedText>No results, sorry.</ThemedText>}
+        <CustomAddress
+          placeholder={address ? address : 'Enter your address'}
+          address={address}
+          setAddress={setAddress}
         />
       </View>
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}

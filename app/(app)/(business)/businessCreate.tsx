@@ -10,7 +10,7 @@ import { commonStyles } from '@/constants/commonStyles';
 import BusinessForm from '@/components/business/BusinessForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import Toast from 'react-native-toast-message';
-import { setError, setMessage } from '../(redux)/settingSlice';
+import { setError, setMessage } from '../../(redux)/settingSlice';
 
 export default function BusinessCreate() {
   const [isLoading, setIsLoading] = useState(false);

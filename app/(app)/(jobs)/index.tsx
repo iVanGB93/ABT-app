@@ -1,10 +1,8 @@
 import {
-  StyleSheet,
-  Text,
+  TextInput,
   View,
   TouchableOpacity,
   FlatList,
-  SafeAreaView,
   ActivityIndicator,
   RefreshControl,
   Vibration,
@@ -31,6 +29,7 @@ export default function Jobs() {
   const { jobs, jobMessage, jobError } = useSelector((state: RootState) => state.job);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -89,6 +88,14 @@ export default function Jobs() {
     fetchJobs();
   }, []);
 
+  const filteredJobs = [...jobs]
+    .filter(
+      (job) =>
+        job.description.toLowerCase().includes(search.toLowerCase()) ||
+        job.client.toLowerCase().includes(search.toLowerCase()),
+    )
+    .sort((a, b) => a.description.localeCompare(b.description));
+
   const handlePressable = (id: string) => {
     let job = jobs.find((job: { id: string }) => job.id === id);
     dispatch(setJob(job));
@@ -102,6 +109,22 @@ export default function Jobs() {
         <View style={commonStyles.tabHeader}>
           <ThemedText type="subtitle">Jobs</ThemedText>
           <ThemedText type="subtitle">{business.name}</ThemedText>
+        </View>
+        <View style={{ paddingHorizontal: 10, marginBottom: 5 }}>
+          <TextInput
+            placeholder="Search by description or client"
+            placeholderTextColor="#888"
+            value={search}
+            onChangeText={setSearch}
+            style={{
+              backgroundColor: darkTheme ? '#222' : '#f2f2f2',
+              color: darkTheme ? '#fff' : '#000',
+              borderRadius: 8,
+              padding: 10,
+              borderWidth: 1,
+              borderColor: darkTheme ? '#444' : '#ccc',
+            }}
+          />
         </View>
         {isLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
@@ -118,7 +141,7 @@ export default function Jobs() {
         ) : (
           <>
             <FlatList
-              data={jobs}
+              data={filteredJobs}
               renderItem={({ item }) => {
                 return (
                   <TouchableOpacity onPress={() => handlePressable(item.id)}>
@@ -140,7 +163,7 @@ export default function Jobs() {
               ItemSeparatorComponent={() => (
                 <View
                   style={{
-                    height: 16,
+                    height: 5,
                   }}
                 />
               )}
@@ -166,7 +189,7 @@ export default function Jobs() {
               style={[commonStyles.createButton, { backgroundColor: color }]}
               onPress={() => router.push('/(app)/(jobs)/jobCreate')}
             >
-              <Ionicons name="add" size={30} color="#FFF" />
+              <Ionicons name="add" size={36} color="#FFF" />
             </TouchableOpacity>
           </>
         )}

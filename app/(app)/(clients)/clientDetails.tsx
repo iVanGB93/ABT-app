@@ -5,12 +5,14 @@ import {
   TouchableOpacity,
   RefreshControl,
   Vibration,
+  Image,
+  Linking,
+  Modal,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
-import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -26,6 +28,8 @@ import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
 import { Ionicons } from '@expo/vector-icons';
+import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
+import { commonStylesCards } from '@/constants/commonStylesCard';
 
 export default function ClientDetail() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -35,6 +39,9 @@ export default function ClientDetail() {
   const [fetchTimes, setFetchTimes] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isBig, setIsBig] = useState(false);
+
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -104,9 +111,40 @@ export default function ClientDetail() {
     router.push('/(app)/(jobs)/jobDetails');
   };
 
+  const deleteClient = async () => {
+    setIsLoading(true);
+    await axiosInstance
+      .post(
+        `clients/delete/${client.id}/`,
+        { action: 'delete' },
+        {
+          headers: {
+            'content-Type': 'multipart/form-data',
+          },
+        },
+      )
+      .then(function (response) {
+        if (response.data.OK) {
+          dispatch(clientSetMessage(response.data.message));
+          router.push('/(app)/(clients)');
+        }
+      })
+      .catch(function (error) {
+        setIsLoading(false);
+        console.error('Error deleting a client:', error);
+      });
+  };
+
+  const handleDelete = () => {
+    setModalVisible(true);
+  };
+
+  const toggleImageSize = () => {
+    setIsBig((prev) => !prev);
+  };
+
   return (
     <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <ThemedView style={commonStyles.tabHeader}>
         <TouchableOpacity
           onPress={() => {
@@ -124,16 +162,85 @@ export default function ClientDetail() {
           { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
         ]}
       >
-        <ClientCard
-          id={client.id}
-          image={client.image}
-          name={client.name}
-          last_name={client.last_name}
-          address={client.address}
-          phone={client.phone}
-          email={client.email}
-          inDetail={true}
-        />
+        <ThemedSecondaryView
+          style={{
+            borderRadius: 15,
+            padding: 10,
+            margin: 10,
+            marginTop: 0,
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+            elevation: 6,
+          }}
+        >
+          <TouchableOpacity onPress={toggleImageSize}>
+            <Image
+              source={{ uri: client.image }}
+              style={{
+                width: 90,
+                height: 90,
+                borderRadius: 45,
+                marginBottom: 12,
+                borderWidth: 3,
+                borderColor: color,
+              }}
+            />
+          </TouchableOpacity>
+          <ThemedText type="title" style={{ marginBottom: 2 }}>
+            {client.name} {client.last_name}
+          </ThemedText>
+          <TouchableOpacity onPress={() => Linking.openURL(`mailto:${client.email}`)}>
+            <ThemedText type="default" style={{ color: color, marginBottom: 8 }}>
+              {client.email ? client.email : 'No email saved'}
+            </ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}
+            onPress={() => Linking.openURL(`tel:${client.phone}`)}
+          >
+            <Ionicons name="call" size={18} color={color} style={{ marginRight: 6 }} />
+            <ThemedText>{client.phone ? client.phone : 'No phone saved'}</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(`https://www.google.com/maps?q=${client.address}`)}
+            style={{ flexDirection: 'row', alignItems: 'center' }}
+          >
+            <Ionicons name="location" size={18} color={color} style={{ marginRight: 6 }} />
+            <ThemedText>{client.address ? client.address : 'No address saved'}</ThemedText>
+          </TouchableOpacity>
+        </ThemedSecondaryView>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+          <TouchableOpacity
+            style={[
+              commonStyles.button,
+              {
+                borderColor: color,
+                margin: 0,
+                backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+              },
+            ]}
+            onPress={() => router.navigate('/(app)/(clients)/clientUpdate')}
+          >
+            <Ionicons name="create-outline" size={28} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              commonStyles.button,
+              {
+                margin: 0,
+                borderColor: 'red',
+                backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+              },
+            ]}
+            onPress={() => handleDelete()}
+          >
+            <Ionicons name="trash-outline" size={28} color="red" />
+          </TouchableOpacity>
+        </View>
+
         <View style={commonStylesDetails.bottom}>
           <ThemedText type="subtitle">Jobs</ThemedText>
           {isLoading ? (
@@ -160,7 +267,7 @@ export default function ClientDetail() {
                     </TouchableOpacity>
                   );
                 }}
-                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+                ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
                 ListEmptyComponent={
                   <View>
                     <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>
@@ -169,27 +276,13 @@ export default function ClientDetail() {
                   </View>
                 }
                 ListHeaderComponent={<View style={{ margin: 5 }} />}
-                ListFooterComponent={
-                  <TouchableOpacity
-                    style={[
-                      commonStyles.button,
-                      {
-                        margin: 15,
-                        borderColor: color,
-                        backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-                      },
-                    ]}
-                    onPress={() => router.push('/(app)/(jobs)/jobCreate')}
-                  >
-                    <ThemedText>+ Job</ThemedText>
-                  </TouchableOpacity>
-                }
+                ListFooterComponent={<View style={{ margin: 5 }} />}
                 refreshControl={
                   <RefreshControl
                     refreshing={isLoading}
                     onRefresh={() => fetchJobs()}
-                    colors={[color]} // Colores del indicador de carga
-                    tintColor={color} // Color del indicador de carga en iOS
+                    colors={[color]}
+                    tintColor={color}
                   />
                 }
               />
@@ -199,6 +292,73 @@ export default function ClientDetail() {
                     <Text style={styles.errorText}>{errorJobs}</Text>
                 ) : null} */}
         </View>
+        <TouchableOpacity
+          style={[
+            commonStyles.button,
+            {
+              position: 'absolute',
+              bottom: 20,
+              right: 20,
+              borderColor: color,
+              backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+            },
+          ]}
+          onPress={() => router.push('/(app)/(jobs)/jobCreate')}
+        >
+          <ThemedText>Create Job</ThemedText>
+        </TouchableOpacity>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(!modalVisible)}
+        >
+          <View style={commonStylesCards.centeredView}>
+            {isLoading ? (
+              <ActivityIndicator color={color} size="large" />
+            ) : (
+              <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>
+                <ThemedText style={[commonStylesCards.name, { padding: 10 }]}>
+                  Do you want to delete {client.name}?
+                </ThemedText>
+                <View
+                  style={[
+                    commonStylesCards.dataContainer,
+                    { padding: 10, justifyContent: 'space-evenly' },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={[commonStylesCards.button, { borderColor: color }]}
+                    onPress={() => setModalVisible(!modalVisible)}
+                  >
+                    <ThemedText style={{ color: color }}>Cancel</ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[commonStylesCards.button, { borderColor: 'red' }]}
+                    onPress={() => deleteClient()}
+                  >
+                    <ThemedText style={{ color: 'red', textAlign: 'center' }}>DELETE</ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </ThemedSecondaryView>
+            )}
+          </View>
+        </Modal>
+        <Modal transparent={true} animationType="fade" visible={isBig}>
+          <View style={commonStylesCards.modalContainer}>
+            <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
+              <Image source={{ uri: client.image }} style={commonStylesCards.expandedImage} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[commonStylesCards.button, { marginHorizontal: 5, flex: 1 }]}
+              onPress={() => setIsBig(!isBig)}
+            >
+              <ThemedText style={{ color: 'white', textAlign: 'center', fontSize: 20 }}>
+                Close
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Modal>
       </ThemedView>
     </>
   );

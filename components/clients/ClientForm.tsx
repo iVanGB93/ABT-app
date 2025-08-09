@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Text, Image, TouchableOpacity, Vibration } from 'react-native';
+import { View, TextInput, Text, Image, TouchableOpacity, Vibration, Modal } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,9 @@ import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
+import { commonStylesForm } from '@/constants/commonStylesForm';
+import CustomAddress from '../CustomAddress';
+import { ThemedSecondaryView } from '../ThemedSecondaryView';
 
 interface ClientFormProps {
   name?: any;
@@ -72,6 +75,7 @@ export default function ClientForm({
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState<string | null>(null);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -95,7 +99,10 @@ export default function ClientForm({
 
   useEffect(() => {
     if (phone) {
-      const localNumber = removeCountryCode(phone, getCountryByPhoneNumber(phone)?.callingCode || '');
+      const localNumber = removeCountryCode(
+        phone,
+        getCountryByPhoneNumber(phone)?.callingCode || '',
+      );
       setPhone(localNumber);
     }
   }, [phone]);
@@ -213,20 +220,28 @@ export default function ClientForm({
     }
   };
 
+  const handleImageOptions = () => setImageModalVisible(true);
+
   return (
     <View>
       {error ? <ThemedText style={commonStyles.errorMsg}>{error}</ThemedText> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Name
-      </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <ThemedText style={commonStylesForm.label}>Name</ThemedText>
+      <View
+        style={[
+          commonStylesForm.action,
+          { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+        ]}
+      >
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder={name ? name : "Enter client's name"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
@@ -234,17 +249,23 @@ export default function ClientForm({
         />
       </View>
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Last Name
-      </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <ThemedText style={commonStylesForm.label}>Last Name</ThemedText>
+      <View
+        style={[
+          commonStylesForm.action,
+          { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+        ]}
+      >
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person-add"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder={lastName ? lastName : "Enter client's last name"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={lastName}
@@ -252,9 +273,7 @@ export default function ClientForm({
         />
       </View>
       {errors.lastName ? <Text style={commonStyles.errorMsg}>{errors.lastName}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Phone
-      </ThemedText>
+      <ThemedText style={commonStylesForm.label}>Phone</ThemedText>
       <PhoneInput
         defaultCountry="US"
         value={phone}
@@ -270,26 +289,32 @@ export default function ClientForm({
             padding: 0,
           },
           caret: {
-            fontSize: 12,
+            fontSize: 16,
             width: 3,
           },
           callingCode: {
-            fontSize: 12,
+            fontSize: 16,
           },
         }}
       />
       {errors.phone ? <Text style={commonStyles.errorMsg}>{errors.phone}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Email
-      </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <ThemedText style={commonStylesForm.label}>Email</ThemedText>
+      <View
+        style={[
+          commonStylesForm.action,
+          { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+        ]}
+      >
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="mail"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder="Enter client's email"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           keyboardType="email-address"
@@ -299,12 +324,10 @@ export default function ClientForm({
         />
       </View>
       {errors.email ? <Text style={commonStyles.errorMsg}>{errors.email}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
-        Address
-      </ThemedText>
+      <ThemedText style={commonStylesForm.label}>Address</ThemedText>
       <View
         style={[
-          commonStyles.action,
+          commonStylesForm.action,
           { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', marginBottom: 5 },
         ]}
       >
@@ -313,75 +336,42 @@ export default function ClientForm({
           name="location"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
-        <GooglePlacesAutocomplete
-          keyboardShouldPersistTaps='always'
-          predefinedPlaces={[]}
+        <CustomAddress
           placeholder={address ? address : "Client's address"}
-          minLength={2}
-          timeout={1000}
-          textInputProps={{
-            placeholderTextColor: darkTheme ? darkTextColor : lightTextColor,
-          }}
-          onPress={(data, details = null) => {
-            setAddress(data.description);
-          }}
-          query={{
-            key: GOOGLE_PLACES_API_KEY,
-            language: 'en',
-          }}
-          styles={{
-            textInputContainer: {
-              height: 26,
-            },
-            textInput: {
-              height: 26,
-              color: darkTheme ? '#fff' : '#000',
-              fontSize: 16,
-              backgroundColor: 'transparent',
-            },
-            predefinedPlacesDescription: {
-              color: darkTheme ? darkTextColor : lightTextColor,
-            },
-          }}
-          enablePoweredByContainer={false}
-          disableScroll={true}
-          listEmptyComponent={<ThemedText>No results, sorry.</ThemedText>}
+          address={address}
+          setAddress={setAddress}
         />
       </View>
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
-      {image && <Image source={{ uri: image }} style={commonStyles.imageCircle} />}
-      <View
-        style={{
-          width: '100%',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          marginTop: 15,
-        }}
-      >
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
-          ]}
-          onPress={() => handleImage()}
-        >
-          <ThemedText>Add image</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
-          ]}
-          onPress={() => takePhoto()}
-        >
-          <ThemedText>Take Photo</ThemedText>
-        </TouchableOpacity>
+
+      <View style={{ alignItems: 'center', marginTop: 15 }}>
+        <View style={{ position: 'relative' }}>
+          <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>
+            <Image source={{ uri: image }} style={commonStyles.imageCircle} />
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                backgroundColor: color,
+                borderRadius: 16,
+                width: 32,
+                height: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: darkTheme ? darkMainColor : lightMainColor,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 3,
+              }}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
       <View
         style={{
@@ -411,11 +401,84 @@ export default function ClientForm({
               backgroundColor: darkTheme ? darkMainColor : lightMainColor,
             },
           ]}
-          onPress={action === 'new' ? () => router.replace('/(app)/(clients)') : () => router.back()}
+          onPress={
+            action === 'new' ? () => router.replace('/(app)/(clients)') : () => router.back()
+          }
         >
           <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
         </TouchableOpacity>
       </View>
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ThemedSecondaryView
+            style={{
+              borderRadius: 16,
+              padding: 24,
+              minWidth: 250,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+              {action === 'new' ? 'Add Photo' : 'Change Photo'}
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <Image source={{ uri: image }} style={commonStyles.imageCircle} />
+              <View>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    handleImage();
+                  }}
+                >
+                  <Ionicons name="image" size={20} color={color} />
+                  <ThemedText>Choose from Gallery</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    takePhoto();
+                  }}
+                >
+                  <Ionicons name="camera" size={20} color={color} />
+                  <ThemedText>Take Photo</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[commonStyles.button, { borderColor: 'red', marginTop: 15, backgroundColor: darkTheme ? darkMainColor : lightMainColor }]}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </ThemedSecondaryView>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Text,
   View,
@@ -35,7 +35,7 @@ interface Errors {
 }
 
 export default function UsernameAndPassword() {
-  const { userEmail, token } = useSelector((state: RootState) => state.auth);
+  const { userEmail } = useSelector((state: RootState) => state.auth);
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -46,13 +46,6 @@ export default function UsernameAndPassword() {
   const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (token) {
-      router.replace('/(businessSelect)');
-    }
-  }, [token]);
 
   const validateForm = () => {
     let errors: Errors = {};

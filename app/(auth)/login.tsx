@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   View,
@@ -36,7 +36,6 @@ interface Errors {
 
 export default function Login() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { token } = useSelector((state: RootState) => state.auth);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
@@ -46,12 +45,6 @@ export default function Login() {
   const [alertVisible, setAlertVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  useEffect(() => {
-    if (token) {
-      router.navigate('/accountDetails');
-    }
-  }, [token]);
 
   const validateForm = () => {
     let errors: Errors = {};
@@ -194,7 +187,7 @@ export default function Login() {
               </TouchableOpacity>
               <View style={commonStyles.linkSection}>
                 <ThemedText type="subtitle">I'm new, </ThemedText>
-                <TouchableOpacity onPress={() => router.navigate('./register')}>
+                <TouchableOpacity onPress={() => router.navigate('/(auth)/register')}>
                   <ThemedText type="subtitle" style={{ color: color }}>
                     {' '}
                     create account!!
