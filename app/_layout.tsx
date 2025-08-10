@@ -24,8 +24,9 @@ export default function RootLayout() {
           }}
           >
             <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(app)" />
+            <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="(onboarding)" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="(app)" options={{ animation: 'flip' }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <Toast />

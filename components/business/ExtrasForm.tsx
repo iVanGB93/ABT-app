@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Image, Switch } from 'react-native';
+import React, { act, useState } from 'react';
+import { View, TextInput, TouchableOpacity, Text, Image, Switch, Modal } from 'react-native';
 import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import axiosInstance from '@/axios';
 import SelectDropdown from 'react-native-select-dropdown';
+import { ThemedSecondaryView } from '../ThemedSecondaryView';
 
 interface Errors {
   description?: string;
@@ -64,8 +65,11 @@ export default function ExtraForm({
   const [formImage, setFormImage] = useState<any>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState('');
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  const handleImageOptions = () => setImageModalVisible(true);
 
   const handleImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -189,7 +193,7 @@ export default function ExtraForm({
             placeholder={amount ? amount.toString() : `Enter ${type}'s amount`}
             placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
             value={amount ? amount.toString() : ''}
-            onChangeText={text => setAmount(text.replace(',', '.'))}
+            onChangeText={(text) => setAmount(text.replace(',', '.'))}
             keyboardType="numeric"
           />
         )}
@@ -263,54 +267,37 @@ export default function ExtraForm({
           </View>
         </>
       ) : null}
-      {formImage ? (
-        <Image
-          source={{ uri: formImage.uri }}
-          style={commonStyles.imageSquare}
-          onError={() => setFormImage(null)}
-        />
-      ) : image ? (
-        <Image
-          source={{ uri: image }}
-          style={commonStyles.imageSquare}
-          onError={() => setImage(null)}
-        />
-      ) : (
-        <ThemedText style={{ alignSelf: 'center' }}>No image selected </ThemedText>
-      )}
-      <View
-        style={{
-          width: '100%',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          marginTop: 15,
-        }}
-      >
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
-          ]}
-          onPress={() => handleImage()}
-        >
-          <ThemedText>Add image</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
-          ]}
-          onPress={() => takePhoto()}
-        >
-          <ThemedText>Take Photo</ThemedText>
+      <View style={{ alignItems: 'center' }}>
+        <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>
+          <Image
+            source={{ uri: typeof image === 'string' ? image : image.uri }}
+            style={[commonStyles.imageSquare, { marginTop: 10 }]}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              backgroundColor: color,
+              borderRadius: 16,
+              width: 32,
+              height: 32,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 2,
+              borderColor: darkTheme ? darkMainColor : lightMainColor,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 2,
+              elevation: 3,
+            }}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </View>
         </TouchableOpacity>
       </View>
+
       <View
         style={{
           width: '100%',
@@ -344,6 +331,87 @@ export default function ExtraForm({
           <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
         </TouchableOpacity>
       </View>
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ThemedSecondaryView
+            style={{
+              borderRadius: 16,
+              padding: 24,
+              minWidth: 250,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+              {action === 'new' ? 'Add Image' : 'Update Image'}
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <Image
+                source={{ uri: typeof image === 'string' ? image : image.uri }}
+                style={commonStyles.imageSquare}
+              />
+              <View>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    handleImage();
+                  }}
+                >
+                  <Ionicons name="image" size={20} color={color} />
+                  <ThemedText>Choose from Gallery</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    takePhoto();
+                  }}
+                >
+                  <Ionicons name="camera" size={20} color={color} />
+                  <ThemedText>Take Photo</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: 'red',
+                  marginTop: 15,
+                  backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                },
+              ]}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </ThemedSecondaryView>
+        </View>
+      </Modal>
     </View>
   );
 }

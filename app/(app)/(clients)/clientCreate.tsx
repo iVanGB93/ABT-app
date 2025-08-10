@@ -10,7 +10,7 @@ import { RootState } from '@/app/(redux)/store';
 import { useRouter } from 'expo-router';
 
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
-import { darkMainColor, lightMainColor } from '@/settings';
+import { darkMainColor, lightMainColor, userImageDefault } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import ClientForm from '@/components/clients/ClientForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
@@ -24,7 +24,7 @@ export default function ClientCreate() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
-  const [image, setImage] = useState<string | null>('https://abt-media.nyc3.cdn.digitaloceanspaces.com/userDefault.jpg');
+  const [image, setImage] = useState<string | null>(userImageDefault);
   const [isLoading, setIsLoading] = useState(false);
   const { darkTheme, color } = useSelector((state: RootState) => state.settings);
   const router = useRouter();

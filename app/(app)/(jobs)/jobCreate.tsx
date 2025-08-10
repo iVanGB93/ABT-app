@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 import { RootState } from '@/app/(redux)/store';
@@ -25,8 +24,6 @@ export default function JobCreate() {
   const router = useRouter();
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={100}
@@ -61,6 +58,5 @@ export default function JobCreate() {
           </ThemedSecondaryView>
         )}
       </KeyboardAvoidingView>
-    </>
   );
 }

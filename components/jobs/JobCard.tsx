@@ -1,29 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
-  Text,
-  Pressable,
-  Linking,
-  Image,
-  Modal,
-  Alert,
-  ActivityIndicator,
-  TouchableOpacity,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
-import { baseImageURL } from '../../settings';
-import axiosInstance from '../../axios';
-import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '../../settings';
-import { RootState, useAppDispatch } from '@/app/(redux)/store';
+import { darkTextColor, lightTextColor } from '../../settings';
+import { RootState } from '@/app/(redux)/store';
 import { ThemedText } from '../ThemedText';
-import { setClient } from '@/app/(redux)/clientSlice';
-import { ThemedSecondaryView } from '../ThemedSecondaryView';
-import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { ThemedView } from '../ThemedView';
+import { formatDate } from '@/utils/formatDate';
 
 interface JobCardProps {
   image: any;
@@ -53,14 +40,6 @@ export default function JobCard({
   isList,
 }: JobCardProps) {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalVisibleFinish, setModalVisibleFinish] = useState(false);
-  const clients = useSelector((state: RootState) => state.client.clients);
-  const [imageError, setImageError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isBig, setIsBig] = useState(false);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
 
   const statusIcon = (status: string) => {
     if (status === 'active') {
@@ -71,16 +50,6 @@ export default function JobCard({
       return <Ionicons style={{ color: 'green', fontSize: 20 }} name="checkmark-done-sharp" />;
     }
   };
-
-  const newDate = new Date(date);
-  const formattedDate = newDate.toLocaleDateString('en-EN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    /* second: '2-digit', */
-  });
 
   return (
     <ThemedView
@@ -100,12 +69,10 @@ export default function JobCard({
       </View>
       { isList ?
       <View style={commonStylesCards.dataContainer}>
-        <TouchableOpacity onPress={() => router.navigate('/(app)/(clients)/clientDetails')}>
-          <ThemedText>{client}</ThemedText>
-        </TouchableOpacity>
+        <ThemedText>{client}</ThemedText>
       </View> : null}
       <View style={commonStylesCards.dataContainer}>
-        <ThemedText style={commonStylesCards.dataText}>{formattedDate}</ThemedText>
+        <ThemedText style={commonStylesCards.dataText}>{formatDate(date)}</ThemedText>
         <ThemedText style={commonStylesCards.dataText}>${price}</ThemedText>
       </View>
     </ThemedView>

@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
-import { darkMainColor, lightMainColor } from '@/settings';
+import { businessExpenseImageDefault, darkMainColor, lightMainColor } from '@/settings';
 import { RootState } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStyles } from '@/constants/commonStyles';
@@ -23,15 +23,13 @@ export default function BusinessExpenseCreate() {
   const { darkTheme } = useSelector((state: RootState) => state.settings);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [image, setImage] = useState<any>(null);
+  const [image, setImage] = useState(businessExpenseImageDefault);
   const [category, setCategory] = useState<string>('other');
   const [isDeductible, setIsDeductible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={100}
@@ -78,6 +76,5 @@ export default function BusinessExpenseCreate() {
           </ThemedSecondaryView>
         )}
       </KeyboardAvoidingView>
-    </>
   );
 }

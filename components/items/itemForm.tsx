@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  Text,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, TextInput, Text, Image, TouchableOpacity, Modal } from 'react-native';
 import axiosInstance from '@/axios';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,7 +8,7 @@ import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
 import { useRouter } from 'expo-router';
 import { commonStyles } from '@/constants/commonStyles';
-import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
+import { darkMainColor, darkTextColor, itemImageDefault, lightMainColor, lightTextColor } from '@/settings';
 import { Ionicons } from '@expo/vector-icons';
 import { setItemMessage } from '@/app/(redux)/itemSlice';
 import { commonStylesForm } from '@/constants/commonStylesForm';
@@ -39,12 +33,18 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
   const [description, setDescription] = useState(action === 'new' ? '' : item?.description || '');
   const [amount, setAmount] = useState<any>(action === 'new' ? 1 : item?.amount || 1);
   const [price, setPrice] = useState<any>(action === 'new' ? '' : item?.price || '');
-  const [image, setImage] = useState<string | null>(action === 'new' ? null : item?.image || null);
+  const [image, setImage] = useState(
+    action === 'new'
+      ? itemImageDefault
+      : item?.image || itemImageDefault,
+  );
   const [error, setError] = useState('');
   const [errors, setErrors] = useState<Errors>({});
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
-  
+
+  const handleImageOptions = () => setImageModalVisible(true);
 
   const validateForm = () => {
     let errors: Errors = {};
@@ -141,13 +141,13 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
   return (
     <View>
       {error ? <Text style={commonStyles.errorMsg}>{error}</Text> : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Name
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons name="person" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder={name ? name : "Enter item's name"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
@@ -156,13 +156,13 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
       </View>
       {errors.name ? <Text style={commonStyles.errorMsg}>{errors.name}</Text> : null}
 
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Description
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons name="clipboard-outline" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder="Enter item's description (optional)"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={description}
@@ -171,13 +171,13 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
       </View>
       {errors.description ? <Text style={commonStyles.errorMsg}>{errors.description}</Text> : null}
 
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Amount
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <Ionicons name="layers-outline" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder="Enter item's amount"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={amount.toString()}
@@ -187,12 +187,12 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
       </View>
       {errors.amount ? <Text style={commonStyles.errorMsg}>{errors.amount}</Text> : null}
 
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Price
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
           placeholder="Enter item's price"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={price.toString()}
@@ -202,40 +202,37 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
       </View>
       {errors.price ? <Text style={commonStyles.errorMsg}>{errors.price}</Text> : null}
 
-      {image && <Image source={{ uri: image }} style={[commonStyles.imageSquare, { marginTop: 15 }]} />}
-      <View
-        style={{
-          width: '100%',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          marginTop: 15,
-        }}
-      >
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
-          ]}
-          onPress={() => handleImage()}
-        >
-          <ThemedText>Add image</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
-          ]}
-          onPress={() => takePhoto()}
-        >
-          <ThemedText>Take Photo</ThemedText>
+      <View style={{ alignItems: 'center', marginTop: 15 }}>
+        <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>
+          <Image
+            source={{ uri: typeof image === 'string' ? image ?? '' : image?.uri ?? '' }}
+            style={[commonStyles.imageSquare, { marginTop: 10 }]}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              backgroundColor: color,
+              borderRadius: 16,
+              width: 32,
+              height: 32,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 2,
+              borderColor: darkTheme ? darkMainColor : lightMainColor,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 2,
+              elevation: 3,
+            }}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </View>
         </TouchableOpacity>
       </View>
+
       <View
         style={{
           width: '100%',
@@ -269,6 +266,87 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
           <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
         </TouchableOpacity>
       </View>
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ThemedSecondaryView
+            style={{
+              borderRadius: 16,
+              padding: 24,
+              minWidth: 250,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+              'Add Photo'
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <Image
+                source={{ uri: typeof image === 'string' ? image : image.uri }}
+                style={commonStyles.imageSquare}
+              />
+              <View>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    handleImage();
+                  }}
+                >
+                  <Ionicons name="image" size={20} color={color} />
+                  <ThemedText>Choose from Gallery</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    takePhoto();
+                  }}
+                >
+                  <Ionicons name="camera" size={20} color={color} />
+                  <ThemedText>Take Photo</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: 'red',
+                  marginTop: 15,
+                  backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                },
+              ]}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </ThemedSecondaryView>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -10,14 +10,15 @@ import {
   Switch,
   Image,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import SelectDropdown from 'react-native-select-dropdown';
 import * as ImagePicker from 'expo-image-picker';
 import {
-  baseImageURL,
   darkMainColor,
   darkTextColor,
+  itemImageDefault,
   lightMainColor,
   lightTextColor,
 } from '@/settings';
@@ -28,9 +29,9 @@ import { commonStyles } from '@/constants/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import axiosInstance from '@/axios';
-import { StatusBar } from 'expo-status-bar';
 import { ThemedView } from '@/components/ThemedView';
 import { commonStylesForm } from '@/constants/commonStylesForm';
+import { setItemMessage, setItems } from '@/app/(redux)/itemSlice';
 
 interface Errors {
   client?: string;
@@ -40,7 +41,7 @@ interface Errors {
 }
 
 export default function SpentCreate() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { job } = useSelector((state: RootState) => state.job);
   const { items } = useSelector((state: RootState) => state.item);
   const [item, setItem] = useState<any>({});
@@ -48,26 +49,70 @@ export default function SpentCreate() {
   const [itemsName, setItemsName] = useState<any>('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [image, setImage] = useState<any>(null);
+  type ImageType = { uri: string } | string;
+  const [image, setImage] = useState<ImageType>(itemImageDefault);
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useAppDispatch();
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const getItems = async () => {
+    setIsLoading(true);
+    await axiosInstance
+      .get(`items/list/${business.name}/`)
+      .then(function (response) {
+        if (response.data) {
+          if (response.data.length > 0) {
+            setItems(response.data);
+          }
+        } else {
+          dispatch(setItemMessage(response.data.message));
+        }
+        setIsLoading(false);
+      })
+      .catch(function (error) {
+        console.error('Error fetching items:', error);
+        if (typeof error.response === 'undefined') {
+          setError(
+            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
+          );
+          setIsLoading(false);
+        } else {
+          if (error.status === 401) {
+            setIsLoading(false);
+            setError('Unauthorized, please login againg');
+            router.push('/');
+          } else {
+            setError('Error getting your items.');
+            setIsLoading(false);
+          }
+        }
+      });
+  };
 
   useEffect(() => {
-    const itemsName = items.map((item: { name: string }) => item.name);
-    setItemsName(itemsName);
-  }, []);
+    if (items.length === 0) {
+      getItems();
+    } else {
+      const itemsName = items.map((item: { name: string }) => item.name);
+      setItemsName(itemsName);
+    }
+  }, [items]);
+
+  const handleImageOptions = () => setImageModalVisible(true);
 
   const toggleSwitch = () => {
     setIsEnabled((previousState: any) => !previousState);
     if (!isEnabled) {
       setDescription(item.name);
       setAmount(item.price);
+      setImage(item.image ? item.image : itemImageDefault);
     } else {
       setDescription('');
       setAmount('');
+      setImage(itemImageDefault);
     }
   };
 
@@ -76,14 +121,14 @@ export default function SpentCreate() {
     setItem(itemList[0]);
     setAmount(itemList[0].price);
     setDescription(itemList[0].name);
-    setImage({ uri: baseImageURL + itemList[0].image });
+    setImage(itemList[0].image ? itemList[0].image : itemImageDefault);
   };
 
   const handleImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [4, 3],
       quality: 1,
     });
     if (!result.canceled) {
@@ -99,9 +144,9 @@ export default function SpentCreate() {
     }
 
     let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [4, 3],
       quality: 1,
     });
     if (!result.canceled) {
@@ -127,7 +172,7 @@ export default function SpentCreate() {
       formData.append('amount', amount);
       formData.append('use_item', isEnabled);
       formData.append('item_id', isEnabled ? item.id : '');
-      if (image !== null) {
+      if (image !== null && typeof image !== 'string' && image.uri) {
         const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
         const fileName = `${description}SpentPicture.${fileType}`;
@@ -162,240 +207,312 @@ export default function SpentCreate() {
   };
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
-      <KeyboardAvoidingView
-        behavior="padding"
-        keyboardVerticalOffset={100}
-        style={commonStyles.container}
-      >
-        <ThemedView style={commonStyles.tabHeader}>
-          <TouchableOpacity
-            onPress={() => {
-              router.back();
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
-          </TouchableOpacity>
-          <ThemedText type="subtitle">Create Spent</ThemedText>
-          <ThemedText type="subtitle"></ThemedText>
-        </ThemedView>
-        {isLoading ? (
-          <ActivityIndicator style={commonStyles.loading} color={color} size={36} />
-        ) : (
-          <ThemedSecondaryView style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}>
-            <ScrollView>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              <ThemedText style={[styles.label, { marginBottom: 10 }]}>
-                Job: {job.description}
-              </ThemedText>
-
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'flex-end',
-                  alignSelf: 'center',
-                }}
+    <KeyboardAvoidingView
+      behavior="padding"
+      keyboardVerticalOffset={100}
+      style={commonStyles.container}
+    >
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Create Spent</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
+      {isLoading ? (
+        <ActivityIndicator style={commonStyles.loading} color={color} size={36} />
+      ) : (
+        <ThemedSecondaryView
+          style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
+        >
+          <ScrollView>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <ThemedText style={[styles.label, { marginBottom: 0 }]}>
+              Job: {job.description}
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                alignSelf: 'center',
+              }}
+            >
+              <ThemedText
+                style={[
+                  styles.label,
+                  {
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    alignSelf: 'center',
+                    verticalAlign: 'middle',
+                  },
+                ]}
               >
-                <ThemedText
+                use an item
+              </ThemedText>
+              <Switch
+                trackColor={{ false: '#767577', true: color }}
+                thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={toggleSwitch}
+                value={isEnabled}
+              />
+            </View>
+
+            {isEnabled ? (
+              <>
+                <SelectDropdown
+                  data={itemsName}
+                  onSelect={(selectedItem: string, index: number) => {
+                    handleSelect(selectedItem);
+                  }}
+                  renderButton={(selectedItem, isOpened) => {
+                    return (
+                      <View
+                        style={[
+                          styles.dropdownButtonStyle,
+                          { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' },
+                        ]}
+                      >
+                        <ThemedText style={styles.dropdownButtonTxtStyle}>
+                          {selectedItem || 'Select the item'}
+                        </ThemedText>
+                        <Ionicons
+                          name={isOpened ? 'chevron-up' : 'chevron-down'}
+                          size={26}
+                          color={darkTheme ? '#fff' : '#000'}
+                        />
+                      </View>
+                    );
+                  }}
+                  renderItem={(item, index, isSelected) => {
+                    return (
+                      <View
+                        style={{
+                          ...styles.dropdownItemStyle,
+                          ...(isSelected && { backgroundColor: '#D2D9DF' }),
+                        }}
+                      >
+                        <Text style={styles.dropdownItemTxtStyle}>{item}</Text>
+                      </View>
+                    );
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  dropdownStyle={styles.dropdownMenuStyle}
+                  search={true}
+                  searchPlaceHolder={'Type to search'}
+                />
+                {errors.job ? <Text style={styles.errorText}>{errors.job}</Text> : null}
+              </>
+            ) : (
+              <>
+                <ThemedText style={commonStylesForm.label} type="subtitle">
+                  Description
+                </ThemedText>
+                <View
                   style={[
-                    styles.label,
-                    {
-                      flexDirection: 'row',
-                      justifyContent: 'flex-end',
-                      alignSelf: 'center',
-                      verticalAlign: 'middle',
-                    },
+                    commonStylesForm.action,
+                    { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' },
                   ]}
                 >
-                  use an item
-                </ThemedText>
-                <Switch
-                  trackColor={{ false: '#767577', true: color }}
-                  thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-                  ios_backgroundColor="#3e3e3e"
-                  onValueChange={toggleSwitch}
-                  value={isEnabled}
-                />
-              </View>
-
-              {isEnabled ? (
-                <>
-                  <SelectDropdown
-                    data={itemsName}
-                    onSelect={(selectedItem: string, index: number) => {
-                      handleSelect(selectedItem);
-                    }}
-                    renderButton={(selectedItem, isOpened) => {
-                      return (
-                        <View
-                          style={[
-                            styles.dropdownButtonStyle,
-                            { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' },
-                          ]}
-                        >
-                          <ThemedText style={styles.dropdownButtonTxtStyle}>
-                            {selectedItem || 'Select the item'}
-                          </ThemedText>
-                          <Ionicons
-                            name={isOpened ? 'chevron-up' : 'chevron-down'}
-                            size={26}
-                            color={darkTheme ? '#fff' : '#000'}
-                          />
-                        </View>
-                      );
-                    }}
-                    renderItem={(item, index, isSelected) => {
-                      return (
-                        <View
-                          style={{
-                            ...styles.dropdownItemStyle,
-                            ...(isSelected && { backgroundColor: '#D2D9DF' }),
-                          }}
-                        >
-                          <Text style={styles.dropdownItemTxtStyle}>{item}</Text>
-                        </View>
-                      );
-                    }}
-                    showsVerticalScrollIndicator={false}
-                    dropdownStyle={styles.dropdownMenuStyle}
-                    search={true}
-                    searchPlaceHolder={'Type to search'}
-                  />
-                  {errors.job ? <Text style={styles.errorText}>{errors.job}</Text> : null}
-                </>
-              ) : (
-                <>
-                  <ThemedText style={commonStyles.text_action} type="subtitle">
-                    Description
-                  </ThemedText>
-                  <View
-                    style={[
-                      commonStyles.action,
-                      { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' },
-                    ]}
-                  >
-                    <Ionicons name="text" color={darkTheme ? darkTextColor : lightTextColor} />
-                    <TextInput
-                      style={[
-                        commonStyles.textInput,
-                        { color: darkTheme ? darkTextColor : lightTextColor },
-                      ]}
-                      placeholder={description ? description : "Enter job's description"}
-                      placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-                      value={description}
-                      onChangeText={setDescription}
-                    />
-                  </View>
-                  {errors.description ? (
-                    <Text style={styles.errorText}>{errors.description}</Text>
-                  ) : null}
-                </>
-              )}
-              <ThemedText style={commonStyles.text_action} type="subtitle">
-                Amount
-              </ThemedText>
-              <View
-                style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
-              >
-                <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
-                {isEnabled ? (
-                  <ThemedText> $ {amount}</ThemedText>
-                ) : (
+                  <Ionicons name="text" color={darkTheme ? darkTextColor : lightTextColor} />
                   <TextInput
                     style={[
                       commonStyles.textInput,
                       { color: darkTheme ? darkTextColor : lightTextColor },
                     ]}
-                    placeholder={amount ? amount.toString() : "Enter spent's amount"}
+                    placeholder={description ? description : "Enter job's description"}
                     placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-                    value={amount ? amount.toString() : ''}
-                    onChangeText={setAmount}
-                    keyboardType="numeric"
+                    value={description}
+                    onChangeText={setDescription}
                   />
-                )}
-              </View>
-              {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
-              {image ? (
-                <Image
-                  source={{ uri: image.uri }}
-                  style={styles.image}
-                  onError={() => setImage(null)}
-                />
+                </View>
+                {errors.description ? (
+                  <Text style={styles.errorText}>{errors.description}</Text>
+                ) : null}
+              </>
+            )}
+            <ThemedText style={commonStylesForm.label} type="subtitle">
+              Amount
+            </ThemedText>
+            <View
+              style={[
+                commonStylesForm.action,
+                { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' },
+              ]}
+            >
+              <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
+              {isEnabled ? (
+                <ThemedText> $ {amount}</ThemedText>
               ) : (
-                <ThemedText style={{ alignSelf: 'center' }}>image not found </ThemedText>
+                <TextInput
+                  style={[
+                    commonStyles.textInput,
+                    { color: darkTheme ? darkTextColor : lightTextColor },
+                  ]}
+                  placeholder={amount ? amount.toString() : "Enter spent's amount"}
+                  placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+                  value={amount ? amount.toString() : ''}
+                  onChangeText={setAmount}
+                  keyboardType="numeric"
+                />
               )}
-              <View
-                style={{
-                  width: '100%',
-                  flexDirection: 'row',
-                  justifyContent: 'space-evenly',
-                  marginTop: 15,
-                }}
+            </View>
+            {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+
+            <View style={{ alignItems: 'center', marginTop: 15 }}>
+              <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>
+                <Image
+                  source={{ uri: typeof image === 'string' ? image : image.uri }}
+                  style={[commonStyles.imageSquare, { marginTop: 10 }]}
+                />
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: color,
+                    borderRadius: 16,
+                    width: 32,
+                    height: 32,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 2,
+                    borderColor: darkTheme ? darkMainColor : lightMainColor,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 2,
+                    elevation: 3,
+                  }}
+                >
+                  <Ionicons name="add" size={20} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={{
+                width: '100%',
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <TouchableOpacity
+                style={[
+                  commonStyles.button,
+                  {
+                    borderColor: color,
+                    backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                  },
+                ]}
+                onPress={() => handleSubmit()}
               >
+                <ThemedText>Create</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  commonStyles.button,
+                  {
+                    borderColor: 'red',
+                    backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                  },
+                ]}
+                onPress={() => router.replace('/(app)/(jobs)/jobDetails')}
+              >
+                <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </ThemedSecondaryView>
+      )}
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ThemedSecondaryView
+            style={{
+              borderRadius: 16,
+              padding: 24,
+              minWidth: 250,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+              'Add Photo'
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <Image
+                source={{ uri: typeof image === 'string' ? image : image.uri }}
+                style={commonStyles.imageSquare}
+              />
+              <View>
                 <TouchableOpacity
                   style={[
                     commonStyles.button,
-                    {
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                    },
+                    { borderColor: color, marginBottom: 10, width: 180 },
                   ]}
-                  onPress={() => handleImage()}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    handleImage();
+                  }}
                 >
-                  <ThemedText>Add image</ThemedText>
+                  <Ionicons name="image" size={20} color={color} />
+                  <ThemedText>Choose from Gallery</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     commonStyles.button,
-                    {
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                    },
+                    { borderColor: color, marginBottom: 10, width: 180 },
                   ]}
-                  onPress={() => takePhoto()}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    takePhoto();
+                  }}
                 >
+                  <Ionicons name="camera" size={20} color={color} />
                   <ThemedText>Take Photo</ThemedText>
                 </TouchableOpacity>
               </View>
-              <View
-                style={{
-                  width: '100%',
-                  flexDirection: 'row',
-                  justifyContent: 'space-evenly',
+            </View>
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: 'red',
                   marginTop: 15,
-                }}
-              >
-                <TouchableOpacity
-                  style={[
-                    commonStyles.button,
-                    {
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                    },
-                  ]}
-                  onPress={() => handleSubmit()}
-                >
-                  <ThemedText>Create</ThemedText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    commonStyles.button,
-                    {
-                      borderColor: 'red',
-                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                    },
-                  ]}
-                  onPress={() => router.replace('/(app)/(jobs)/jobDetails')}
-                >
-                  <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
+                  backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                },
+              ]}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
           </ThemedSecondaryView>
-        )}
-      </KeyboardAvoidingView>
-    </>
+        </View>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 }
 

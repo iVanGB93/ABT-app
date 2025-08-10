@@ -69,7 +69,7 @@ export default function Login() {
               }),
             );
             setLoading(false);
-            router.navigate('/accountDetails');
+            router.navigate('/(onboarding)');
           } else {
             setError(response.data.message);
             setAlertVisible(true);

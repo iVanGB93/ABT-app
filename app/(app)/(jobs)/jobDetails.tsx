@@ -12,11 +12,9 @@ import {
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import JobCard from '@/components/jobs/JobCard';
 import SpentCard from '@/components/jobs/SpentCard';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
@@ -31,6 +29,7 @@ import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { setClient } from '@/app/(redux)/clientSlice';
 import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { commonStylesCards } from '@/constants/commonStylesCard';
+import { formatDate } from '@/utils/formatDate';
 
 export default function JobDetail() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
@@ -80,16 +79,6 @@ export default function JobDetail() {
   useEffect(() => {
     fetchSpents();
   }, []);
-
-  const newDate = new Date(job.date);
-  const formattedDate = newDate.toLocaleDateString('en-EN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    /* second: '2-digit', */
-  });
 
   const deleteJob = async () => {
     setIsLoading(true);
@@ -154,7 +143,7 @@ export default function JobDetail() {
 
   const handleInvoice = () => {
     let pickedClient = clients.find(
-      (pickedClient: { name: any }) => pickedClient.name === job.client,
+      (pickedClient: { id: any }) => pickedClient.id === job.client_id,
     );
     dispatch(setClient(pickedClient));
     router.navigate('/(app)/(jobs)/invoice');
@@ -213,7 +202,7 @@ export default function JobDetail() {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                 <Ionicons name="calendar" size={16} color={color} style={{ marginRight: 4 }} />
-                <ThemedText>{formattedDate}</ThemedText>
+                <ThemedText>{formatDate(job.date)}</ThemedText>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                 <Ionicons name="location" size={16} color={color} style={{ marginRight: 4 }} />
@@ -255,7 +244,10 @@ export default function JobDetail() {
                 </TouchableOpacity>
               ) : null}
               {job.status !== 'finished' ? (
-                <TouchableOpacity onPress={() => handleClose()} style={[commonStyles.button, { marginTop: 30, padding: 0, borderColor: color }]}>
+                <TouchableOpacity
+                  onPress={() => handleClose()}
+                  style={[commonStyles.button, { marginTop: 30, padding: 0, borderColor: color }]}
+                >
                   <ThemedText>Close Job</ThemedText>
                 </TouchableOpacity>
               ) : null}
@@ -332,29 +324,12 @@ export default function JobDetail() {
             ListEmptyComponent={
               <View>
                 <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>
-                  No spents found, pull to refresh
+                  No spents found, create a new one
                 </ThemedText>
               </View>
             }
             ListHeaderComponent={<View style={{ margin: 5 }} />}
-            ListFooterComponent={
-              job.status !== 'finished' ? (
-                <TouchableOpacity
-                  style={[
-                    commonStyles.button,
-                    {
-                      marginTop: 20,
-                      marginHorizontal: 'auto',
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
-                    },
-                  ]}
-                  onPress={() => router.push('/(app)/(jobs)/spentCreate')}
-                >
-                  <ThemedText>+ Spent</ThemedText>
-                </TouchableOpacity>
-              ) : null
-            }
+            ListFooterComponent={<View style={{ margin: 5 }} />}
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}
@@ -366,6 +341,23 @@ export default function JobDetail() {
           />
         )}
       </ThemedView>
+      {job.status !== 'finished' ? (
+        <TouchableOpacity
+          style={[
+            commonStyles.button,
+            {
+              position: 'absolute',
+              bottom: 20,
+              right: 20,
+              borderColor: color,
+              backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+            },
+          ]}
+          onPress={() => router.push('/(app)/(jobs)/spentCreate')}
+        >
+          <ThemedText>Create Spent</ThemedText>
+        </TouchableOpacity>
+      ) : null}
       <Modal
         animationType="slide"
         transparent={true}

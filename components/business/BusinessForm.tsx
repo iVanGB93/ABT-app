@@ -77,21 +77,21 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
     if (useAccountPhone) {
       setPhone(profile.phone ?? '');
     } else {
-      setPhone('');
+      setPhone(action === 'create' ? '' : business.phone);
     }
   }, [useAccountPhone, profile.phone]);
   useEffect(() => {
     if (useAccountEmail) {
-      setEmail(profile.email ?? email);
+      setEmail(profile.email ?? '');
     } else {
-      setEmail('');
+      setEmail(action === 'create' ? '' : business.email);
     }
   }, [useAccountEmail, profile.email]);
   useEffect(() => {
     if (useAccountAddress) {
       setAddress(profile.address ?? '');
     } else {
-      setAddress('');
+      setAddress(action === 'create' ? '' : business.address);
     }
   }, [useAccountAddress, profile.address]);
 
@@ -483,7 +483,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           flexDirection: 'row',
           justifyContent: 'space-evenly',
           alignItems: 'center',
-          marginTop: 15,
+          marginTop: 10,
         }}
       >
         <TouchableOpacity
@@ -505,7 +505,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           width: '100%',
           flexDirection: 'row',
           justifyContent: 'space-evenly',
-          marginTop: 15,
+          marginTop: 10,
         }}
       >
         <TouchableOpacity

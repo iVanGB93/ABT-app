@@ -1,5 +1,6 @@
+import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
 import { Vibration } from 'react-native';
@@ -7,9 +8,19 @@ import { Vibration } from 'react-native';
 import { darkSecondColor, lightSecondColor } from '@/settings';
 
 export default function TabLayout() {
-  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { token, userName } = useSelector((state: RootState) => state.auth);
 
   const vibrateTab = () => Vibration.vibrate(30);
+  const isAuthed = !!token && !!userName;
+  const hasBusiness = !!business && Object.keys(business).length > 0;
+
+  if (!isAuthed) {
+    return <Redirect href="/(auth)/login" />;
+  }
+  if (!hasBusiness) {
+    return <Redirect href="/(onboarding)" />;
+  }
 
   return (
     <Tabs

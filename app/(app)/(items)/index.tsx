@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
   View,
   RefreshControl,
   FlatList,
-  SafeAreaView,
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
@@ -26,7 +23,6 @@ import { commonStyles } from '@/constants/commonStyles';
 
 export default function Items() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
   const { items, itemMessage } = useSelector((state: RootState) => state.item);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,13 +143,20 @@ export default function Items() {
                   </TouchableOpacity>
                 );
               }}
-              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+              ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+              contentContainerStyle={
+                filteredItems.length === 0
+                  ? { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }
+                  : undefined
+              }
               ListEmptyComponent={
-                <ThemedText style={commonStyles.loading}>
-                  {itemMessage
-                    ? itemMessage.toString() + ', pull to refresh'
-                    : 'No items found, pull to refresh'}
-                </ThemedText>
+                <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                  <ThemedText type="subtitle" style={{ textAlign: 'center' }}>
+                    {itemMessage
+                      ? itemMessage.toString() + ', pull to refresh'
+                      : 'No items found, create your first one'}
+                  </ThemedText>
+                </View>
               }
               ListHeaderComponent={<View style={{ margin: 5 }} />}
               ListFooterComponent={<View style={{ margin: 5 }} />}

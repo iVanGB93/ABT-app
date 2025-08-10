@@ -1,8 +1,16 @@
-import React, { useState, useEffect, use } from 'react';
-import { Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+  Image,
+  Modal,
+} from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, usePathname } from 'expo-router';
-import { useAppDispatch, RootState } from '../../(redux)/store';
+import { useAppDispatch, RootState } from '../(redux)/store';
 import PhoneInput, {
   ICountry,
   getCountryByPhoneNumber,
@@ -24,43 +32,42 @@ import {
   lightSecondColor,
   lightTextColor,
   darkMainColor,
+  userImageDefault,
 } from '@/settings';
-import { setMessage, setProfile } from '../../(redux)/settingSlice';
+import { setMessage, setProfile } from '../(redux)/settingSlice';
 import CustomAddress from '@/components/CustomAddress';
+import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 
 interface Errors {
   phone?: string;
   address?: string;
 }
 
-export default function AccountDetails() {
+export default function OnboardingIndex() {
   const { color, darkTheme, profile } = useSelector((state: RootState) => state.settings);
   const { userName, token } = useSelector((state: RootState) => state.auth);
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [image, setImage] = useState<string | null>(profile.image || null);
+  const [image, setImage] = useState(userImageDefault);
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [updateProfile, setUpdateProfile] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [errors, setErrors] = useState<Errors>({});
   const [alertVisible, setAlertVisible] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+
   const dispatch = useAppDispatch();
+  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (token || userName) {
-      router.navigate('/accountDetails');
-    } else {
-      router.navigate('/(auth)/login');
-    }
-  }, [token, userName]);
-
-  useEffect(() => {
     if (!updateProfile) {
-      router.navigate('/(app)/(business)');
+      router.navigate('/(onboarding)/businessList');
     }
   }, [updateProfile]);
+
+  const handleImageOptions = () => setImageModalVisible(true);
 
   function handleSelectedCountry(country: ICountry) {
     setSelectedCountry(country);
@@ -144,7 +151,7 @@ export default function AccountDetails() {
       if (image !== null) {
         const uriParts = image.split('.');
         const fileType = uriParts[uriParts.length - 1];
-        const fileName = `${name}ProfilePicture.${fileType}`;
+        const fileName = `${profile.name}ProfilePicture.${fileType}`;
         formData.append('image', {
           uri: image,
           name: fileName,
@@ -176,6 +183,8 @@ export default function AccountDetails() {
         });
     }
   };
+
+  if (!updateProfile) return null;
 
   return (
     <ThemedView style={commonStyles.container}>
@@ -241,45 +250,36 @@ export default function AccountDetails() {
                 />
               </View>
               {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
-              {image && (
-                <Image
-                  source={{ uri: image }}
-                  style={[commonStyles.imageCircle, { marginTop: 15 }]}
-                />
-              )}
-              <View
-                style={{
-                  width: '100%',
-                  flexDirection: 'row',
-                  justifyContent: 'space-evenly',
-                  marginTop: 15,
-                }}
-              >
-                <TouchableOpacity
-                  style={[
-                    commonStyles.button,
-                    {
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                    },
-                  ]}
-                  onPress={() => handleImage()}
-                >
-                  <ThemedText style={{ color: color }}>Add image</ThemedText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    commonStyles.button,
-                    {
-                      borderColor: color,
-                      backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-                    },
-                  ]}
-                  onPress={() => takePhoto()}
-                >
-                  <ThemedText style={{ color: color }}>Take Photo</ThemedText>
-                </TouchableOpacity>
+              <View style={{ alignItems: 'center', marginTop: 15 }}>
+                <View style={{ position: 'relative' }}>
+                  <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>
+                    <Image source={{ uri: image }} style={commonStyles.imageCircle} />
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0,
+                        backgroundColor: color,
+                        borderRadius: 16,
+                        width: 32,
+                        height: 32,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 2,
+                        borderColor: darkTheme ? darkMainColor : lightMainColor,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 2,
+                        elevation: 3,
+                      }}
+                    >
+                      <Ionicons name="add" size={20} color="#fff" />
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
+
               {loading ? (
                 <ActivityIndicator style={commonStyles.loading} size="large" color={color} />
               ) : (
@@ -301,7 +301,7 @@ export default function AccountDetails() {
                   </TouchableOpacity>
                   <View style={commonStyles.linkSection}>
                     <ThemedText type="subtitle">Skip and </ThemedText>
-                    <TouchableOpacity onPress={() => router.navigate('/(app)/(business)')}>
+                    <TouchableOpacity onPress={() => router.navigate('/(onboarding)/businessList')}>
                       <ThemedText type="subtitle" style={{ color: color }}>
                         Continue!
                       </ThemedText>
@@ -319,6 +319,84 @@ export default function AccountDetails() {
         message={error}
         onClose={() => setAlertVisible(false)}
       />
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ThemedSecondaryView
+            style={{
+              borderRadius: 16,
+              padding: 24,
+              minWidth: 250,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+              Add Photo
+            </ThemedText>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginTop: 15,
+              }}
+            >
+              <Image source={{ uri: image }} style={commonStyles.imageCircle} />
+              <View>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    handleImage();
+                  }}
+                >
+                  <Ionicons name="image" size={20} color={color} />
+                  <ThemedText>Choose from Gallery</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    commonStyles.button,
+                    { borderColor: color, marginBottom: 10, width: 180 },
+                  ]}
+                  onPress={() => {
+                    setImageModalVisible(false);
+                    takePhoto();
+                  }}
+                >
+                  <Ionicons name="camera" size={20} color={color} />
+                  <ThemedText>Take Photo</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: 'red',
+                  marginTop: 15,
+                  backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                },
+              ]}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </ThemedSecondaryView>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }

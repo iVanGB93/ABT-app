@@ -1,18 +1,16 @@
-import React, { useEffect } from 'react';
-import { useRouter, Stack } from 'expo-router';
+import React from 'react';
+import { Redirect, Stack } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '../(redux)/store';
 
 
 export default function AuthLayout() {
   const { token, userName } = useSelector((state: RootState) => state.auth);
-  const router = useRouter();
+  const isAuthed = !!token && !!userName;
 
-  useEffect(() => {
-    if (!!token && !!userName) {
-      router.navigate('/(app)/(business)');
-    }
-  }, [token, userName]);
+  if (isAuthed) {
+    return <Redirect href="/(onboarding)" />;
+  }
 
   return (
     <Stack

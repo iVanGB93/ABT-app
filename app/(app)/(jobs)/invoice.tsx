@@ -34,7 +34,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function Invoice() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { client } = useSelector((state: RootState) => state.client);
+  const { client, clients } = useSelector((state: RootState) => state.client);
   const { job, invoice, charges } = useSelector((state: RootState) => state.job);
   const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 import {
+  businessIncomeImageDefault,
   darkMainColor,
   lightMainColor,
 } from '@/settings';
@@ -28,7 +28,7 @@ export default function BusinessIncomeUpdate() {
   const { extraIncome } = useSelector((state: RootState) => state.business);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [image, setImage] = useState<any>(null);
+  const [image, setImage] = useState(businessIncomeImageDefault);
   const [category, setCategory] = useState<string>('other');
   const [isLoading, setIsLoading] = useState(false);
   const params = useLocalSearchParams();
@@ -47,8 +47,6 @@ export default function BusinessIncomeUpdate() {
   }, [incomeId, extraIncome]);
 
   return (
-    <>
-          <StatusBar style={darkTheme ? 'light' : 'dark'} />
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={100}
@@ -89,6 +87,5 @@ export default function BusinessIncomeUpdate() {
         </ThemedSecondaryView>
       )}
     </KeyboardAvoidingView>
-    </>
   );
 };

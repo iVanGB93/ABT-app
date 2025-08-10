@@ -145,12 +145,19 @@ export default function Clients() {
                 );
               }}
               ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+              contentContainerStyle={
+                filteredClients.length === 0
+                  ? { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }
+                  : undefined
+              }
               ListEmptyComponent={
-                <ThemedText style={commonStyles.loading}>
-                  {clientMessage
-                    ? clientMessage.toString() + ', pull to refresh'
-                    : 'No clients found, pull to refresh or create a new one'}
-                </ThemedText>
+                <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                  <ThemedText type="subtitle" style={{ textAlign: 'center' }}>
+                    {clientMessage
+                      ? clientMessage.toString() + ', pull to refresh'
+                      : 'No clients found, create your first one'}
+                  </ThemedText>
+                </View>
               }
               ListHeaderComponent={<View style={{ margin: 5 }} />}
               ListFooterComponent={<View style={{ margin: 5 }} />}

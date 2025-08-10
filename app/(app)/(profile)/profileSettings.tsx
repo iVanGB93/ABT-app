@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import { RootState } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
-import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 import { darkMainColor, lightMainColor } from '@/settings';
@@ -25,8 +24,6 @@ export default function ProfileSettings() {
   const router = useRouter();
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={100}
@@ -61,6 +58,5 @@ export default function ProfileSettings() {
           </ThemedSecondaryView>
         )}
       </KeyboardAvoidingView>
-    </>
   );
 }

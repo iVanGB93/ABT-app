@@ -16,7 +16,6 @@ import Toast from 'react-native-toast-message';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import ClientCard from '@/components/clients/ClientCard';
 import JobCard from '@/components/jobs/JobCard';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { setJobs, jobFail, setJob } from '@/app/(redux)/jobSlice';
@@ -141,6 +140,16 @@ export default function ClientDetail() {
 
   const toggleImageSize = () => {
     setIsBig((prev) => !prev);
+  };
+
+  const handleCreateJob = () => {
+    router.push({
+      pathname: '/(app)/(jobs)/jobCreate',
+      params: {
+        clientId: String(client.id),
+        clientName: `${client.name} ${client.last_name}`,
+      },
+    });
   };
 
   return (
@@ -271,7 +280,7 @@ export default function ClientDetail() {
                 ListEmptyComponent={
                   <View>
                     <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>
-                      No jobs found, pull to refresh
+                      No jobs for {client.name}, create your first one
                     </ThemedText>
                   </View>
                 }
@@ -303,7 +312,7 @@ export default function ClientDetail() {
               backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
             },
           ]}
-          onPress={() => router.push('/(app)/(jobs)/jobCreate')}
+          onPress={() => handleCreateJob()}
         >
           <ThemedText>Create Job</ThemedText>
         </TouchableOpacity>

@@ -71,7 +71,6 @@ export default function Profile() {
 
   return (
     <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <ThemedView style={commonStyles.container}>
         <View style={commonStyles.tabHeader}>
         </View>

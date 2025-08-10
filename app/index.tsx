@@ -64,7 +64,7 @@ export default function Index() {
 
   return (
     isAuthenticated ? (
-      <Redirect href={'/(app)/(business)'}/>
+      <Redirect href={'/(onboarding)'}/>
     ) : (
       <Redirect href={'/(auth)/login'}/>
     )

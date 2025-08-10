@@ -10,7 +10,7 @@ import { RootState } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 
-import { darkMainColor, lightMainColor } from '@/settings';
+import { darkMainColor, lightMainColor, userImageDefault } from '@/settings';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStyles } from '@/constants/commonStyles';
 import ClientForm from '@/components/clients/ClientForm';
@@ -27,7 +27,7 @@ export default function ClientUpdate() {
   const [phone, setPhone] = useState(client.phone);
   const [email, setEmail] = useState(client.email);
   const [address, setAddress] = useState(client.address);
-  const [image, setImage] = useState<string | null>(client.image || null);
+  const [image, setImage] = useState<string | null>(client.image || userImageDefault);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 

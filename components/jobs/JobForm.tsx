@@ -13,13 +13,19 @@ import {
 import { useSelector } from 'react-redux';
 import SelectDropdown from 'react-native-select-dropdown';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
-import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
+import {
+  darkMainColor,
+  darkTextColor,
+  jobImageDefault,
+  lightMainColor,
+  lightTextColor,
+} from '@/settings';
 import axiosInstance from '@/axios';
 import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { clientSetMessage, setClients } from '@/app/(redux)/clientSlice';
@@ -27,6 +33,7 @@ import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
 import CustomAddress from '../CustomAddress';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
+import { commonStylesForm } from '@/constants/commonStylesForm';
 
 interface JobFormProps {
   action?: any;
@@ -47,14 +54,13 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
   const { clients } = useSelector((state: RootState) => state.client);
   const { job } = useSelector((state: RootState) => state.job);
   const [clientsNames, setClientsNames] = useState<any[]>([]);
-  const [client, setClient] = useState<any | undefined>();
+  const [client, setClient] = useState<any | undefined>(); // objeto cliente seleccionado
+  const [clientSelected, setClientSelected] = useState<string | undefined>(); // "Nombre Apellido"
   const [description, setDescription] = useState(action === 'new' ? '' : job.description);
   const [address, setAddress] = useState(action === 'new' ? '' : job.address);
   const [price, setPrice] = useState(action === 'new' ? '' : job.price);
   const [image, setImage] = useState(
-    action === 'new'
-      ? 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/jobDefault.jpg'
-      : { uri: job.image ? job.image : 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/jobDefault.jpg' },
+    action === 'new' ? jobImageDefault : { uri: job.image ? job.image : jobImageDefault },
   );
   const [error, setError] = useState('');
   const [imageModalVisible, setImageModalVisible] = useState(false);
@@ -63,6 +69,10 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
   const [isEnabled, setIsEnabled] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { clientId, clientName } = useLocalSearchParams<{
+    clientId?: string;
+    clientName?: string;
+  }>();
 
   const handleImageOptions = () => setImageModalVisible(true);
 
@@ -72,12 +82,13 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       .then(function (response) {
         Vibration.vibrate(15);
         if (response.data) {
-          dispatch(setClients(response.data));
-          setIsLoading(false);
+          if (response.data.length > 0) {
+            dispatch(setClients(response.data));
+          }
         } else {
           dispatch(clientSetMessage(response.data.message));
-          setIsLoading(false);
         }
+        setIsLoading(false);
       })
       .catch(function (error) {
         Vibration.vibrate(60);
@@ -99,34 +110,72 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       });
   };
 
+  // Normaliza un nombre completo para comparar
+  const normalizeFullName = (full?: string) =>
+    (full ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+
+  // Devuelve el cliente seleccionado buscando por nombre+apellido
+  const getSelectedClient = () => {
+    const target = typeof clientSelected === 'string' ? clientSelected : '';
+    const normalized = normalizeFullName(target);
+    return clients.find(
+      (c: any) => normalizeFullName(`${c?.name ?? ''} ${c?.last_name ?? ''}`) === normalized,
+    );
+  };
+
+  // Carga/actualiza lista de nombres y sincroniza el cliente seleccionado si existe
   useEffect(() => {
     if (action === 'new' && clients.length === 0) {
       getClients();
     } else {
-      const clientsList = clients.map((item: { name: string }) => item.name);
-      setClientsNames(clientsList);
+      const list = clients.map(
+        (item: { name: string; last_name: string }) => `${item.name} ${item.last_name}`,
+      );
+      setClientsNames(list);
+      // si ya hay seleccionado por nombre, sincroniza el objeto cliente
+      if (clientSelected) {
+        const found = getSelectedClient();
+        setClient(found);
+      }
     }
   }, [clients]);
 
-  const toggleSwitch = () => {
-    setIsEnabled((previousState) => !previousState);
-    if (!isEnabled) {
-      setAddress(clientAddress());
-    } else {
-      setAddress(address);
+  // Preselección desde params (nombre) al venir de Client
+  useEffect(() => {
+    if (action === 'new' && clientName && typeof clientName === 'string') {
+      setClientSelected(clientName);
     }
+  }, [action, clientName]);
+
+  // Cuando cambia el nombre seleccionado o el listado, sincroniza el objeto cliente
+  useEffect(() => {
+    const found = getSelectedClient();
+    setClient(found);
+    // si el switch está activo, actualiza la dirección automáticamente
+    if (isEnabled && found?.address) {
+      setAddress(found.address);
+    }
+  }, [clientSelected, clients, isEnabled]);
+
+  const toggleSwitch = () => {
+    const nextEnabled = !isEnabled;
+    setIsEnabled(nextEnabled);
+    if (nextEnabled) {
+      // al activar, usa la dirección del cliente si existe
+      const found = getSelectedClient();
+      if (found?.address && found.address.trim() !== '') {
+        setAddress(found.address);
+      }
+    }
+    // al desactivar, mantiene la dirección actual para que el usuario pueda editarla
   };
 
+  // Devuelve la dirección del cliente seleccionado o mensajes adecuados
   const clientAddress = () => {
-    let clientA = clients.find((clientA: { name: string }) => clientA.name === client);
-    if (clientA !== undefined) {
-      if (clientA.address === '') {
-        return 'no address saved';
-      }
-      return clientA.address;
-    } else {
-      return 'no client selected';
-    }
+    const found = client ?? getSelectedClient();
+    if (!found) return 'no client selected';
+    const addr = (found.address ?? '').toString().trim();
+    return addr ? addr : 'no address saved';
   };
 
   const handleImage = async () => {
@@ -165,7 +214,6 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
     let errors: Errors = {};
     if (action === 'new') if (!client) errors.client = 'Client is required';
     if (!description) errors.description = 'Description is required';
-    //if (!address) errors.address = 'Address is required';
     if (!price) errors.price = 'Price is required';
     setErrors(errors);
     return Object.keys(errors).length === 0;
@@ -177,7 +225,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       const formData = new FormData();
       formData.append('action', action);
       formData.append('id', job.id);
-      formData.append('name', client);
+      formData.append('name', client ? client.name : '');
       formData.append('business', business.name);
       formData.append('description', description);
       formData.append('price', price);
@@ -226,8 +274,9 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           <View style={{ flexDirection: 'row' }}>
             <SelectDropdown
               data={clientsNames}
-              onSelect={(selectedItem: string, index: number) => {
-                setClient(selectedItem);
+              defaultValue={clientSelected}
+              onSelect={(selectedItem: string) => {
+                setClientSelected(selectedItem); // sincroniza nombre; efectos actualizan objeto y address si corresponde
               }}
               renderButton={(selectedItem, isOpened) => {
                 return (
@@ -238,7 +287,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
                     ]}
                   >
                     <ThemedText style={styles.dropdownButtonTxtStyle}>
-                      {selectedItem || 'Select the client'}
+                      {selectedItem || clientSelected || 'Select the client'}
                     </ThemedText>
                     <Ionicons
                       name={isOpened ? 'chevron-up' : 'chevron-down'}
@@ -278,13 +327,18 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           {errors.client ? <Text style={commonStyles.errorMsg}>{errors.client}</Text> : null}
         </>
       ) : null}
-      <ThemedText style={commonStyles.text_action} type="subtitle">
+      <ThemedText style={commonStylesForm.label} type="subtitle">
         Description
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View
+        style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+      >
         <Ionicons name="text" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder={description ? description : "Enter job's description"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={description}
@@ -294,7 +348,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       {errors.description ? <Text style={commonStyles.errorMsg}>{errors.description}</Text> : null}
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <ThemedText style={commonStyles.text_action} type="subtitle">
+        <ThemedText style={commonStylesForm.label} type="subtitle">
           Address
         </ThemedText>
         {action === 'update' ? null : (
@@ -318,14 +372,18 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
         )}
       </View>
       {isEnabled ? (
-        <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+        <View
+          style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+        >
           <Ionicons name="location" color={darkTheme ? darkTextColor : lightTextColor} />
-          <ThemedText style={[commonStyles.textInput, { marginLeft: 10, height: 26 }]}>
+          <ThemedText style={[commonStylesForm.textInput, { marginLeft: 10, height: 26 }]}>
             {clientAddress()}
           </ThemedText>
         </View>
       ) : (
-        <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+        <View
+          style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+        >
           <Ionicons name="location" color={darkTheme ? darkTextColor : lightTextColor} />
           <CustomAddress
             placeholder={address ? address : 'Job address'}
@@ -336,13 +394,18 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       )}
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
 
-      <ThemedText style={[commonStyles.text_action, { marginTop: 5 }]} type="subtitle">
+      <ThemedText style={[commonStylesForm.label, { marginTop: 5 }]} type="subtitle">
         Price
       </ThemedText>
-      <View style={[commonStyles.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View
+        style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+      >
         <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
         <TextInput
-          style={[commonStyles.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder={price ? String(price) : "Enter job's price"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={price}
@@ -446,7 +509,10 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
                 marginTop: 15,
               }}
             >
-              <Image source={{ uri: typeof image === 'string' ? image : image.uri }} style={commonStyles.imageSquare} />
+              <Image
+                source={{ uri: typeof image === 'string' ? image : image.uri }}
+                style={commonStyles.imageSquare}
+              />
               <View>
                 <TouchableOpacity
                   style={[

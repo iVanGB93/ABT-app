@@ -6,9 +6,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { darkMainColor, lightMainColor } from '@/settings';
+import { businessExpenseImageDefault, darkMainColor, lightMainColor } from '@/settings';
 import { RootState } from '@/app/(redux)/store';
-import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
@@ -25,7 +24,7 @@ export default function BusinessExpenseUpdate() {
   const { extraExpenses } = useSelector((state: RootState) => state.business);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [image, setImage] = useState<any>(null);
+  const [image, setImage] = useState(businessExpenseImageDefault);
   const [category, setCategory] = useState<string>('other');
   const [isDeductible, setIsDeductible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,8 +50,6 @@ export default function BusinessExpenseUpdate() {
   }, [expenseId, extraExpenses]);
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={100}
@@ -100,6 +97,5 @@ export default function BusinessExpenseUpdate() {
           </ThemedSecondaryView>
         )}
       </KeyboardAvoidingView>
-    </>
   );
 }

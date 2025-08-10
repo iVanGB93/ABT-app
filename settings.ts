@@ -1,4 +1,4 @@
-export const production: boolean = true;
+export const production: boolean = false;
 
 export const baseURL: string = production
   ? 'https://abt.qbared.com/api/'
@@ -17,3 +17,10 @@ export const darkTextSecondColor: string = '#a0a0a0';
 export const lightMainColor: string = '#edebeb';
 export const lightSecondColor: string = '#f5f5f5';
 export const lightTextColor: string = '#333333';
+
+export const userImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/userDefault.jpg';
+export const jobImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/jobDefault.jpg';
+export const spentImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/spentDefault.jpg';
+export const itemImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/itemDefault.jpg';
+export const businessExpenseImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/expenseDefault.jpg';
+export const businessIncomeImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/incomeDefault.jpg';

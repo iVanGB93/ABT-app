@@ -15,7 +15,6 @@ import { darkMainColor, lightMainColor } from '@/settings';
 import { Ionicons } from '@expo/vector-icons';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import ItemForm from '@/components/items/itemForm';
-import { StatusBar } from 'expo-status-bar';
 import { ThemedView } from '@/components/ThemedView';
 
 
@@ -25,8 +24,6 @@ export default function ItemUpdate() {
   const router = useRouter();
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={100}
@@ -61,6 +58,5 @@ export default function ItemUpdate() {
           </ThemedSecondaryView>
         )}
       </KeyboardAvoidingView>
-    </>
   );
 }

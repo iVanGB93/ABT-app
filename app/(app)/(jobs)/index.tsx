@@ -94,7 +94,7 @@ export default function Jobs() {
         job.description.toLowerCase().includes(search.toLowerCase()) ||
         job.client.toLowerCase().includes(search.toLowerCase()),
     )
-    .sort((a, b) => a.description.localeCompare(b.description));
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   const handlePressable = (id: string) => {
     let job = jobs.find((job: { id: string }) => job.id === id);
@@ -104,7 +104,6 @@ export default function Jobs() {
 
   return (
     <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <ThemedView style={commonStyles.container}>
         <View style={commonStyles.tabHeader}>
           <ThemedText type="subtitle">Jobs</ThemedText>
@@ -160,19 +159,20 @@ export default function Jobs() {
                   </TouchableOpacity>
                 );
               }}
-              ItemSeparatorComponent={() => (
-                <View
-                  style={{
-                    height: 5,
-                  }}
-                />
-              )}
+              ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+              contentContainerStyle={
+                filteredJobs.length === 0
+                  ? { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }
+                  : undefined
+              }
               ListEmptyComponent={
-                <ThemedText style={commonStyles.loading}>
-                  {jobError
-                    ? jobError.toString() + ', pull to refresh'
-                    : 'No jobs found, pull to refresh or create a new one'}
-                </ThemedText>
+                <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                  <ThemedText type="subtitle" style={{ textAlign: 'center' }}>
+                    {jobError
+                      ? jobError.toString() + ', pull to refresh'
+                      : 'No jobs found, create your first one'}
+                  </ThemedText>
+                </View>
               }
               ListHeaderComponent={<View style={{ margin: 5 }} />}
               ListFooterComponent={<View style={{ margin: 5 }} />}
