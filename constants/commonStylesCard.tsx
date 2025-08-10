@@ -7,15 +7,14 @@ export const commonStylesCards = StyleSheet.create({
     borderBottomWidth: 1,
     borderRightWidth: 1,
     padding: 5,
-    paddingTop: 0,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 2, height: 2 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
       },
       android: {
-        elevation: 5,
+        elevation: 4,
       },
     }),
   },
@@ -54,6 +53,14 @@ export const commonStylesCards = StyleSheet.create({
     height: 80,
     alignSelf: 'center',
     borderRadius: 10,
+  },
+  businessLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
   centeredView: {
     flex: 1,

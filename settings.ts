@@ -10,7 +10,7 @@ export const baseImageURL: string = production
 export const version: string = '1.0.12';
 
 export const darkMainColor: string = '#000000';
-export const darkSecondColor: string = '#23272e';
+export const darkSecondColor: string = '#2A2A2A';
 export const darkThirdColor: string = '#333333';
 export const darkTextColor: string = '#e0e0e0';
 export const darkTextSecondColor: string = '#a0a0a0';

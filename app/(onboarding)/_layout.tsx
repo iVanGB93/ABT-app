@@ -24,7 +24,7 @@ export default function OnboardingLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen options={{ animation: 'slide_from_bottom' }} name="index" />
+      <Stack.Screen options={{ animation: 'fade' }} name="index" />
       <Stack.Screen options={{ animation: 'fade' }} name="businessList" />
       <Stack.Screen options={{ animation: 'fade' }} name="businessCreate" />
     </Stack>

@@ -24,6 +24,7 @@ import BusinessCard from '@/components/business/BusinessCard';
 import { commonStyles } from '@/constants/commonStyles';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
 import { authLogout } from '../../(redux)/authSlice';
+import { commonStylesCards } from '@/constants/commonStylesCard';
 
 export default function IndexBusiness() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -110,12 +111,12 @@ export default function IndexBusiness() {
           <Ionicons name="person-outline" size={24} color={color} />
         </TouchableOpacity>
       </View>
-      <View style={[styles.businessCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
+      <View style={[commonStylesCards.card, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
         <View style={styles.businessHeader}>
           {business?.logo ? (
-            <Image source={{ uri: business.logo }} style={styles.businessLogo} />
+            <Image source={{ uri: business.logo }} style={commonStylesCards.businessLogo} />
           ) : (
-            <View style={[styles.businessLogo, { backgroundColor: color + '20' }]}>
+            <View style={[commonStylesCards.businessLogo, { backgroundColor: color + '20' }]}>
               <Ionicons name="briefcase-outline" size={32} color={color} />
             </View>
           )}
@@ -285,28 +286,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  businessCard: {
-    marginHorizontal: 20,
-    marginBottom: 15,
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
   businessHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  businessLogo: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
   },
   businessInfo: {
     flex: 1,

@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, Linking, Image, ActivityIndicator, Modal, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Linking,
+  Image,
+  ActivityIndicator,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import { baseImageURL } from "@/settings";
+import { baseImageURL } from '@/settings';
 import { darkTextColor, lightTextColor } from '../../settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { setBusiness } from '@/app/(redux)/settingSlice';
-
+import { Ionicons } from '@expo/vector-icons';
 
 interface BusinessCardProps {
   logo: any;
@@ -25,101 +33,79 @@ interface BusinessCardProps {
   created_at: any;
   updated_at: any;
   inDetail?: boolean;
-};
+}
 
-export default function BusinessCard({logo, id, name, description, address, phone, email, owners, website, created_at, updated_at, inDetail}: BusinessCardProps) {
-    const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-    const { businesses } = useSelector((state: RootState) => state.business);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [imageError, setImageError] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [isBig, setIsBig] = useState(false);
-    const router = useRouter();
-    const dispatch = useAppDispatch();
+export default function BusinessCard({
+  logo,
+  id,
+  name,
+  description,
+  address,
+  phone,
+  email,
+  owners,
+  website,
+  created_at,
+  updated_at,
+  inDetail,
+}: BusinessCardProps) {
+  const { color, darkTheme } = useSelector((state: RootState) => state.settings);
+  const { businesses } = useSelector((state: RootState) => state.business);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isBig, setIsBig] = useState(false);
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
-    const editBusiness = (id: string) => {
-        let business = businesses.find((business: { id: string; }) => business.id === id);
-        dispatch(setBusiness(business));
-        router.navigate('/(app)/(business)/businessUpdate');
-    };
+  const editBusiness = (id: string) => {
+    let business = businesses.find((business: { id: string }) => business.id === id);
+    dispatch(setBusiness(business));
+    router.navigate('/(app)/(business)/businessUpdate');
+  };
 
-    const detailBusiness = (id: string) => {
-        let business = businesses.find((business: { id: string; }) => business.id === id);
-        dispatch(setBusiness(business));
-        router.navigate('/(app)/(business)/businessDetails');
-    };
+  const detailBusiness = (id: string) => {
+    let business = businesses.find((business: { id: string }) => business.id === id);
+    dispatch(setBusiness(business));
+    router.navigate('/(app)/(business)/businessDetails');
+  };
 
-    const toggleImageSize = () => {
-        setIsBig((prev) => !prev);
-    };
+  const toggleImageSize = () => {
+    setIsBig((prev) => !prev);
+  };
 
   return (
-    <ThemedSecondaryView style={[commonStylesCards.card, {borderColor: color, shadowColor: darkTheme ? '#fff' : '#000'}]}>
-      <View style={[commonStylesCards.nameContainer, {borderBottomColor:darkTheme ? darkTextColor: lightTextColor}]}>
-          <Text style={[commonStylesCards.name, {color:darkTheme ? darkTextColor: lightTextColor}]}>{name}</Text>
-          <Image 
-          style={{width: 30, height: 30, borderRadius: 75}} 
-          source={{ uri: logo }}
-          onError={() => setImageError(true)}
-          />
-      </View>
-      <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Address: </Text>
-          <TouchableOpacity onPress={() => Linking.openURL(`https://www.google.com/maps?q=${address}`)}>
-            <ThemedText style={commonStylesCards.dataText}>{address ? address : 'No address saved'}</ThemedText>
-          </TouchableOpacity>
-      </View>
-      <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Phone: </Text>
-          <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}>
-            <ThemedText style={commonStylesCards.dataText}>{phone ? phone : 'No phone saved'}</ThemedText>
-          </TouchableOpacity>
-      </View>
-      <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Email: </Text>
-          <TouchableOpacity onPress={() => Linking.openURL(`mailto:${email}`)}>
-            <ThemedText style={commonStylesCards.dataText}>{email ? email : 'No email saved'}</ThemedText>
-          </TouchableOpacity>
-      </View>
-      <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Website: </Text>
-          <ThemedText style={commonStylesCards.dataText}>{website ? website : 'No website saved'}</ThemedText>
-      </View>
-      <View style={commonStylesCards.dataContainer}>
-          <Text style={[commonStylesCards.LabelText, {color:darkTheme ? darkTextColor: lightTextColor}]}>Owners: </Text>
-          <ThemedText style={commonStylesCards.dataText}>{owners && owners.length > 0 ? owners.join(', ') : 'No owners saved'}</ThemedText>
-      </View>
-      {inDetail ?
-      null
-      : 
-      <View style={[commonStylesCards.dataContainer, {padding: 5, justifyContent: 'space-evenly'}]}>
-        <TouchableOpacity style={[commonStylesCards.button, {borderColor: color}]} onPress={() => detailBusiness(id)}>
-            <ThemedText type="subtitle" style={{color: color}}>Details</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={[commonStylesCards.button, {borderColor: color}]} onPress={() => editBusiness(id)}>
-            <ThemedText type="subtitle" style={{color: color}}>Edit</ThemedText>
-          </TouchableOpacity>
-      </View>
-      }
-      <Modal 
-        transparent={true} 
-        animationType="fade"
-        visible={isBig}
-        >
-        <View style={commonStylesCards.modalContainer}>
-          <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
-            <Image
-              source={{ uri: logo }}
-              style={commonStylesCards.expandedImage}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-          style={[commonStylesCards.button, {marginHorizontal: 5, flex: 1}]}
-          onPress={() => setIsBig(!isBig)}>
-            <Text style={{color:'white', textAlign: 'center', fontSize: 20}}>Close</Text>
-          </TouchableOpacity>
+    <ThemedSecondaryView
+      style={[
+        commonStylesCards.card,
+        { borderColor: color, shadowColor: darkTheme ? '#fff' : '#000' },
+      ]}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {logo ? (
+          <Image source={{ uri: logo }} style={commonStylesCards.businessLogo} />
+        ) : (
+          <View style={[commonStylesCards.businessLogo, { backgroundColor: color + '20' }]}>
+            <Ionicons name="briefcase-outline" size={32} color={color} />
+          </View>
+        )}
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <ThemedText type="subtitle">{name}</ThemedText>
+          {phone && (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="call-outline" size={16} color={color} />
+              <ThemedText type="default">{phone}</ThemedText>
+            </View>
+          )}
+          {address && (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="location-outline" size={16} color={color} />
+              <ThemedText type="default">{address}</ThemedText>
+            </View>
+          )}
         </View>
-      </Modal>
+        <Ionicons name="chevron-forward" size={16} color={darkTheme ? '#666' : '#999'} />
+      </View>
     </ThemedSecondaryView>
-  )
-};
+  );
+}

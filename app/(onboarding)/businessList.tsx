@@ -29,7 +29,6 @@ export default function IndexBusiness() {
   const hasBusiness = !!business && Object.keys(business).length > 0;
 
   const getBusinesses = async () => {
-    if (hasBusiness) return; // evita cargar lista si ya hay uno seleccionado
     setIsLoading(true);
     await axiosInstance
       .get(`business/${userName}/`)
@@ -133,10 +132,10 @@ export default function IndexBusiness() {
           </TouchableOpacity>
         </>
       ) : isLoading ? (
-        <ActivityIndicator color={color} size="large" />
+        <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
       ) : (
-        <>
-          <ThemedText type="title">Select a business</ThemedText>
+        <View style={{ flex: 1, width: '100%' }}>
+          <ThemedText type="title" style={{ margin: 10 }}>Select a business</ThemedText>
           <FlatList
             data={businesses}
             renderItem={({ item }) => {
@@ -198,7 +197,7 @@ export default function IndexBusiness() {
           >
             <Ionicons name="add" size={36} color="#FFF" />
           </TouchableOpacity>
-        </>
+        </View>
       )}
     </ThemedView>
   );
