@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
 
@@ -30,27 +30,38 @@ import {
 import { commonStyles } from '@/constants/commonStyles';
 import { businessSetMessage, setExtraExpenses, setExtraIncome } from '@/app/(redux)/businessSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
-import axiosInstance from '@/axios';
 import ExtrasCard from '@/components/business/ExtrasCard';
 import { Ionicons } from '@expo/vector-icons';
 import { jobFail, setJobs } from '@/app/(redux)/jobSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
 import { authLogout } from '@/app/(redux)/authSlice';
+import { useBusinessExtras } from '@/hooks/useBusinessExtras';
+import { useJobs } from '@/hooks/useJobs';
+import { useCallback } from 'react';
 
 export default function BusinessDetails() {
   const [activeTab, setActiveTab] = useState<'expenses' | 'income'>('expenses');
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { jobs } = useSelector((state: RootState) => state.job);
-  const [isLoadingJob, setIsLoadingJob] = useState(true);
-  const [difference, setDifference] = useState(0);
-  const { businessMessage, extraExpenses, extraIncome } = useSelector(
-    (state: RootState) => state.business,
-  );
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  // Use custom hooks
+  const { extraExpenses, extraIncome, loading: extrasLoading, refresh: refreshExtras } = useBusinessExtras();
+  const { jobs, loading: jobsLoading, refresh: refreshJobs } = useJobs();
+  const { businessMessage } = useSelector((state: RootState) => state.business);
+
+  const isLoading = extrasLoading;
+  const isLoadingJob = jobsLoading;
+
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshExtras();
+      refreshJobs();
+    }, [refreshExtras, refreshJobs])
+  );
 
   // Financial calculations
   const totalJobs = Array.isArray(jobs)
@@ -80,58 +91,6 @@ export default function BusinessDetails() {
     dispatch(setBusiness({}));
   };
 
-  const getExtras = async () => {
-    await axiosInstance
-      .get(`business/extras/${business.name}/`)
-      .then(function (response) {
-        if (response.data) {
-          dispatch(setExtraExpenses(response.data.extra_expenses));
-          dispatch(setExtraIncome(response.data.extra_income));
-        } else {
-          dispatch(businessSetMessage(response.data.message));
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        console.error('Error fetching extras:', error);
-        if (typeof error.response === 'undefined') {
-          dispatch(businessSetMessage('Error fetching extras, undefined'));
-        } else {
-          if (error.response.status === 401) {
-            dispatch(setBusiness([]));
-            dispatch(authLogout());
-            router.replace('/');
-          } else {
-            dispatch(businessSetMessage('Error fetching extras, undefined'));
-          }
-        }
-        setIsLoading(false);
-      });
-  };
-
-  const getJobs = async () => {
-    await axiosInstance
-      .get(`jobs/list/${business.name}/`)
-      .then(function (response) {
-        if (response.data) {
-          dispatch(setJobs(response.data));
-        } else {
-          dispatch(jobFail(response.data.message));
-        }
-        setIsLoadingJob(false);
-      })
-      .catch(function (error) {
-        console.error('Error fetching jobs:', error);
-        try {
-          const message = error.data.message;
-          dispatch(jobFail(message));
-        } catch (e) {
-          dispatch(jobFail('Error getting your jobs.'));
-        }
-        setIsLoadingJob(false);
-      });
-  };
-
   useEffect(() => {
     if (businessMessage) {
       Toast.show({
@@ -143,35 +102,12 @@ export default function BusinessDetails() {
     }
   }, [businessMessage]);
 
-  useEffect(() => {
-    getExtras();
-    getJobs();
-  }, []);
-
-  useEffect(() => {
-    if (Array.isArray(jobs) && Array.isArray(extraIncome) && Array.isArray(extraExpenses)) {
-      const totalJobs = jobs.reduce((sum: number, job: any) => sum + (Number(job.price) || 0), 0);
-      const totalIncome = extraIncome.reduce(
-        (sum: any, item: any) => sum + (Number(item.amount) || 0),
-        0,
-      );
-      const totalExpenses = extraExpenses.reduce(
-        (sum: any, item: any) => sum + (Number(item.amount) || 0),
-        0,
-      );
-      setDifference(totalIncome + totalJobs - totalExpenses);
-    } else {
-      setDifference(0);
-    }
-  }, [jobs, extraIncome, extraExpenses]);
-
   return (
-    <ScrollView
+    <View
       style={[
         styles.container,
         { backgroundColor: darkTheme ? darkMainColor : lightMainColor, marginTop: 40 },
       ]}
-      showsVerticalScrollIndicator={false}
     >
       {/* Financial Overview */}
       <View style={styles.statsContainer}>
@@ -334,14 +270,17 @@ export default function BusinessDetails() {
                       />
                     </TouchableOpacity>
                   )}
-                  scrollEnabled={false}
-                  ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-                  ListHeaderComponent={<View style={{ height: 8 }} />}
-                  ListFooterComponent={<View style={{ height: 20 }} />}
+                  scrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                  ListFooterComponent={<View style={{ height: 100 }} />}
                   refreshControl={
                     <RefreshControl
                       refreshing={isLoading}
-                      onRefresh={() => getExtras()}
+                      onRefresh={() => {
+                        refreshExtras();
+                        refreshJobs();
+                      }}
                       colors={[color]}
                       tintColor={color}
                     />
@@ -353,7 +292,6 @@ export default function BusinessDetails() {
         </View>
       </View>
 
-      {/* Floating Action Button */}
       <TouchableOpacity
         style={[
           commonStyles.createButton,
@@ -370,7 +308,6 @@ export default function BusinessDetails() {
         <Ionicons name="add" size={36} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* Details Modal */}
       <Modal
         visible={detailsModalVisible}
         animationType="slide"
@@ -411,7 +348,7 @@ export default function BusinessDetails() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -439,7 +376,7 @@ const styles = StyleSheet.create({
   profitCard: {
     padding: 20,
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 5,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
   },
@@ -463,7 +400,7 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 5,
   },
   statCard: {
     flex: 1,
@@ -501,7 +438,7 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 5,
   },
   quickActionCard: {
     flexDirection: 'row',
@@ -536,14 +473,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   tabsContainer: {
-    marginBottom: 24,
+    marginBottom: 5,
   },
   tabsHeader: {
-    marginBottom: 16,
+    marginBottom: 5,
   },
   tabBar: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 5,
   },
   tab: {
     flex: 1,
@@ -564,7 +501,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   tabContent: {
-    minHeight: 200,
+    flex: 1,
+    maxHeight: 400,
   },
   centeredContainer: {
     alignItems: 'center',

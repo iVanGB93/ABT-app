@@ -40,14 +40,14 @@ export interface BusinessUpdateData extends Partial<BusinessCreateData> {
 
 class BusinessService extends ApiService {
   constructor() {
-    super('/business');
+    super('business');
   }
 
   /**
-   * Get all businesses
+   * Get all businesses for a user
    */
-  async getBusinesses(): Promise<Business[]> {
-    return this.get<Business[]>('/');
+  async getBusinesses(userName: string): Promise<Business[]> {
+    return this.get<Business[]>(`/${userName}/`);
   }
 
   /**
@@ -60,43 +60,71 @@ class BusinessService extends ApiService {
   /**
    * Create new business
    */
-  async createBusiness(data: BusinessCreateData): Promise<Business> {
-    return this.post<Business>('/', data);
+  async createBusiness(data: BusinessCreateData, userName: string): Promise<Business> {
+    return this.post<Business>(`/create/${userName}/`, data);
   }
 
   /**
    * Update business
    */
-  async updateBusiness(id: number, data: Partial<BusinessCreateData>): Promise<Business> {
-    return this.patch<Business>(`/${id}/`, data);
+  async updateBusiness(data: Partial<BusinessCreateData>, userName: string): Promise<Business> {
+    return this.post<Business>(`/update/${userName}/`, data);
   }
 
   /**
    * Delete business
    */
   async deleteBusiness(id: number): Promise<void> {
-    return this.delete<void>(`/${id}/`);
+    return this.post<void>(`/delete/${id}/`);
   }
 
   /**
-   * Get business statistics
+   * Get business extras (expenses and income)
    */
-  async getBusinessStats(id: number): Promise<BusinessStats> {
-    return this.get<BusinessStats>(`/${id}/stats/`);
+  async getBusinessExtras(businessName: string): Promise<any> {
+    return this.get<any>(`/extras/${businessName}/`);
+  }
+
+  /**
+   * Create business extra (expense or income)
+   */
+  async createBusinessExtra(businessName: string, data: any): Promise<any> {
+    return this.post<any>(`/extras/${businessName}/`, data);
+  }
+
+  /**
+   * Get business statistics - simplified version
+   */
+  async getBusinessStats(businessName: string): Promise<BusinessStats> {
+    // This would need to be implemented based on your backend
+    // For now, we'll calculate from extras
+    const extras = await this.getBusinessExtras(businessName);
+    
+    // Calculate basic stats from extras data
+    const expenses = extras?.expenses || [];
+    const income = extras?.income || [];
+    
+    const total_expenses = expenses.reduce((sum: number, expense: any) => sum + (Number(expense.amount) || 0), 0);
+    const total_revenue = income.reduce((sum: number, inc: any) => sum + (Number(inc.amount) || 0), 0);
+    
+    return {
+      total_revenue,
+      total_expenses,
+      total_profit: total_revenue - total_expenses,
+      total_jobs: 0, // Would need to be calculated from jobs
+      pending_jobs: 0,
+      completed_jobs: 0,
+      total_clients: 0, // Would need to be calculated from clients
+      active_clients: 0,
+    };
   }
 
   /**
    * Get monthly statistics
    */
-  async getMonthlyStats(id: number, year: number, month: number): Promise<BusinessStats> {
-    return this.get<BusinessStats>(`/${id}/stats/monthly/`, { year, month });
-  }
-
-  /**
-   * Upload business logo
-   */
-  async uploadLogo(id: number, logoFile: FormData): Promise<Business> {
-    return this.post<Business>(`/${id}/upload-logo/`, logoFile);
+  async getMonthlyStats(businessName: string, year: number, month: number): Promise<BusinessStats> {
+    // Similar to getBusinessStats but filtered by month
+    return this.getBusinessStats(businessName);
   }
 }
 

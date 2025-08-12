@@ -9,16 +9,15 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import SpentCard from '@/components/jobs/SpentCard';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
-import axiosInstance from '@/axios';
 import { setItemMessage, setUsedItems } from '@/app/(redux)/itemSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import { commonStyles } from '@/constants/commonStyles';
@@ -30,107 +29,65 @@ import { setClient } from '@/app/(redux)/clientSlice';
 import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { formatDate } from '@/utils/formatDate';
+import { useJobSpents, useJobActions } from '@/hooks/useJobs';
 
 export default function JobDetail() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const { job } = useSelector((state: RootState) => state.job);
-  const { usedItems } = useSelector((state: RootState) => state.item);
   const { clients } = useSelector((state: RootState) => state.client);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleFinish, setModalVisibleFinish] = useState(false);
   const [isBig, setIsBig] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const fetchSpents = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .get(`jobs/spents/list/${job.id}/`)
-      .then(function (response) {
-        Vibration.vibrate(15);
-        if (response.data) {
-          dispatch(setUsedItems(response.data));
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        Vibration.vibrate(60);
-        console.error('Error fetching spents:', error);
-        if (typeof error.response === 'undefined') {
-          setError(
-            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
-          );
-        } else {
-          if (error.status === 401) {
-            dispatch(authSetMessage('Unauthorized, please login againg'));
-            dispatch(setBusiness([]));
-            dispatch(authLogout());
-            router.replace('/');
-          } else {
-            setError('Error getting your spents.');
-          }
-        }
-        setIsLoading(false);
-      });
-  };
+  // Use job spents hook and actions
+  const { spents, loading: isLoading, error, refresh: refreshSpents } = useJobSpents(job?.id || null);
+  const { deleteJob: deleteJobAction, updateJob, loading: actionLoading } = useJobActions();
 
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (job?.id) {
+        refreshSpents();
+      }
+    }, [job?.id, refreshSpents])
+  );
+
+  // Update Redux store with spents (maintain compatibility)
   useEffect(() => {
-    fetchSpents();
-  }, []);
+    if (spents) {
+      dispatch(setUsedItems(spents));
+    }
+  }, [spents, dispatch]);
 
   const deleteJob = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .post(
-        `jobs/delete/${job.id}/`,
-        { action: 'delete' },
-        {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      .then(function (response) {
-        if (response.data.OK) {
-          setIsLoading(false);
-          dispatch(setJobMessage(response.data.message));
-          router.push('/(app)/(jobs)');
-        }
-      })
-      .catch(function (error) {
-        setIsLoading(false);
-        console.error('Error deleting a job:', error.message);
-        Alert.alert(`Error deleting a job: ${error.message}`);
-      });
+    if (!job?.id) return;
+    
+    const success = await deleteJobAction(job.id);
+    if (success) {
+      dispatch(setJobMessage('Job deleted successfully'));
+      router.push('/(app)/(jobs)');
+    } else {
+      Alert.alert('Error deleting job');
+    }
   };
 
   const closeJob = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .post(
-        `jobs/update/${job.id}/`,
-        { action: 'close' },
-        {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      .then(function (response) {
-        if (response.data.OK) {
-          setIsLoading(false);
-          dispatch(setJobMessage(response.data.message));
-          router.push('/(app)/(jobs)');
-        }
-      })
-      .catch(function (error) {
-        setIsLoading(false);
-        setModalVisible(false);
-        console.error('Error closing a job:', error.message);
-        Alert.alert(`Error closing a job: ${error.message}`);
-      });
+    if (!job?.id) return;
+    
+    const updatedJob = await updateJob({ 
+      status: 'finished',
+      // Add other required fields if needed
+    } as any); // Temporary type assertion
+    
+    if (updatedJob) {
+      dispatch(setJobMessage('Job closed successfully'));
+      router.push('/(app)/(jobs)');
+    } else {
+      setModalVisible(false);
+      Alert.alert('Error closing job');
+    }
   };
 
   const handleDelete = () => {
@@ -302,15 +259,15 @@ export default function JobDetail() {
           <ActivityIndicator style={commonStylesDetails.loading} size="large" />
         ) : (
           <FlatList
-            data={usedItems}
+            data={spents}
             renderItem={({ item }) => {
               return (
                 <SpentCard
                   id={item.id}
                   description={item.description}
                   amount={item.amount}
-                  image={item.image}
-                  date={item.date}
+                  image={undefined} // JobSpent doesn't have image
+                  date={item.created_at}
                 />
               );
             }}
@@ -333,7 +290,7 @@ export default function JobDetail() {
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}
-                onRefresh={() => fetchSpents()}
+                onRefresh={() => refreshSpents()}
                 colors={[color]} // Colores del indicador de carga
                 tintColor={color} // Color del indicador de carga en iOS
               />

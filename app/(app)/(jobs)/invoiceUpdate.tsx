@@ -19,7 +19,6 @@ import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { useRouter } from 'expo-router';
 
 import { ThemedView } from '@/components/ThemedView';
-import axiosInstance from '@/axios';
 import { setInvoice } from '@/app/(redux)/jobSlice';
 import CustomAlert from '@/constants/customAlert';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
@@ -29,6 +28,7 @@ import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/
 import { StatusBar } from 'expo-status-bar';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import { commonStylesCards } from '@/constants/commonStylesCard';
+import { useJobActions } from '@/hooks';
 
 interface Errors {
   description?: string;
@@ -52,6 +52,8 @@ export default function InvoiceUpdate() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
+  const { updateInvoice } = useJobActions();
+
   const validateForm = () => {
     let errors: Errors = {};
     if (!description) errors.description = 'Description is required';
@@ -62,24 +64,22 @@ export default function InvoiceUpdate() {
   const handleSubmit = async () => {
     if (Object.keys(newCharges).length !== 0) {
       setLoading(true);
-      await axiosInstance
-        .put(`jobs/invoice/update/${job.id}/`, { price: price, paid: paid, charges: newCharges })
-        .then(function (response) {
-          dispatch(setInvoice(response.data));
+      try {
+        const result = await updateInvoice(job.id, { price: price, paid: paid, charges: newCharges });
+        if (result) {
+          dispatch(setInvoice(result));
           router.push('/(app)/(jobs)/invoice');
-        })
-        .catch(function (error) {
-          console.error('Error creating invoice:', error);
-          if (error.response.status === 404) {
-            setError(error.response.data.message);
-            setLoading(false);
-            setAlertVisible(true);
-          } else {
-            setError(error.message);
-            setLoading(false);
-            setAlertVisible(true);
-          }
-        });
+        } else {
+          setError('Error updating invoice');
+          setAlertVisible(true);
+        }
+        setLoading(false);
+      } catch (error: any) {
+        console.error('Error updating invoice:', error);
+        setError(error.message || 'Error updating invoice');
+        setLoading(false);
+        setAlertVisible(true);
+      }
     } else {
       setError('No charges added yet, please create at least one.');
       setAlertVisible(true);

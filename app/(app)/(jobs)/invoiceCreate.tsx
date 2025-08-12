@@ -20,7 +20,6 @@ import { useRouter } from 'expo-router';
 
 import { ThemedView } from '@/components/ThemedView';
 import CustomAlert from '@/constants/customAlert';
-import axiosInstance from '@/axios';
 import { setInvoice } from '@/app/(redux)/jobSlice';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
@@ -35,6 +34,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import { commonStylesCards } from '@/constants/commonStylesCard';
+import { useJobActions } from '@/hooks';
 
 interface Errors {
   description?: string;
@@ -58,6 +58,8 @@ export default function InvoiceCreate() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
+  const { createInvoice } = useJobActions();
+
   const validateForm = () => {
     let errors: Errors = {};
     if (!description) errors.description = 'Description is required';
@@ -68,25 +70,22 @@ export default function InvoiceCreate() {
   const handleSubmit = async () => {
     if (Object.keys(charges).length !== 0) {
       setLoading(true);
-      await axiosInstance
-        .post(`jobs/invoice/create/${job.id}/`, { price: price, paid: paid, charges: charges })
-        .then(function (response) {
-          dispatch(setInvoice(response.data));
+      try {
+        const result = await createInvoice(job.id, { price: price, paid: paid, charges: charges });
+        if (result) {
+          dispatch(setInvoice(result));
           router.push('/(app)/(jobs)/invoice');
-          setLoading(false);
-        })
-        .catch(function (error) {
-          console.error('Error creating invoice:', error);
-          if (error.response.status === 404) {
-            setError(error.response.data.message);
-            setLoading(false);
-            setAlertVisible(true);
-          } else {
-            setError(error.message);
-            setLoading(false);
-            setAlertVisible(true);
-          }
-        });
+        } else {
+          setError('Error creating invoice');
+          setAlertVisible(true);
+        }
+        setLoading(false);
+      } catch (error: any) {
+        console.error('Error creating invoice:', error);
+        setError(error.message || 'Error creating invoice');
+        setLoading(false);
+        setAlertVisible(true);
+      }
     } else {
       setError('No charges added yet, please create at least one.');
       setAlertVisible(true);

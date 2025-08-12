@@ -25,7 +25,7 @@ export default function ClientCreate() {
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [image, setImage] = useState<string | null>(userImageDefault);
-  const [isLoading, setIsLoading] = useState(false);
+  const { clientLoading } = useSelector((state: RootState) => state.client);
   const { darkTheme, color } = useSelector((state: RootState) => state.settings);
   const router = useRouter();
 
@@ -49,7 +49,7 @@ export default function ClientCreate() {
         <ThemedText type="subtitle">Create a New Client</ThemedText>
         <ThemedText type="subtitle"></ThemedText>
       </ThemedView>
-      {isLoading ? (
+      {clientLoading ? (
         <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
       ) : (
         <ThemedSecondaryView
@@ -70,8 +70,6 @@ export default function ClientCreate() {
               image={image}
               setImage={setImage}
               action="new"
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
             />
           </ScrollView>
         </ThemedSecondaryView>

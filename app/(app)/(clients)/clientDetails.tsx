@@ -4,12 +4,11 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Vibration,
   Image,
   Linking,
   Modal,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
@@ -18,71 +17,37 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import JobCard from '@/components/jobs/JobCard';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import { setJobs, jobFail, setJob } from '@/app/(redux)/jobSlice';
-import axiosInstance from '@/axios';
+import { setJob } from '@/app/(redux)/jobSlice';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage } from '@/app/(redux)/clientSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
-import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
-import { setBusiness } from '@/app/(redux)/settingSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStylesCards } from '@/constants/commonStylesCard';
+import { useClientActions } from '@/hooks';
+import { useJobs } from '@/hooks';
 
 export default function ClientDetail() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { clientMessage, client } = useSelector((state: RootState) => state.client);
-  const { jobs } = useSelector((state: RootState) => state.job);
-  const [stateJobs, setStateJobs] = useState<any>([]);
-  const [fetchTimes, setFetchTimes] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const { clientMessage, client, clientLoading } = useSelector((state: RootState) => state.client);
   const [modalVisible, setModalVisible] = useState(false);
   const [isBig, setIsBig] = useState(false);
 
   const dispatch = useAppDispatch();
   const router = useRouter();
+  
+  // Usar useJobs para obtener todos los trabajos
+  const { jobs, loading, error, refresh } = useJobs();
+  const { deleteClient: deleteClientAction } = useClientActions();
 
-  const getJobs = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .get(`jobs/list/${business.name}/`)
-      .then(function (response) {
-        Vibration.vibrate(15);
-        if (response.data) {
-          dispatch(setJobs(response.data));
-        } else {
-          dispatch(jobFail(response.data.message));
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        Vibration.vibrate(60);
-        console.error('Error fetching spents:', error);
-        if (typeof error.response === 'undefined') {
-          setError(
-            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
-          );
-        } else {
-          if (error.status === 401) {
-            dispatch(authSetMessage('Unauthorized, please login againg'));
-            dispatch(setBusiness([]));
-            dispatch(authLogout());
-            router.replace('/');
-          } else {
-            setError('Error getting your spents.');
-          }
-        }
-        setIsLoading(false);
-      });
-  };
-
-  const fetchJobs = async () => {
-    getJobs();
-    let jobList = jobs.filter((jobs: { client: any }) => jobs.client === client.name);
-    setStateJobs(jobList);
-  };
+  // Filtrar trabajos del cliente específico
+  const clientJobs = useMemo(() => {
+    if (!client?.id || !jobs || jobs.length === 0) {
+      return [];
+    }
+    return jobs.filter((job: any) => job.client_id === client.id);
+  }, [jobs, client?.id]);
 
   useEffect(() => {
     if (clientMessage) {
@@ -93,45 +58,28 @@ export default function ClientDetail() {
       });
       dispatch(clientSetMessage(null));
     }
-    if (jobs.length === 0 && fetchTimes === 0) {
-      setFetchTimes(fetchTimes + 1);
-      console.log(fetchTimes);
+  }, [clientMessage, dispatch]);
 
-      fetchJobs();
-    } else {
-      let jobList = jobs.filter((jobs: { client: any }) => jobs.client === client.name);
-      setStateJobs(jobList);
-    }
-  }, [clientMessage, jobs]);
-
-  const handlePressable = (id: string) => {
-    let job = jobs.find((job: { id: string }) => job.id === id);
+  const handlePressable = (id: number) => {
+    let job = clientJobs.find((job) => job.id === id);
     dispatch(setJob(job));
-    router.push('/(app)/(jobs)/jobDetails');
+    router.navigate('/(app)/(jobs)/jobDetails');
   };
 
-  const deleteClient = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .post(
-        `clients/delete/${client.id}/`,
-        { action: 'delete' },
-        {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      .then(function (response) {
-        if (response.data.OK) {
-          dispatch(clientSetMessage(response.data.message));
-          router.push('/(app)/(clients)');
-        }
-      })
-      .catch(function (error) {
-        setIsLoading(false);
-        console.error('Error deleting a client:', error);
-      });
+  const handleDeleteClient = async () => {
+    if (!client?.id) return;
+    
+    setModalVisible(false);
+    try {
+      const success = await deleteClientAction(client.id);
+      if (success) {
+        dispatch(clientSetMessage('Client deleted successfully'));
+        router.push('/(app)/(clients)');
+      }
+    } catch (error: any) {
+      console.error('Error deleting client:', error);
+      dispatch(clientSetMessage('Error deleting client'));
+    }
   };
 
   const handleDelete = () => {
@@ -143,7 +91,7 @@ export default function ClientDetail() {
   };
 
   const handleCreateJob = () => {
-    router.push({
+    router.navigate({
       pathname: '/(app)/(jobs)/jobCreate',
       params: {
         clientId: String(client.id),
@@ -165,6 +113,8 @@ export default function ClientDetail() {
         <ThemedText type="subtitle">Client Details</ThemedText>
         <ThemedText type="subtitle"></ThemedText>
       </ThemedView>
+      { clientLoading ?
+      <ActivityIndicator style={commonStyles.loading} color={color} size="large" /> : (
       <ThemedView
         style={[
           commonStylesDetails.container,
@@ -252,25 +202,25 @@ export default function ClientDetail() {
 
         <View style={commonStylesDetails.bottom}>
           <ThemedText type="subtitle">Jobs</ThemedText>
-          {isLoading ? (
+          {loading ? (
             <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
           ) : (
             <View style={commonStylesDetails.list}>
               <FlatList
-                data={stateJobs}
+                data={clientJobs}
                 renderItem={({ item }) => {
                   return (
                     <TouchableOpacity onPress={() => handlePressable(item.id)}>
                       <JobCard
                         id={item.id}
                         status={item.status}
-                        client={item.client}
+                        client={item.client_name_lastName || 'Unknown Client'}
                         address={item.address}
                         description={item.description}
                         price={item.price}
                         inDetail={false}
                         image={item.image}
-                        date={item.date}
+                        date={item.created_at}
                         isList={false}
                       />
                     </TouchableOpacity>
@@ -288,8 +238,8 @@ export default function ClientDetail() {
                 ListFooterComponent={<View style={{ margin: 5 }} />}
                 refreshControl={
                   <RefreshControl
-                    refreshing={isLoading}
-                    onRefresh={() => fetchJobs()}
+                    refreshing={loading}
+                    onRefresh={() => refresh()}
                     colors={[color]}
                     tintColor={color}
                   />
@@ -323,7 +273,7 @@ export default function ClientDetail() {
           onRequestClose={() => setModalVisible(!modalVisible)}
         >
           <View style={commonStylesCards.centeredView}>
-            {isLoading ? (
+            {loading ? (
               <ActivityIndicator color={color} size="large" />
             ) : (
               <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>
@@ -344,7 +294,7 @@ export default function ClientDetail() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[commonStylesCards.button, { borderColor: 'red' }]}
-                    onPress={() => deleteClient()}
+                    onPress={() => handleDeleteClient()}
                   >
                     <ThemedText style={{ color: 'red', textAlign: 'center' }}>DELETE</ThemedText>
                   </TouchableOpacity>
@@ -368,7 +318,7 @@ export default function ClientDetail() {
             </TouchableOpacity>
           </View>
         </Modal>
-      </ThemedView>
+      </ThemedView> )}
     </>
   );
 }

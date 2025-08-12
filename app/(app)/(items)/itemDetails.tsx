@@ -12,7 +12,6 @@ import { useSelector } from 'react-redux';
 
 import JobCard from '@/components/jobs/JobCard';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import axiosInstance from '@/axios';
 import { setItemMessage, setUsedItems } from '@/app/(redux)/itemSlice';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
@@ -25,41 +24,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { formatDate } from '@/utils/formatDate';
+import { useItemDetails } from '@/hooks';
 
 export default function ItemDetail() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { item, usedItems, itemMessage } = useSelector((state: RootState) => state.item);
-  const [isLoading, setIsLoading] = useState(true);
+  const { item, usedItems, itemLoading } = useSelector((state: RootState) => state.item);
   const [modalVisible, setModalVisible] = useState(false);
   const [isBig, setIsBig] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  const fetchUsedItems = async () => {
-    await axiosInstance
-      .get(`items/used/${item.id}/`)
-      .then(function (response) {
-        const uniqueItems = response.data.filter(
-          (item: { id: any }, index: any, self: any[]) =>
-            index === self.findIndex((t) => t.id === item.id),
-        );
-        dispatch(setUsedItems(uniqueItems));
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        console.error('Error fetching items:', error.message);
-        dispatch(setUsedItems([]));
-        setIsLoading(false);
-        /* dispatch({
-                type: CHANGE_ERROR,
-                payload: error.message
-            }) */
-      });
-  };
+  const { usedItems: hookUsedItems, loading, error, refresh, deleteItem: deleteItemAction } = useItemDetails(item?.id);
 
   useEffect(() => {
-    fetchUsedItems();
-  }, []);
+    if (item?.id) {
+      refresh();
+    }
+  }, [item?.id, refresh]);
 
   const handlePressable = (id: string) => {
     let job = usedItems.find((job: { id: string }) => job.id === id);
@@ -67,29 +47,20 @@ export default function ItemDetail() {
     router.push('/(app)/(jobs)/jobDetails');
   };
 
-  const deleteItem = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .post(
-        `items/delete/${business.name}/`,
-        { action: 'delete', id: item.id },
-        {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      .then(function (response) {
-        if (response.data.OK) {
-          dispatch(setItemMessage(response.data.message));
-          setIsLoading(false);
-          router.push('/(app)/(items)');
-        }
-      })
-      .catch(function (error) {
-        console.error('Error deleting a client:', error);
-        setIsLoading(false);
-      });
+  const handleDeleteItem = async () => {
+    if (!item?.id) return;
+    
+    setModalVisible(false);
+    try {
+      const success = await deleteItemAction(item.id);
+      if (success) {
+        dispatch(setItemMessage('Elemento eliminado con éxito'));
+        router.push('/(app)/(items)');
+      }
+    } catch (error: any) {
+      console.error('Error deleting item:', error);
+      dispatch(setItemMessage('Error al eliminar el elemento'));
+    }
   };
 
   const handleDelete = () => {
@@ -198,7 +169,7 @@ export default function ItemDetail() {
 
         <View style={commonStylesDetails.bottom}>
           <ThemedText type="subtitle">Used in</ThemedText>
-          {isLoading ? (
+          {loading ? (
             <ActivityIndicator style={commonStyles.loading} size="large" />
           ) : (
             <View style={commonStylesDetails.list}>
@@ -238,8 +209,8 @@ export default function ItemDetail() {
                 ListFooterComponent={<TouchableOpacity style={{ margin: 5 }} />}
                 refreshControl={
                   <RefreshControl
-                    refreshing={isLoading}
-                    onRefresh={() => fetchUsedItems()}
+                    refreshing={loading}
+                    onRefresh={() => refresh()}
                     colors={[color]}
                     tintColor={color}
                   />
@@ -257,7 +228,7 @@ export default function ItemDetail() {
           }}
         >
           <View style={commonStylesCards.centeredView}>
-            {isLoading ? (
+            {loading ? (
               <ActivityIndicator style={commonStylesCards.loading} size="large" />
             ) : (
               <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>
@@ -278,7 +249,7 @@ export default function ItemDetail() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[commonStylesCards.button, { borderColor: 'red' }]}
-                    onPress={() => deleteItem()}
+                    onPress={() => handleDeleteItem()}
                   >
                     <ThemedText style={{ color: 'red', textAlign: 'center' }}>DELETE</ThemedText>
                   </TouchableOpacity>

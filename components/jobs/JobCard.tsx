@@ -11,6 +11,7 @@ import { ThemedText } from '../ThemedText';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { ThemedView } from '../ThemedView';
 import { formatDate } from '@/utils/formatDate';
+import { ThemedSecondaryView } from '../ThemedSecondaryView';
 
 interface JobCardProps {
   image: any;
@@ -52,10 +53,10 @@ export default function JobCard({
   };
 
   return (
-    <ThemedView
+    <ThemedSecondaryView
       style={[
         commonStylesCards.card,
-        { borderColor: color, shadowColor: darkTheme ? '#fff' : '#000' },
+        { borderColor: color, shadowColor: darkTheme ? '#fff' : '#000', paddingHorizontal: 10 },
       ]}
     >
       <View
@@ -75,6 +76,6 @@ export default function JobCard({
         <ThemedText style={commonStylesCards.dataText}>{formatDate(date)}</ThemedText>
         <ThemedText style={commonStylesCards.dataText}>${price}</ThemedText>
       </View>
-    </ThemedView>
+    </ThemedSecondaryView>
   );
 }

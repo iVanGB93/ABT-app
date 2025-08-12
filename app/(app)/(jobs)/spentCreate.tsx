@@ -28,10 +28,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import axiosInstance from '@/axios';
 import { ThemedView } from '@/components/ThemedView';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import { setItemMessage, setItems } from '@/app/(redux)/itemSlice';
+import { useItems } from '@/hooks';
+import { useJobActions } from '@/hooks/useJobs';
 
 interface Errors {
   client?: string;
@@ -58,38 +59,19 @@ export default function SpentCreate() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
+  const { refresh: refreshItems } = useItems();
+  const { createSpentWithFormData } = useJobActions();
+
   const getItems = async () => {
     setIsLoading(true);
-    await axiosInstance
-      .get(`items/list/${business.name}/`)
-      .then(function (response) {
-        if (response.data) {
-          if (response.data.length > 0) {
-            setItems(response.data);
-          }
-        } else {
-          dispatch(setItemMessage(response.data.message));
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        console.error('Error fetching items:', error);
-        if (typeof error.response === 'undefined') {
-          setError(
-            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
-          );
-          setIsLoading(false);
-        } else {
-          if (error.status === 401) {
-            setIsLoading(false);
-            setError('Unauthorized, please login againg');
-            router.push('/');
-          } else {
-            setError('Error getting your items.');
-            setIsLoading(false);
-          }
-        }
-      });
+    try {
+      await refreshItems();
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+      setError('Error al obtener items');
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -182,27 +164,18 @@ export default function SpentCreate() {
           type: `image/${fileType}`,
         } as unknown as Blob);
       }
-      await axiosInstance
-        .post('jobs/spents/create/new/', formData, {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        })
-        .then(function (response) {
-          let data = response.data;
-          if (data.OK) {
-            router.push('/(app)/(jobs)/jobDetails');
-          }
-          setIsLoading(false);
-        })
-        .catch(function (error) {
-          console.error('Error creating a spent:', error);
-          /* dispatch({
-                    type: CHANGE_ERROR,
-                    payload: error.message
-                }) */
-          setIsLoading(false);
-        });
+      
+      try {
+        const result = await createSpentWithFormData(formData);
+        if (result) {
+          router.push('/(app)/(jobs)/jobDetails');
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error creating a spent:', error);
+        setError('Error creating spent');
+        setIsLoading(false);
+      }
     }
   };
 

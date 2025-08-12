@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { clientService, type Client, type ClientCreateData, type ClientUpdateData } from '@/services';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { clientService, type Client, type ClientCreateData } from '@/services';
+import { setClients, clientFail, clientSetMessage, setClientLoading } from '@/app/(redux)/clientSlice';
 
 interface UseClientsState {
   clients: Client[];
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  searchClients: (query: string) => Promise<void>;
 }
 
 interface UseClientState {
@@ -24,10 +25,9 @@ interface UseClientJobsState {
 }
 
 interface UseClientActionsState {
-  loading: boolean;
   error: string | null;
-  createClient: (data: ClientCreateData) => Promise<Client | null>;
-  updateClient: (id: number, data: ClientUpdateData) => Promise<Client | null>;
+  createUpdateClient: (data: ClientCreateData & { id?: number }) => Promise<Client | null>;
+  createUpdateClientWithImage: (formData: FormData) => Promise<Client | null>;
   deleteClient: (id: number) => Promise<boolean>;
 }
 
@@ -35,37 +35,66 @@ interface UseClientActionsState {
  * Hook para obtener lista de clients
  */
 export const useClients = (searchQuery?: string): UseClientsState => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch();
+  const { business } = useSelector((state: any) => state.settings);
+  const { clients, clientError, clientLoading } = useSelector((state: any) => state.client);
+  
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchClients = useCallback(async (search?: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await clientService.getClients(search);
-      setClients(data);
-    } catch (err: any) {
-      setError(err.message || 'Error loading clients');
-    } finally {
-      setLoading(false);
+  const fetchClients = useCallback(async (showLoading = true) => {
+    if (!business?.name) {
+      dispatch(clientFail('No business selected'));
+      return;
     }
-  }, []);
 
-  const searchClients = useCallback(async (query: string) => {
-    await fetchClients(query);
+    try {
+      if (showLoading) {
+        dispatch(setClientLoading(true));
+      }
+      dispatch(clientSetMessage(null)); // Clear previous errors
+      
+      const data = await clientService.getClients(business.name);
+      dispatch(setClients(data));
+    } catch (err: any) {
+      dispatch(clientFail(err.message || 'Error loading clients'));
+    } finally {
+      if (showLoading) {
+        dispatch(setClientLoading(false));
+      }
+    }
+  }, [business?.name, dispatch]);
+
+  const refresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchClients(false);
+    setIsRefreshing(false);
   }, [fetchClients]);
 
   useEffect(() => {
-    fetchClients(searchQuery);
-  }, [fetchClients, searchQuery]);
+    // Solo hacer fetch si no hay datos o si cambió el business
+    if (business?.name && (!clients || clients.length === 0)) {
+      fetchClients();
+    }
+  }, [business?.name, fetchClients]);
+
+  // Filter clients by search query if provided
+  const filteredClients = useMemo(() => {
+    if (!searchQuery || !clients) return clients || [];
+    
+    return clients.filter((client: Client) =>
+      client.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [clients, searchQuery]);
 
   return {
-    clients,
-    loading,
-    error,
-    refresh: () => fetchClients(searchQuery),
-    searchClients,
+    clients: filteredClients,
+    loading: clientLoading || isRefreshing,
+    error: clientError,
+    refresh,
   };
 };
 
@@ -149,56 +178,107 @@ export const useClientJobs = (clientId: number | null): UseClientJobsState => {
  * Hook para acciones de clients (crear, actualizar, eliminar)
  */
 export const useClientActions = (): UseClientActionsState => {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { userName } = useSelector((state: any) => state.auth);
+  const { clients } = useSelector((state: any) => state.client);
   const [error, setError] = useState<string | null>(null);
 
-  const createClient = async (data: ClientCreateData): Promise<Client | null> => {
+  const createUpdateClient = async (data: ClientCreateData & { id?: number }): Promise<Client | null> => {
+    if (!userName) {
+      setError('User not authenticated');
+      return null;
+    }
+
     try {
-      setLoading(true);
+      dispatch(setClientLoading(true));
       setError(null);
-      const result = await clientService.createClient(data);
+      
+      const result = await clientService.createUpdateClient(data, userName);
+      
+      // Actualizar Redux store de manera inteligente
+      if (data.id) {
+        // Update: reemplazar cliente existente
+        const updatedClients = clients.map((client: Client) => 
+          client.id === data.id ? result : client
+        );
+        dispatch(setClients(updatedClients));
+      } else {
+        // Create: agregar nuevo cliente
+        dispatch(setClients([...clients, result]));
+      }
+      
       return result;
     } catch (err: any) {
-      setError(err.message || 'Error creating client');
+      setError(err.message || `Error ${data.id ? 'updating' : 'creating'} client`);
       return null;
     } finally {
-      setLoading(false);
+      dispatch(setClientLoading(false));
     }
   };
 
-  const updateClient = async (id: number, data: ClientUpdateData): Promise<Client | null> => {
+  const createUpdateClientWithImage = async (formData: FormData): Promise<Client | null> => {
+    if (!userName) {
+      setError('User not authenticated');
+      return null;
+    }
+
     try {
-      setLoading(true);
+      dispatch(setClientLoading(true));
       setError(null);
-      const result = await clientService.updateClient(id, data);
+      
+      const result = await clientService.createUpdateClientWithImage(formData, userName);
+      const action = formData.get('action') as string;
+      const id = formData.get('id');
+      
+      // Actualizar Redux store de manera inteligente
+      if (action === 'update' && id) {
+        // Update: reemplazar cliente existente
+        const updatedClients = clients.map((client: Client) => 
+          client.id === parseInt(id as string) ? result : client
+        );
+        dispatch(setClients(updatedClients));
+      } else {
+        // Create: agregar nuevo cliente
+        dispatch(setClients([...clients, result]));
+      }
+      
       return result;
     } catch (err: any) {
-      setError(err.message || 'Error updating client');
+      const action = formData.get('action') as string;
+      setError(err.message || `Error ${action === 'update' ? 'updating' : 'creating'} client`);
       return null;
     } finally {
-      setLoading(false);
+      dispatch(setClientLoading(false));
     }
   };
 
   const deleteClient = async (id: number): Promise<boolean> => {
     try {
-      setLoading(true);
+      dispatch(setClientLoading(true));
       setError(null);
-      await clientService.deleteClient(id);
+      
+      // Create FormData with action: 'delete'
+      const formData = new FormData();
+      formData.append('action', 'delete');
+      formData.append('id', id.toString());
+      
+      await clientService.deleteClient(formData);
+      // Actualizar Redux store
+      const updatedClients = clients.filter((client: Client) => client.id !== id);
+      dispatch(setClients(updatedClients));
       return true;
     } catch (err: any) {
       setError(err.message || 'Error deleting client');
       return false;
     } finally {
-      setLoading(false);
+      dispatch(setClientLoading(false));
     }
   };
 
   return {
-    loading,
     error,
-    createClient,
-    updateClient,
+    createUpdateClient,
+    createUpdateClientWithImage,
     deleteClient,
   };
 };

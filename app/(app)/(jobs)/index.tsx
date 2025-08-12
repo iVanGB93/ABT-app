@@ -7,8 +7,8 @@ import {
   RefreshControl,
   Vibration,
 } from 'react-native';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -19,63 +19,29 @@ import { ThemedView } from '@/components/ThemedView';
 import JobCard from '@/components/jobs/JobCard';
 import { jobFail, setJobs, setJob, setJobMessage } from '@/app/(redux)/jobSlice';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
-import axiosInstance from '@/axios';
 import { commonStyles } from '@/constants/commonStyles';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
+import { useJobs } from '@/hooks';
 
 export default function Jobs() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { jobs, jobMessage, jobError } = useSelector((state: RootState) => state.job);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { jobMessage } = useSelector((state: RootState) => state.job);
   const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const getJobs = async () => {
-    setIsLoading(true);
-    await axiosInstance
-      .get(`jobs/list/${business.name}/`)
-      .then(function (response) {
-        Vibration.vibrate(15);
-        if (response.data) {
-          dispatch(setJobs(response.data));
-        } else {
-          dispatch(jobFail(response.data.message));
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        Vibration.vibrate(60);
-        console.error('Error fetching jobs:', error);
-        if (typeof error.response === 'undefined') {
-          setError(
-            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
-          );
-        } else {
-          if (error.status === 401) {
-            dispatch(authSetMessage('Unauthorized, please login againg'));
-            dispatch(setBusiness([]));
-            dispatch(authLogout());
-            router.replace('/');
-          } else {
-            setError('Error getting your jobs.');
-          }
-        }
-        setIsLoading(false);
-      });
-  };
+  // Use the Jobs hook
+  const { jobs, loading: isLoading, error, refresh } = useJobs();
 
-  const fetchJobs = () => {
-    getJobs();
-    /* if (jobs.length !== 0) {
-        console.log("SAME JOBS");
-    } else {
-        getJobs();
-    } */
-  };
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
+  // Handle job messages (success notifications)
   useEffect(() => {
     if (jobMessage) {
       Toast.show({
@@ -85,19 +51,18 @@ export default function Jobs() {
       });
       dispatch(setJobMessage(null));
     }
-    fetchJobs();
-  }, []);
+  }, [jobMessage]);
 
-  const filteredJobs = [...jobs]
+  const filteredJobs = Array.isArray(jobs) ? [...jobs]
     .filter(
       (job) =>
-        job.description.toLowerCase().includes(search.toLowerCase()) ||
-        job.client.toLowerCase().includes(search.toLowerCase()),
+        (job.description || '').toLowerCase().includes(search.toLowerCase()) ||
+        (job.client_name_lastName || '').toLowerCase().includes(search.toLowerCase()),
     )
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || '')) : [];
 
-  const handlePressable = (id: string) => {
-    let job = jobs.find((job: { id: string }) => job.id === id);
+  const handlePressable = (id: number) => {
+    let job = jobs.find((job) => job.id === id);
     dispatch(setJob(job));
     router.push('/(app)/(jobs)/jobDetails');
   };
@@ -127,12 +92,12 @@ export default function Jobs() {
         </View>
         {isLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-        ) : jobError ? (
+        ) : error ? (
           <View style={commonStyles.containerCentered}>
-            <ThemedText>{jobError}</ThemedText>
+            <ThemedText>{error}</ThemedText>
             <TouchableOpacity
               style={[commonStyles.button, { backgroundColor: color }]}
-              onPress={() => fetchJobs()}
+              onPress={() => refresh()}
             >
               <ThemedText>Try again</ThemedText>
             </TouchableOpacity>
@@ -148,12 +113,12 @@ export default function Jobs() {
                       image={item.image}
                       id={item.id}
                       status={item.status}
-                      client={item.client}
+                      client={item.client_name_lastName || 'No client'}
                       address={item.address}
                       description={item.description}
                       price={item.price}
                       inDetail={true}
-                      date={item.date}
+                      date={item.created_at}
                       isList={true}
                     />
                   </TouchableOpacity>
@@ -168,8 +133,8 @@ export default function Jobs() {
               ListEmptyComponent={
                 <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
                   <ThemedText type="subtitle" style={{ textAlign: 'center' }}>
-                    {jobError
-                      ? jobError.toString() + ', pull to refresh'
+                    {error
+                      ? error.toString() + ', pull to refresh'
                       : 'No jobs found, create your first one'}
                   </ThemedText>
                 </View>
@@ -179,7 +144,7 @@ export default function Jobs() {
               refreshControl={
                 <RefreshControl
                   refreshing={isLoading}
-                  onRefresh={() => getJobs()}
+                  onRefresh={() => refresh()}
                   colors={[color]} // Colores del indicador de carga
                   tintColor={color} // Color del indicador de carga en iOS
                 />

@@ -1,38 +1,40 @@
 import { ApiService } from './api';
 
-// Tipos para Jobs
+// Tipos para Jobs - Actualizados para coincidir con el modelo Django
 export interface Job {
   id: number;
-  title: string;
-  description?: string;
+  business: number;
+  provider?: number | null;
   client: number;
-  client_name?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  estimated_hours?: number;
-  actual_hours?: number;
-  hourly_rate?: number;
-  fixed_price?: number;
-  total_amount: number;
-  start_date?: string;
-  end_date?: string;
+  client_name?: string; // Campo calculado del frontend
+  client_name_lastName?: string; // Campo calculado con nombre completo
+  status: 'pending' | 'confirmed' | 'in_progress' | 'on_hold' | 'review' | 'completed' | 'cancelled' | 'invoiced' | 'paid';
+  description: string;
+  address: string;
+  price: number;
+  image?: string;
   created_at: string;
   updated_at: string;
+  scheduled_at?: string | null;
+  completed_at?: string | null;
+  closed: boolean;
 }
 
 export interface JobCreateData {
-  title: string;
-  description?: string;
+  business?: number; // Se puede inferir del contexto
+  provider?: number;
   client: number;
-  estimated_hours?: number;
-  hourly_rate?: number;
-  fixed_price?: number;
-  start_date?: string;
-  end_date?: string;
+  description: string;
+  address: string;
+  price: number;
+  scheduled_at?: string;
 }
 
 export interface JobUpdateData extends Partial<JobCreateData> {
-  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  actual_hours?: number;
+  id: number;
+  status?: 'pending' | 'confirmed' | 'in_progress' | 'on_hold' | 'review' | 'completed' | 'cancelled' | 'invoiced' | 'paid';
+  completed_at?: string | null;
+  closed?: boolean;
 }
 
 export interface JobSpent {
@@ -59,8 +61,8 @@ class JobService extends ApiService {
   /**
    * Get all jobs
    */
-  async getJobs(params?: { status?: string; client?: number }): Promise<Job[]> {
-    return this.get<Job[]>('/', params);
+  async getJobs(businessName: string, params?: { status?: string; client?: number }): Promise<Job[]> {
+    return this.get<Job[]>(`/list/${businessName}/`, params);
   }
 
   /**
@@ -78,10 +80,24 @@ class JobService extends ApiService {
   }
 
   /**
+   * Create new job with FormData (for image uploads)
+   */
+  async createJobWithFormData(formData: FormData, userName: string): Promise<Job> {
+    return this.postFormData<Job>(`/create/${userName}/`, formData);
+  }
+
+  /**
    * Update job
    */
   async updateJob(id: number, data: JobUpdateData): Promise<Job> {
     return this.patch<Job>(`/${id}/`, data);
+  }
+
+  /**
+   * Update job with FormData (for image uploads)
+   */
+  async updateJobWithFormData(formData: FormData, userName: string): Promise<Job> {
+    return this.postFormData<Job>(`/update/${userName}/`, formData);
   }
 
   /**
@@ -106,6 +122,13 @@ class JobService extends ApiService {
   }
 
   /**
+   * Create job spent with FormData (for image uploads)
+   */
+  async createJobSpentWithFormData(formData: FormData): Promise<JobSpent> {
+    return this.postFormData<JobSpent>('/spents/create/new/', formData);
+  }
+
+  /**
    * Update job spent
    */
   async updateJobSpent(id: number, data: Partial<JobSpentCreateData>): Promise<JobSpent> {
@@ -124,6 +147,27 @@ class JobService extends ApiService {
    */
   async generateInvoice(jobId: number): Promise<{ invoice_url: string }> {
     return this.post<{ invoice_url: string }>(`/${jobId}/generate-invoice/`);
+  }
+
+  /**
+   * Create invoice for job
+   */
+  async createInvoice(jobId: number, data: { price: number; paid: number; charges: any }): Promise<any> {
+    return this.post<any>(`/invoice/create/${jobId}/`, data);
+  }
+
+  /**
+   * Get invoice for job
+   */
+  async getInvoice(jobId: number): Promise<{ invoice: any; charges: any }> {
+    return this.get<{ invoice: any; charges: any }>(`/invoice/${jobId}/`);
+  }
+
+  /**
+   * Update invoice for job
+   */
+  async updateInvoice(jobId: number, data: { price: number; paid: number; charges: any }): Promise<any> {
+    return this.put<any>(`/invoice/update/${jobId}/`, data);
   }
 }
 

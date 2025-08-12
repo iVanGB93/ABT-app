@@ -51,6 +51,26 @@ export class ApiService {
   }
 
   /**
+   * POST request with FormData (for file uploads)
+   */
+  async postFormData<T>(path: string = '', formData: FormData): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await axiosInstance.post(
+        `${this.endpoint}${path}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * PUT request
    */
   async put<T>(path: string = '', data?: object): Promise<T> {

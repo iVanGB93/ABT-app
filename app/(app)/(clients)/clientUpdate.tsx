@@ -21,20 +21,19 @@ import { ThemedText } from '@/components/ThemedText';
 
 export default function ClientUpdate() {
   const { darkTheme, color } = useSelector((state: RootState) => state.settings);
-  const { client } = useSelector((state: RootState) => state.client);
+  const { client, clientLoading } = useSelector((state: RootState) => state.client);
   const [name, setName] = useState(client.name);
   const [lastName, setLastName] = useState(client.last_name);
   const [phone, setPhone] = useState(client.phone);
   const [email, setEmail] = useState(client.email);
   const [address, setAddress] = useState(client.address);
   const [image, setImage] = useState<string | null>(client.image || userImageDefault);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 100}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       style={[
         commonStyles.container,
         { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
@@ -51,7 +50,7 @@ export default function ClientUpdate() {
         <ThemedText type="subtitle">Update Client</ThemedText>
         <ThemedText type="subtitle"></ThemedText>
       </ThemedView>
-      {isLoading ? (
+      {clientLoading ? (
         <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
       ) : (
         <ThemedSecondaryView
@@ -72,8 +71,6 @@ export default function ClientUpdate() {
               image={image}
               setImage={setImage}
               action="update"
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
               id={client.id}
             />
           </ScrollView>

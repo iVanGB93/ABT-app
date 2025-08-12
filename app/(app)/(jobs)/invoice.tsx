@@ -15,10 +15,10 @@ import { useSelector } from 'react-redux';
 
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 //import { SENDGRID_API_KEY } from '@env';
-import axiosInstance from '@/axios';
 import { setInvoice, setCharges } from '@/app/(redux)/jobSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
+import { useJobInvoice } from '@/hooks';
 import {
   darkSecondColor,
   lightSecondColor,
@@ -35,39 +35,24 @@ import { Ionicons } from '@expo/vector-icons';
 export default function Invoice() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { client, clients } = useSelector((state: RootState) => state.client);
-  const { job, invoice, charges } = useSelector((state: RootState) => state.job);
+  const { job } = useSelector((state: RootState) => state.job);
   const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const getInvoice = async () => {
-    setLoading(true);
-    await axiosInstance
-      .get(`jobs/invoice/${job.id}/`)
-      .then(function (response) {
-        if (response.status === 200) {
-          dispatch(setInvoice(response.data.invoice));
-          dispatch(setCharges(response.data.charges));
-          setLoading(false);
-        } else {
-          dispatch(setInvoice(response.data.invoice));
-          dispatch(setCharges(response.data.charges));
-          setError(response.data.message);
-          setLoading(false);
-        }
-      })
-      .catch(function (error) {
-        console.error('Error fetching an invoice', error);
-        setError(error.message);
-        setLoading(false);
-      });
-  };
+  const { invoice, charges, loading, error, refresh: refreshInvoice } = useJobInvoice(job?.id || null);
+
+  // Data is loaded automatically by the useJobInvoice hook
 
   useEffect(() => {
-    getInvoice();
-  }, []);
+    // Update Redux store when invoice data changes
+    if (invoice) {
+      dispatch(setInvoice(invoice));
+    }
+    if (charges) {
+      dispatch(setCharges(charges));
+    }
+  }, [invoice, charges, dispatch]);
 
   const convertImageToBase64 = async (uri: any) => {
     const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });

@@ -26,10 +26,23 @@ export default function ClientCard({ image, name, last_name }: ClientCardProps) 
       ]}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image style={{ width: 40, height: 40, borderRadius: 75 }} source={{ uri: image }} />
+        {image ? (
+          <Image style={{ width: 40, height: 40, borderRadius: 75 }} source={{ uri: image }} />
+        ) : (
+          <View style={{ 
+            width: 40, 
+            height: 40, 
+            borderRadius: 75, 
+            backgroundColor: darkTheme ? '#444' : '#ddd',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <Ionicons name="person" size={20} color={darkTheme ? '#888' : '#666'} />
+          </View>
+        )}
         <View style={{ flex: 1, marginLeft: 10 }}>
           <ThemedText type="subtitle">
-            {name} {last_name ? last_name : null}{' '}
+            {name} {last_name ? last_name : ''}{' '}
           </ThemedText>
         </View>
         <Ionicons name="chevron-forward" size={16} color={darkTheme ? '#666' : '#999'} />

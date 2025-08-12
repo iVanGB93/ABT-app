@@ -26,7 +26,6 @@ import {
   lightMainColor,
   lightTextColor,
 } from '@/settings';
-import axiosInstance from '@/axios';
 import { setJobMessage } from '@/app/(redux)/jobSlice';
 import { clientSetMessage, setClients } from '@/app/(redux)/clientSlice';
 import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
@@ -34,6 +33,7 @@ import { setBusiness } from '@/app/(redux)/settingSlice';
 import CustomAddress from '../CustomAddress';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesForm } from '@/constants/commonStylesForm';
+import { useClients, useJobActions } from '@/hooks';
 
 interface JobFormProps {
   action?: any;
@@ -74,40 +74,22 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
     clientName?: string;
   }>();
 
+  const { refresh: refreshClients } = useClients();
+  const { createJobWithFormData, updateJobWithFormData } = useJobActions();
+
   const handleImageOptions = () => setImageModalVisible(true);
 
   const getClients = async () => {
-    await axiosInstance
-      .get(`clients/${business.name}/`)
-      .then(function (response) {
-        Vibration.vibrate(15);
-        if (response.data) {
-          if (response.data.length > 0) {
-            dispatch(setClients(response.data));
-          }
-        } else {
-          dispatch(clientSetMessage(response.data.message));
-        }
-        setIsLoading(false);
-      })
-      .catch(function (error) {
-        Vibration.vibrate(60);
-        console.error('Error fetching clients:', error);
-        if (typeof error.response === 'undefined') {
-          setError(
-            'A server/network error occurred. ' + 'Sorry about this - try againg in a few minutes.',
-          );
-        } else {
-          if (error.status === 401) {
-            dispatch(authSetMessage('Unauthorized, please login againg'));
-            dispatch(setBusiness([]));
-            dispatch(authLogout());
-            router.replace('/');
-          } else {
-            setError('Error getting your clients.');
-          }
-        }
-      });
+    try {
+      await refreshClients();
+      Vibration.vibrate(15);
+      setIsLoading(false);
+    } catch (error) {
+      Vibration.vibrate(60);
+      console.error('Error fetching clients:', error);
+      setError('Error al obtener clientes');
+      setIsLoading(false);
+    }
   };
 
   // Normaliza un nombre completo para comparar
@@ -241,28 +223,25 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           type: `image/${fileType}`,
         } as unknown as Blob);
       }
-      await axiosInstance
-        .post(`jobs/${action === 'new' ? 'create' : 'update'}/${userName}/`, formData, {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        })
-        .then(function (response) {
+      try {
+        const result = action === 'new' 
+          ? await createJobWithFormData(formData)
+          : await updateJobWithFormData(formData);
+        
+        if (result) {
           Vibration.vibrate(15);
-          let data = response.data;
-          if (data.OK) {
-            dispatch(setJobMessage(response.data.message));
-            router.push('/(app)/(jobs)');
-          }
-          setError(response.data.message);
-          setIsLoading(false);
-        })
-        .catch(function (error) {
-          Vibration.vibrate(60);
-          console.error('Error creating a job:', error);
-          setIsLoading(false);
-          setError(error.message);
-        });
+          dispatch(setJobMessage('Job ' + (action === 'new' ? 'created' : 'updated') + ' successfully'));
+          router.push('/(app)/(jobs)');
+        } else {
+          setError('Error ' + (action === 'new' ? 'creating' : 'updating') + ' job');
+        }
+        setIsLoading(false);
+      } catch (error) {
+        Vibration.vibrate(60);
+        console.error('Error creating/updating job:', error);
+        setIsLoading(false);
+        setError('Error ' + (action === 'new' ? 'creating' : 'updating') + ' job');
+      }
     }
   };
 

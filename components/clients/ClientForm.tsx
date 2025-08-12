@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Text, Image, TouchableOpacity, Vibration, Modal } from 'react-native';
+import { View, TextInput, Text, Image, TouchableOpacity, Modal } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { Ionicons } from '@expo/vector-icons';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import * as ImagePicker from 'expo-image-picker';
 import PhoneInput, {
   ICountry,
   getCountryByPhoneNumber,
   isValidPhoneNumber,
 } from 'react-native-international-phone-number';
-import Constants from 'expo-constants';
-const GOOGLE_PLACES_API_KEY = Constants.expoConfig?.extra?.googlePlacesApiKey;
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import axiosInstance from '@/axios';
 import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
-import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
-import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
-import { setBusiness } from '@/app/(redux)/settingSlice';
+import { clientSetMessage } from '@/app/(redux)/clientSlice';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import CustomAddress from '../CustomAddress';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
+import { useClientActions } from '@/hooks';
 
 interface ClientFormProps {
   name?: any;
@@ -40,8 +35,6 @@ interface ClientFormProps {
   setImage?: any;
   action?: any;
   id?: string;
-  isLoading?: boolean;
-  setIsLoading?: any;
 }
 
 interface Errors {
@@ -65,8 +58,6 @@ export default function ClientForm({
   setAddress,
   image,
   setImage,
-  isLoading,
-  setIsLoading,
   action,
   id = '',
 }: ClientFormProps) {
@@ -78,6 +69,13 @@ export default function ClientForm({
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  // Usar el hook de acciones de cliente
+  const { 
+    createUpdateClient, 
+    createUpdateClientWithImage, 
+    error: actionError 
+  } = useClientActions();
 
   /* function handlePhoneInputValue(phoneNumber: string) {
     setPhone(selectedCountry?.callingCode + phoneNumber);
@@ -152,71 +150,57 @@ export default function ClientForm({
   };
 
   const handleSubmit = async () => {
-    if (validateForm()) {
-      const formData = new FormData();
-      formData.append('action', action);
-      formData.append('id', id);
-      formData.append('business', business.name);
-      formData.append('name', name);
-      formData.append('last_name', lastName);
-      formData.append('phone', phone ? selectedCountry?.callingCode + phone : '');
-      formData.append('email', email);
-      formData.append('address', address);
-      if (image !== null) {
-        const uriParts = image.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-        const fileName = `${name}ProfilePicture.${fileType}`;
-        formData.append('image', {
-          uri: image,
-          name: fileName,
-          type: `image/${fileType}`,
-        } as unknown as Blob);
-      }
-      setIsLoading(true);
-      await axiosInstance
-        .post(`clients/${action === 'new' ? 'create' : 'update'}/${userName}/`, formData, {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        })
-        .then(function (response) {
-          Vibration.vibrate(15);
-          let data = response.data;
-          if (data.OK) {
-            dispatch(clientSetMessage(data.message));
-            if (action === 'new') {
-              router.replace('/(app)/(clients)');
-            } else {
-              dispatch(setClient(data.client));
-              router.replace('/(app)/(clients)/clientDetails');
-            }
-          } else {
-            setError(data.message);
-          }
-          setIsLoading(false);
-        })
-        .catch(function (error) {
-          Vibration.vibrate(60);
-          console.error(
-            `Error ${action === 'new' ? 'creating' : 'updating'} a client:`,
-            error.config,
-          );
-          if (typeof error.response === 'undefined') {
-            console.error(
-              `Error ${action === 'new' ? 'creating' : 'updating'} a client, undefined`,
-            );
-          } else {
-            if (error.response.status === 401) {
-              dispatch(authSetMessage('Unauthorized, please login againg'));
-              dispatch(setBusiness([]));
-              dispatch(authLogout());
-              router.replace('/');
-            } else {
-              setError(`Error ${action === 'new' ? 'creating' : 'updating'} your client`);
-            }
-          }
-          setIsLoading(false);
+    if (!validateForm()) return;
+
+    try {
+      setError(null);
+      
+      const hasImage = image && image !== null;
+      const phoneWithCountry = phone ? selectedCountry?.callingCode + phone : '';
+      
+      let result;
+      if (hasImage) {
+        // Crear FormData para cliente con imagen
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('id', id);
+        formData.append('business', business.name);
+        formData.append('name', name);
+        formData.append('last_name', lastName);
+        formData.append('phone', phoneWithCountry);
+        formData.append('email', email || '');
+        formData.append('address', address || '');
+        
+        if (image) {
+          const uriParts = image.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          const fileName = `${name}ProfilePicture.${fileType}`;
+          formData.append('image', {
+            uri: image,
+            name: fileName,
+            type: `image/${fileType}`,
+          } as unknown as Blob);
+        }
+        
+        result = await createUpdateClientWithImage(formData);
+      } else {
+        // Crear cliente sin imagen
+        result = await createUpdateClient({
+          name,
+          last_name: lastName,
+          phone: phoneWithCountry,
+          email: email || undefined,
+          address: address || undefined,
         });
+      }
+      
+      if (result) {
+        dispatch(clientSetMessage('Client created successfully'));
+        router.replace('/(app)/(clients)');
+      }
+    } catch (error: any) {
+      console.error(`Error ${action === 'new' ? 'creating' : 'updating'} client:`, error);
+      setError(actionError || `Error ${action === 'new' ? 'creating' : 'updating'} client`);
     }
   };
 

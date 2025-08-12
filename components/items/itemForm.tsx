@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, Image, TouchableOpacity, Modal } from 'react-native';
-import axiosInstance from '@/axios';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, Text, Image, TouchableOpacity, Modal, Vibration } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/app/(redux)/store';
@@ -10,8 +9,9 @@ import { useRouter } from 'expo-router';
 import { commonStyles } from '@/constants/commonStyles';
 import { darkMainColor, darkTextColor, itemImageDefault, lightMainColor, lightTextColor } from '@/settings';
 import { Ionicons } from '@expo/vector-icons';
-import { setItemMessage } from '@/app/(redux)/itemSlice';
+import { setItemMessage, setItem } from '@/app/(redux)/itemSlice';
 import { commonStylesForm } from '@/constants/commonStylesForm';
+import { useItemActions } from '@/hooks';
 
 interface ItemFormProps {
   action?: any;
@@ -43,6 +43,30 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
+
+  // ✨ USAR HOOKS EN LUGAR DE AXIOS
+  const { 
+    loading: actionsLoading, 
+    error: actionsError, 
+    createItem, 
+    createItemWithImage,
+    updateItem,
+    updateItemWithImage 
+  } = useItemActions();
+
+  // Sync loading state with parent component
+  useEffect(() => {
+    if (setIsLoading) {
+      setIsLoading(actionsLoading);
+    }
+  }, [actionsLoading, setIsLoading]);
+
+  // Sync error state
+  useEffect(() => {
+    if (actionsError) {
+      setError(actionsError);
+    }
+  }, [actionsError]);
 
   const handleImageOptions = () => setImageModalVisible(true);
 
@@ -88,53 +112,86 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      const formData = new FormData();
-      formData.append('action', action);
-      formData.append('id', item.id || '');
-      formData.append('name', name);
-      formData.append('description', description);
-      formData.append('amount', amount);
-      formData.append('price', price);
-      if (image !== null) {
-        const uriParts = image.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-        const fileName = `${name}ItemPicture.${fileType}`;
-        formData.append('image', {
-          uri: image,
-          name: fileName,
-          type: `image/${fileType}`,
-        } as unknown as Blob);
+      try {
+        setError('');
+
+        let result;
+        
+        // Decidir si usar FormData o datos simples
+        const hasImage = image && image !== '' && !image.includes('default');
+        
+        if (hasImage) {
+          // Usar FormData para manejar la imagen
+          const formData = new FormData();
+          formData.append('action', action);
+          formData.append('id', item?.id || '');
+          formData.append('name', name);
+          formData.append('description', description);
+          formData.append('amount', amount.toString());
+          formData.append('price', price.toString());
+          
+          // Agregar imagen al FormData
+          const uriParts = image.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          const fileName = `${name}ItemPicture.${fileType}`;
+          formData.append('image', {
+            uri: image,
+            name: fileName,
+            type: `image/${fileType}`,
+          } as unknown as Blob);
+
+          if (action === 'new') {
+            result = await createItemWithImage(formData);
+          } else {
+            result = await updateItemWithImage(formData);
+          }
+        } else {
+          // Usar datos simples sin imagen
+          const itemData = {
+            name,
+            description,
+            price: parseFloat(price),
+            unit: 'pcs', // Default unit
+            category: '', // Default category
+            stock_quantity: parseInt(amount),
+            is_service: false, // Default to product
+          };
+
+          if (action === 'new') {
+            result = await createItem(itemData);
+          } else {
+            // Para update, incluir el id
+            const updateData = { ...itemData, id: item?.id };
+            result = await updateItem(updateData);
+          }
+        }
+
+        if (result) {
+          Vibration.vibrate(15);
+          dispatch(setItemMessage(`Item ${action === 'new' ? 'created' : 'updated'} successfully`));
+          
+          if (action === 'update') {
+            dispatch(setItem(result));
+          }
+          
+          router.replace('/(app)/(items)');
+        } else if (!actionsError) {
+          // Si no hay resultado pero tampoco error, algo salió mal
+          setError(`Error ${action === 'new' ? 'creating' : 'updating'} your item`);
+          Vibration.vibrate(60);
+        }
+
+      } catch (err: any) {
+        Vibration.vibrate(60);
+        console.error(`Error ${action === 'new' ? 'creating' : 'updating'} item:`, err);
+        
+        // Manejar errores de autorización como en el código original
+        if (err.response?.status === 401) {
+          router.push('/');
+        } else {
+          setError(`Error ${action === 'new' ? 'creating' : 'updating'} your item`);
+        }
       }
-      setIsLoading(true);
-      await axiosInstance
-        .post(`items/${action === 'new' ? 'create' : 'update'}/${business.name}/`, formData, {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        })
-        .then(function (response) {
-          let data = response.data;
-          if (data.OK) {
-            dispatch(setItemMessage(data.message));
-            router.replace('/(app)/(items)');
-          } else {
-            setError(data.message);
-          }
-          setIsLoading(false);
-        })
-        .catch(function (error) {
-          console.error('Error creating an item:', error);
-          if (typeof error.response === 'undefined') {
-            setError('Error creating a client, undefinded');
-          } else {
-            if (error.response.status === 401) {
-              router.push('/');
-            } else {
-              setError(error.message);
-            }
-          }
-          setIsLoading(false);
-        });
     }
   };
 

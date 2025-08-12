@@ -25,28 +25,108 @@ import { commonStyles } from '@/constants/commonStyles';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
 import { authLogout } from '../../(redux)/authSlice';
 import { commonStylesCards } from '@/constants/commonStylesCard';
+import { useClients, useJobs } from '@/hooks';
+import { useBusinessExtras } from '@/hooks/useBusinessExtras';
 
 export default function IndexBusiness() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const { businesses, businessMessage } = useSelector((state: RootState) => state.business);
-  const { jobs } = useSelector((state: RootState) => state.job);
-  const { clients } = useSelector((state: RootState) => state.client);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Using new hooks for data fetching
+  const {
+    clients,
+    loading: clientsLoading,
+    error: clientsError,
+    refresh: refreshClients,
+  } = useClients();
+
+  const { jobs, loading: jobsLoading, error: jobsError, refresh: refreshJobs } = useJobs();
+
+  const { 
+    extraExpenses, 
+    extraIncome, 
+    loading: extrasLoading, 
+    error: extrasError,
+    refresh: refreshExtras 
+  } = useBusinessExtras();
+
+  const [refreshing, setRefreshing] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const hasBusiness = !!business && Object.keys(business).length > 0;
 
-  // Quick stats calculations
+  // Handle refresh of all data
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([refreshClients(), refreshJobs(), refreshExtras()]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const activeJobs = Array.isArray(jobs)
-    ? jobs.filter((job: any) => job.status !== 'finished').length
+    ? jobs.filter((job: any) => job.status === 'new' || job.status === 'active').length
     : 0;
-  const totalRevenue = Array.isArray(jobs)
+
+  // Calculate total revenue (jobs + extra income)
+  const totalJobRevenue = Array.isArray(jobs)
     ? jobs.reduce((sum: number, job: any) => sum + (Number(job.price) || 0), 0)
     : 0;
+
+  const totalExtraIncome = Array.isArray(extraIncome)
+    ? extraIncome.reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0)
+    : 0;
+
+  const totalExpenses = Array.isArray(extraExpenses)
+    ? extraExpenses.reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0)
+    : 0;
+
+  const totalRevenue = totalJobRevenue + totalExtraIncome;
+  const netProfit = totalRevenue - totalExpenses;
+
   const totalClients = Array.isArray(clients) ? clients.length : 0;
+
+  // Show loading state
+  const isLoading = clientsLoading || jobsLoading || extrasLoading;
+
+  // Show error if any
+  const hasError = clientsError || jobsError || extrasError;
+
+  // Toast error messages
+  useEffect(() => {
+    if (clientsError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error loading clients',
+        text2: clientsError,
+      });
+    }
+  }, [clientsError]);
+
+  useEffect(() => {
+    if (jobsError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error loading jobs',
+        text2: jobsError,
+      });
+    }
+  }, [jobsError]);
+
+  useEffect(() => {
+    if (extrasError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error loading financial data',
+        text2: extrasError,
+      });
+    }
+  }, [extrasError]);
 
   const renderQuickAction = (
     icon: string,
@@ -70,8 +150,14 @@ export default function IndexBusiness() {
     </TouchableOpacity>
   );
 
-  const renderStatCard = (title: string, value: string, icon: string, iconColor: string, onPress?: () => void) => (
-    <TouchableOpacity 
+  const renderStatCard = (
+    title: string,
+    value: string,
+    icon: string,
+    iconColor: string,
+    onPress?: () => void,
+  ) => (
+    <TouchableOpacity
       style={[styles.statCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
       onPress={onPress}
       disabled={!onPress}
@@ -84,7 +170,12 @@ export default function IndexBusiness() {
       <View style={styles.statValueContainer}>
         <ThemedText style={[styles.statValue, { color: iconColor }]}>{value}</ThemedText>
         {onPress && (
-          <Ionicons name="chevron-forward" size={16} color={darkTheme ? '#666' : '#999'} style={styles.statChevron} />
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={darkTheme ? '#666' : '#999'}
+            style={styles.statChevron}
+          />
         )}
       </View>
     </TouchableOpacity>
@@ -97,12 +188,34 @@ export default function IndexBusiness() {
         { backgroundColor: darkTheme ? darkMainColor : lightMainColor, marginTop: 20 },
       ]}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={color}
+          colors={[color]}
+        />
+      }
     >
+      {/* Loading overlay */}
+      {isLoading && !refreshing && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={color} />
+          <ThemedText style={styles.loadingText}>Loading data...</ThemedText>
+        </View>
+      )}
+
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <ThemedText type="title" style={styles.welcomeText}>
             Welcome {userName}
           </ThemedText>
+          {hasError && (
+            <View style={styles.errorBadge}>
+              <Ionicons name="warning-outline" size={16} color="#FF5722" />
+              <ThemedText style={styles.errorText}>Data loading issues</ThemedText>
+            </View>
+          )}
         </View>
         <TouchableOpacity
           style={[styles.profileButton, { backgroundColor: color + '20' }]}
@@ -111,7 +224,9 @@ export default function IndexBusiness() {
           <Ionicons name="person-outline" size={24} color={color} />
         </TouchableOpacity>
       </View>
-      <View style={[commonStylesCards.card, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
+      <View
+        style={[commonStylesCards.card, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
+      >
         <View style={styles.businessHeader}>
           {business?.logo ? (
             <Image source={{ uri: business.logo }} style={commonStylesCards.businessLogo} />
@@ -137,20 +252,58 @@ export default function IndexBusiness() {
               </View>
             )}
           </View>
+          {/* Data status indicator */}
+          <View style={styles.dataStatusContainer}>
+            <View
+              style={[
+                styles.dataStatusDot,
+                { backgroundColor: hasError ? '#FF5722' : isLoading ? '#FFC107' : '#4CAF50' },
+              ]}
+            />
+            <ThemedText style={styles.dataStatusText}>
+              {hasError ? 'Error' : isLoading ? 'Loading' : 'Live'}
+            </ThemedText>
+          </View>
         </View>
       </View>
       {/* Quick Stats */}
       <View style={styles.statsContainer}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Quick Overview
-        </ThemedText>
-        <View style={styles.statsGrid}>
-          {renderStatCard('Active Jobs', activeJobs.toString(), 'briefcase', '#2196F3')}
-          {renderStatCard('Total Revenue', `$${totalRevenue.toFixed(0)}`, 'cash', '#4CAF50')}
+        <View style={styles.statsHeader}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Quick Overview
+          </ThemedText>
+          {(clientsLoading || jobsLoading || extrasLoading) && <ActivityIndicator size="small" color={color} />}
         </View>
         <View style={styles.statsGrid}>
-          {renderStatCard('Clients', totalClients.toString(), 'people', '#FF9800')}
-          {renderStatCard('This Month', 'View Details', 'trending-up', color, () => router.navigate('/(app)/(business)/businessMonthDetails'))}
+          {renderStatCard(
+            'Active Jobs',
+            isLoading ? '...' : activeJobs.toString(),
+            'briefcase',
+            '#2196F3',
+            () => router.navigate('/(app)/(jobs)'),
+          )}
+          {renderStatCard(
+            'Total Revenue',
+            isLoading ? '...' : `$${totalRevenue.toFixed(0)}`,
+            'cash',
+            '#4CAF50',
+          )}
+        </View>
+        <View style={styles.statsGrid}>
+          {renderStatCard(
+            'Clients',
+            isLoading ? '...' : totalClients.toString(),
+            'people',
+            '#FF9800',
+            () => router.navigate('/(app)/(clients)'),
+          )}
+          {renderStatCard(
+            'Net Profit', 
+            isLoading ? '...' : `$${netProfit.toFixed(0)}`,
+            'trending-up',
+            netProfit >= 0 ? '#4CAF50' : '#FF5722',
+            () => router.navigate('/(app)/(business)/businessDetails'),
+          )}
         </View>
       </View>
 
@@ -235,19 +388,86 @@ export default function IndexBusiness() {
             <ThemedText style={[styles.viewAllText, { color }]}>View All</ThemedText>
           </TouchableOpacity>
         </View>
-        <View style={[styles.recentCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
-          <Ionicons name="time-outline" size={24} color={color} />
-          <View style={styles.recentContent}>
-            <ThemedText style={styles.recentTitle}>
-              {activeJobs > 0
-                ? `You have ${activeJobs} active job${activeJobs > 1 ? 's' : ''}`
-                : 'No active jobs'}
-            </ThemedText>
-            <ThemedText style={styles.recentSubtitle}>
-              {activeJobs > 0 ? 'Keep up the great work!' : 'Create a new job to get started'}
-            </ThemedText>
+
+        {isLoading ? (
+          <View style={[styles.recentCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
+            <ActivityIndicator size="small" color={color} />
+            <View style={styles.recentContent}>
+              <ThemedText style={styles.recentTitle}>Loading recent activity...</ThemedText>
+            </View>
           </View>
-        </View>
+        ) : (
+          <>
+            <View
+              style={[styles.recentCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
+            >
+              <Ionicons name="time-outline" size={24} color={color} />
+              <View style={styles.recentContent}>
+                <ThemedText style={styles.recentTitle}>
+                  {activeJobs > 0
+                    ? `You have ${activeJobs} active job${activeJobs > 1 ? 's' : ''}`
+                    : 'No active jobs'}
+                </ThemedText>
+                <ThemedText style={styles.recentSubtitle}>
+                  {activeJobs > 0 ? 'Keep up the great work!' : 'Create a new job to get started'}
+                </ThemedText>
+              </View>
+            </View>
+
+            {/* Show recent jobs if available */}
+            {Array.isArray(jobs) && jobs.length > 0 && (
+              <View
+                style={[
+                  styles.recentCard,
+                  { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA', marginTop: 12 },
+                ]}
+              >
+                <Ionicons name="briefcase-outline" size={24} color="#2196F3" />
+                <View style={styles.recentContent}>
+                  <ThemedText style={styles.recentTitle}>
+                    Latest Job: {jobs[0]?.description || 'No description'}
+                  </ThemedText>
+                  <ThemedText style={styles.recentSubtitle}>
+                    Status: {jobs[0]?.status || 'Unknown'} • ${jobs[0]?.price || 0}
+                  </ThemedText>
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.navigate(`/(app)/(jobs)/jobDetails?id=${jobs[0]?.id}`)}
+                >
+                  <Ionicons name="arrow-forward-outline" size={20} color={color} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Show recent clients if available */}
+            {Array.isArray(clients) && clients.length > 0 && (
+              <View
+                style={[
+                  styles.recentCard,
+                  { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA', marginTop: 12 },
+                ]}
+              >
+                <Ionicons name="person-outline" size={24} color="#FF9800" />
+                <View style={styles.recentContent}>
+                  <ThemedText style={styles.recentTitle}>
+                    Latest Client: {clients[0]?.name || 'Unnamed'}
+                  </ThemedText>
+                  <ThemedText style={styles.recentSubtitle}>
+                    {clients[0]?.business ? `${clients[0].business} • ` : ''}
+                    Contact: {clients[0]?.phone || clients[0]?.email || 'No contact info'}
+                  </ThemedText>
+                </View>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.navigate(`/(app)/(clients)/clientDetails?id=${clients[0]?.id}`)
+                  }
+                >
+                  <Ionicons name="arrow-forward-outline" size={20} color={color} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        )}
       </View>
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -319,6 +539,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
   },
   statsGrid: {
@@ -432,5 +658,47 @@ const styles = StyleSheet.create({
   recentSubtitle: {
     fontSize: 14,
     opacity: 0.7,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  errorBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  errorText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#FF5722',
+    fontWeight: '500',
+  },
+  dataStatusContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dataStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  dataStatusText: {
+    fontSize: 10,
+    fontWeight: '500',
+    opacity: 0.8,
   },
 });
