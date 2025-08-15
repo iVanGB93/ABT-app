@@ -7,7 +7,7 @@ export const baseImageURL: string = production
   ? 'https://abt.qbared.com'
   : 'http://172.20.6.179:8000';
 
-export const version: string = '1.0.12';
+export const version: string = '1.0.13';
 
 export const darkMainColor: string = '#000000';
 export const darkSecondColor: string = '#2A2A2A';
