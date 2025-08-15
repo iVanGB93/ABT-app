@@ -4,7 +4,6 @@ import {
   Button,
   StyleSheet,
   ScrollView,
-  Modal,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -14,33 +13,33 @@ import * as FileSystem from 'expo-file-system';
 import { useSelector } from 'react-redux';
 
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-//import { SENDGRID_API_KEY } from '@env';
 import { setInvoice, setCharges } from '@/app/(redux)/jobSlice';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useJobInvoice } from '@/hooks';
 import {
-  darkSecondColor,
-  lightSecondColor,
-  darkMainColor,
   darkThirdColor,
   lightMainColor,
 } from '@/settings';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
-import { StatusBar } from 'expo-status-bar';
 import { commonStyles } from '@/constants/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function Invoice() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { client, clients } = useSelector((state: RootState) => state.client);
+  const { client } = useSelector((state: RootState) => state.client);
   const { job } = useSelector((state: RootState) => state.job);
-  const [modalVisibleInvoice, setModalVisibleInvoice] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const { invoice, charges, loading, error, refresh: refreshInvoice } = useJobInvoice(job?.id || null);
+  const {
+    invoice,
+    charges,
+    loading,
+    error,
+    refresh: refreshInvoice,
+  } = useJobInvoice(job?.id || null);
 
   // Data is loaded automatically by the useJobInvoice hook
 
@@ -308,7 +307,9 @@ export default function Invoice() {
             <span class="summary-label">Balance Due:</span>
             <span class="summary-value">$${invoice.due}</span>
           </div>
-          <a class="pay-btn" href="${invoice.payUrl || `https://abt.qbared.com/jobs/invoice/${invoice.number}/`}">Pay Now</a>
+          <a class="pay-btn" href="${
+            invoice.payUrl || `https://abt.qbared.com/jobs/invoice/${invoice.number}/`
+          }">Pay Now</a>
           <div class="qr-section">
             <span class="qr-label">Or scan to pay:</span>
             <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
@@ -399,8 +400,7 @@ export default function Invoice() {
   };
 
   return (
-  <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
+    <>
       <ThemedView style={commonStyles.tabHeader}>
         <TouchableOpacity
           onPress={() => {
@@ -412,110 +412,106 @@ export default function Invoice() {
         <ThemedText type="subtitle">Invoice Details</ThemedText>
         <ThemedText type="subtitle"></ThemedText>
       </ThemedView>
-  {loading ? (
-    <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
-  ) : invoice ? (
-      <ScrollView>
-        <ThemedSecondaryView style={styles.invoice}>
-          <View style={styles.header}>
-            <ThemedText style={styles.bussinessname}>{business.name}</ThemedText>
-            <ThemedText style={styles.invoiceTitle}>Invoice #{invoice.number}</ThemedText>
-            <ThemedText style={styles.data}>{formatDate(new Date(invoice.date))}</ThemedText>
-          </View>
-          <View style={styles.details}>
-            <ThemedText style={styles.bold}>Bill to:</ThemedText>
-            <ThemedText style={styles.data}>{client.name}</ThemedText>
-            <ThemedText style={styles.data}>{client.email}</ThemedText>
-            <ThemedText style={styles.data}>{client.phone}</ThemedText>
-            <ThemedText style={styles.data}>{client.address}</ThemedText>
-          </View>
-          <View style={styles.table}>
-            <View style={styles.tableRow}>
-              <ThemedText style={styles.tableHeader}>Description</ThemedText>
-              <ThemedText style={styles.tableHeader}>Amount</ThemedText>
+      {loading ? (
+        <ActivityIndicator style={commonStyles.loading} color={color} size="large" />
+      ) : invoice ? (
+        <ScrollView>
+          <ThemedSecondaryView style={styles.invoice}>
+            <View style={styles.header}>
+              <ThemedText style={styles.bussinessname}>{business.name}</ThemedText>
+              <ThemedText style={styles.invoiceTitle}>Invoice #{invoice.number}</ThemedText>
+              <ThemedText style={styles.data}>{formatDate(new Date(invoice.date))}</ThemedText>
             </View>
-            {charges ? (
-              charges.map(
-                (
-                  item: {
-                    description:
-                      | string
-                      | number
-                      | boolean
-                      | React.ReactElement<any, string | React.JSXElementConstructor<any>>
-                      | Iterable<React.ReactNode>
-                      | React.ReactPortal
-                      | null
-                      | undefined;
-                    amount:
-                      | string
-                      | number
-                      | boolean
-                      | React.ReactElement<any, string | React.JSXElementConstructor<any>>
-                      | Iterable<React.ReactNode>
-                      | React.ReactPortal
-                      | null
-                      | undefined;
-                  },
-                  index: React.Key | null | undefined,
-                ) => (
-                  <View style={styles.tableRow} key={index}>
-                    <ThemedText>{item.description}</ThemedText>
-                    <ThemedText>${item.amount}</ThemedText>
-                  </View>
-                ),
-              )
-            ) : (
+            <View style={styles.details}>
+              <ThemedText style={styles.bold}>Bill to:</ThemedText>
+              <ThemedText style={styles.data}>{client.name}</ThemedText>
+              <ThemedText style={styles.data}>{client.email}</ThemedText>
+              <ThemedText style={styles.data}>{client.phone}</ThemedText>
+              <ThemedText style={styles.data}>{client.address}</ThemedText>
+            </View>
+            <View style={styles.table}>
               <View style={styles.tableRow}>
-                <ThemedText>No charges created.</ThemedText>
-                <ThemedText>$0</ThemedText>
+                <ThemedText style={styles.tableHeader}>Description</ThemedText>
+                <ThemedText style={styles.tableHeader}>Amount</ThemedText>
               </View>
-            )}
-          </View>
-          <View style={styles.footer}>
-            <ThemedText style={styles.data}>Total: ${invoice.total}</ThemedText>
-            <ThemedText style={styles.data}>PAID: ${invoice.paid}</ThemedText>
-            <ThemedText style={styles.data}>Balance Due: ${invoice.due}</ThemedText>
-          </View>
-          {/* <Button title="Email Invoice" onPress={() => sendEmailWithAttachment()} /> */}
-          <View style={styles.tableRow}>
-            {invoice.closed ? (
-              <Button title="Closed" />
-            ) : (
+              {charges ? (
+                charges.map(
+                  (
+                    item: {
+                      description:
+                        | string
+                        | number
+                        | boolean
+                        | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+                        | Iterable<React.ReactNode>
+                        | React.ReactPortal
+                        | null
+                        | undefined;
+                      amount:
+                        | string
+                        | number
+                        | boolean
+                        | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+                        | Iterable<React.ReactNode>
+                        | React.ReactPortal
+                        | null
+                        | undefined;
+                    },
+                    index: React.Key | null | undefined,
+                  ) => (
+                    <View style={styles.tableRow} key={index}>
+                      <ThemedText>{item.description}</ThemedText>
+                      <ThemedText>${item.amount}</ThemedText>
+                    </View>
+                  ),
+                )
+              ) : (
+                <View style={styles.tableRow}>
+                  <ThemedText>No charges created.</ThemedText>
+                  <ThemedText>$0</ThemedText>
+                </View>
+              )}
+            </View>
+            <View style={styles.footer}>
+              <ThemedText style={styles.data}>Total: ${invoice.total}</ThemedText>
+              <ThemedText style={styles.data}>PAID: ${invoice.paid}</ThemedText>
+              <ThemedText style={styles.data}>Balance Due: ${invoice.due}</ThemedText>
+            </View>
+            {/* <Button title="Email Invoice" onPress={() => sendEmailWithAttachment()} /> */}
+            <View style={styles.tableRow}>
+              {invoice.closed ? (
+                <Button title="Closed" />
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    {
+                      borderColor: color,
+                      margin: 'auto',
+                      backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
+                    },
+                  ]}
+                  onPress={() => router.navigate('/(app)/(jobs)/invoiceUpdate')}
+                >
+                  <ThemedText>Change</ThemedText>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[
                   styles.button,
                   {
                     borderColor: color,
+                    width: 120,
                     margin: 'auto',
                     backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
                   },
                 ]}
-                onPress={() => router.navigate('/(app)/(jobs)/invoiceUpdate')}
+                onPress={() => createAndSendInvoice()}
               >
-                <ThemedText>
-                  Change
-                </ThemedText>
+                <ThemedText>Send Invoice</ThemedText>
               </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[
-                styles.button,
-                {
-                  borderColor: color,
-                  width: 120,
-                  margin: 'auto',
-                  backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
-                },
-              ]}
-              onPress={() => createAndSendInvoice()}
-            >
-              <ThemedText>
-                Send Invoice
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-          {/* <Modal
+            </View>
+            {/* <Modal
                         animationType="slide"
                         transparent={true}
                         visible={modalVisibleInvoice}
@@ -544,29 +540,29 @@ export default function Invoice() {
                         }
                         </View>
                     </Modal> */}
-        </ThemedSecondaryView>
-      </ScrollView>
-  ) : (
-    <>
-      <ThemedText style={[styles.invoiceTitle, { textAlign: 'center', margin: 'auto' }]}>
-        {error}
-      </ThemedText>
-      <TouchableOpacity
-        style={[
-          styles.button,
-          {
-            borderColor: color,
-            margin: 'auto',
-            backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
-          },
-        ]}
-        onPress={() => router.navigate('/(app)/(jobs)/invoiceCreate')}
-      >
-        <ThemedText style={{ textAlign: 'center' }}>Create</ThemedText>
-      </TouchableOpacity>
-      </>
-  )}
-  </> 
+          </ThemedSecondaryView>
+        </ScrollView>
+      ) : (
+        <>
+          <ThemedText style={[styles.invoiceTitle, { textAlign: 'center', margin: 'auto' }]}>
+            {error}
+          </ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                borderColor: color,
+                margin: 'auto',
+                backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
+              },
+            ]}
+            onPress={() => router.navigate('/(app)/(jobs)/invoiceCreate')}
+          >
+            <ThemedText style={{ textAlign: 'center' }}>Create</ThemedText>
+          </TouchableOpacity>
+        </>
+      )}
+    </>
   );
 }
 

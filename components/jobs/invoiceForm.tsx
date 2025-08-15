@@ -48,7 +48,7 @@ export default function InvoiceForm({ action, loading, setLoading }: InvoiceForm
   const [modalVisible, setModalVisible] = useState(false);
   const [paid, setPaid] = useState<any>(action === 'create' ? 0 : invoice.paid);
   const [price, setPrice] = useState<any>(action === 'create' ? 0 : invoice.total);
-  const [newCharges, setNewCharges] = useState<Charge[]>(action === 'create' ? [] : charges);
+  const [newCharges, setNewCharges] = useState<NewCharge[]>(action === 'create' ? [] : charges);
   const [description, setDescription] = useState<string>('');
   const [amount, setAmount] = useState<any>(0);
   const [errors, setErrors] = useState<Errors>({});
@@ -67,10 +67,10 @@ export default function InvoiceForm({ action, loading, setLoading }: InvoiceForm
   };
 
   const handleSubmit = async () => {
-    if (Object.keys(charges).length !== 0) {
+    if (Object.keys(newCharges).length !== 0) {
       setLoading(true);
       try {
-        const result = await createUpdateInvoice(job.id, action, { price: price, paid: paid, charges: charges });
+        const result = await createUpdateInvoice(job.id, action, { price: price, paid: paid, charges: newCharges });
         if (result) {
           dispatch(setInvoice(result));
           router.replace('/(app)/(jobs)/invoice');
@@ -91,18 +91,18 @@ export default function InvoiceForm({ action, loading, setLoading }: InvoiceForm
     }
   };
 
-  type Charge = {
+  type NewCharge = {
     description: string;
     amount: number;
   };
 
   const handleCharge = () => {
     if (validateForm()) {
-      const newCharge: Charge = { description: description, amount: amount };
-      setNewCharges((prevCharges: Charge[]) => [...prevCharges, newCharge]);
+      const newCharge: NewCharge = { description: description, amount: amount };
+      setNewCharges((prevCharges: NewCharge[]) => [...prevCharges, newCharge]);
       setDescription('');
       setAmount(0);
-      setNewCharges((prevCharges: Charge[]) => {
+      setNewCharges((prevCharges: NewCharge[]) => {
         const newPrice = prevCharges.reduce(
           (accumulator, charge) => accumulator + Number(charge.amount),
           0,
@@ -115,10 +115,10 @@ export default function InvoiceForm({ action, loading, setLoading }: InvoiceForm
   };
 
   const handleChargeDelete = (description: string) => {
-    const updatedCharges = newCharges.filter((charge: Charge) => charge.description !== description);
+    const updatedCharges = newCharges.filter((charge: NewCharge) => charge.description !== description);
     setNewCharges(updatedCharges);
     const newPrice = updatedCharges.reduce(
-      (accumulator: number, charge: Charge) => accumulator + Number(charge.amount),
+      (accumulator: number, charge: NewCharge) => accumulator + Number(charge.amount),
       0,
     );
     setPrice(newPrice);

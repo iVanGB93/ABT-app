@@ -42,6 +42,7 @@ export const jobSlice = createSlice({
         setJobMessage: (state, action: PayloadAction<any>) => {
             state.jobMessage = action.payload;
             state.jobError = null;
+            state.jobLoading = false;
         },
         setInvoice: (state, action: PayloadAction<any>) => {
             state.invoice = action.payload;
