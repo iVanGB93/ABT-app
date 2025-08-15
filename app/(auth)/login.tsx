@@ -15,11 +15,14 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
+import BiometricLogin from '@/components/BiometricLogin';
+import BiometricSetupPrompt from '@/components/BiometricSetupPrompt';
 import { RootState, useAppDispatch } from '../(redux)/store';
 import { authSuccess } from '../(redux)/authSlice';
 import { commonStyles } from '@/constants/commonStyles';
 import CustomAlert from '@/constants/customAlert';
 import axiosInstance from '@/axios';
+import { useBiometricAuth } from '@/hooks';
 import {
   darkThirdColor,
   darkTextColor,
@@ -43,8 +46,12 @@ export default function Login() {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
+  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
+  const [loginCredentials, setLoginCredentials] = useState<any>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  const { isAvailable, isEnrolled, isEnabled } = useBiometricAuth();
 
   const validateForm = () => {
     let errors: Errors = {};
@@ -61,15 +68,22 @@ export default function Login() {
         .post('token/', { username: username, password: password })
         .then(function (response) {
           if (response.data.access !== undefined) {
-            dispatch(
-              authSuccess({
-                username: username,
-                token: response.data.access,
-                refreshToken: response.data.refresh,
-              }),
-            );
+            const credentials = {
+              username: username,
+              token: response.data.access,
+              refreshToken: response.data.refresh,
+            };
+            
+            dispatch(authSuccess(credentials));
             setLoading(false);
-            router.navigate('/(onboarding)');
+            
+            // Check if we should offer biometric setup
+            if (isAvailable && isEnrolled && !isEnabled) {
+              setLoginCredentials(credentials);
+              setShowBiometricSetup(true);
+            } else {
+              router.navigate('/(onboarding)');
+            }
           } else {
             setError(response.data.message);
             setAlertVisible(true);
@@ -93,6 +107,26 @@ export default function Login() {
           setLoading(false);
         });
     }
+  };
+
+  const handleBiometricSetupClose = () => {
+    setShowBiometricSetup(false);
+    router.navigate('/(onboarding)');
+  };
+
+  const handleBiometricSuccess = (credentials: any) => {
+    // Use the stored credentials to authenticate with Redux
+    dispatch(authSuccess({
+      username: credentials.username,
+      token: credentials.token,
+      refreshToken: credentials.refreshToken,
+    }));
+    router.navigate('/(onboarding)');
+  };
+
+  const handleBiometricError = (error: string) => {
+    setError(error);
+    setAlertVisible(true);
   };
 
   return (
@@ -172,12 +206,19 @@ export default function Login() {
             <ActivityIndicator style={[commonStyles.loading, { marginTop: 50 }]} size="large" color={color} />
           ) : (
             <>
+              {/* Biometric Authentication Section */}
+              <BiometricLogin
+                onSuccess={handleBiometricSuccess}
+                onError={handleBiometricError}
+                showPrompt={false} // Don't auto-prompt, let user choose
+              />
+
               <TouchableOpacity
                 style={[
                   commonStyles.button,
                   {
                     borderColor: color,
-                    marginTop: 50,
+                    marginTop: 20,
                     backgroundColor: darkTheme ? darkThirdColor : lightMainColor,
                   },
                 ]}
@@ -205,6 +246,15 @@ export default function Login() {
         message={error}
         onClose={() => setAlertVisible(false)}
       />
+      
+      {/* Biometric Setup Prompt */}
+      {loginCredentials && (
+        <BiometricSetupPrompt
+          visible={showBiometricSetup}
+          onClose={handleBiometricSetupClose}
+          credentials={loginCredentials}
+        />
+      )}
     </ThemedView>
   );
 }

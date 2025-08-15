@@ -10,6 +10,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="businessSettings" options={{ headerShown: false }} />
       <Stack.Screen name="profileSettings" options={{ headerShown: false }} />
       <Stack.Screen name="styleSettings" options={{ headerShown: false }} />
+      <Stack.Screen name="biometricSettings" options={{ headerShown: false }} />
     </Stack>
   );
 }

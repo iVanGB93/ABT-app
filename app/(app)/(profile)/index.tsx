@@ -245,6 +245,25 @@ export default function Profile() {
                   </Text>
                 </TouchableOpacity>
               </View>
+              <View style={styles.rowContainer}>
+                <TouchableOpacity onPress={() => router.push('/(app)/(profile)/biometricSettings')}>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      { color: darkTheme ? darkTextColor : lightTextColor },
+                    ]}
+                  >
+                    <Ionicons
+                      style={[
+                        styles.optionText,
+                        { color: darkTheme ? darkTextColor : lightTextColor },
+                      ]}
+                      name="finger-print"
+                    />{' '}
+                    Biometric Authentication
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.rowContainerLast}>
                 <TouchableOpacity onPress={() => router.push('/(app)/(profile)/styleSettings')}>
                   <Text

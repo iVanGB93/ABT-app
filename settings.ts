@@ -1,4 +1,4 @@
-export const production: boolean = false;
+export const production: boolean = true;
 
 export const baseURL: string = production
   ? 'https://abt.qbared.com/api/'
