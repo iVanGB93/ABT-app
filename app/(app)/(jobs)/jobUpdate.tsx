@@ -21,8 +21,7 @@ import { ThemedText } from '@/components/ThemedText';
 
 export default function JobUpdate() {
   const { darkTheme } = useSelector((state: RootState) => state.settings);
-  const { job } = useSelector((state: RootState) => state.job);
-  const [isLoading, setIsLoading] = useState(false);
+  const { job, jobLoading } = useSelector((state: RootState) => state.job);
   const router = useRouter();
 
   return (
@@ -45,7 +44,7 @@ export default function JobUpdate() {
           <ThemedText type="subtitle">Update Job for {job.client}</ThemedText>
           <ThemedText type="subtitle"></ThemedText>
         </ThemedView>
-        {isLoading ? (
+        {jobLoading ? (
           <ActivityIndicator style={commonStyles.loading} size="large" />
         ) : (
           <ThemedSecondaryView
@@ -55,7 +54,7 @@ export default function JobUpdate() {
               keyboardShouldPersistTaps={'handled'}
               contentContainerStyle={{ flexGrow: 1 }}
             >
-              <JobForm action="update" isLoading={isLoading} setIsLoading={setIsLoading} />
+              <JobForm action="update" />
             </ScrollView>
           </ThemedSecondaryView>
         )}

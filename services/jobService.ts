@@ -30,19 +30,13 @@ export interface JobCreateData {
   scheduled_at?: string;
 }
 
-export interface JobUpdateData extends Partial<JobCreateData> {
-  id: number;
-  status?: 'pending' | 'confirmed' | 'in_progress' | 'on_hold' | 'review' | 'completed' | 'cancelled' | 'invoiced' | 'paid';
-  completed_at?: string | null;
-  closed?: boolean;
-}
-
 export interface JobSpent {
   id: number;
   job: number;
   description: string;
   amount: number;
   date: string;
+  image?: string;
   created_at: string;
 }
 
@@ -73,31 +67,17 @@ class JobService extends ApiService {
   }
 
   /**
-   * Create new job
+   * Create or update job with FormData (unified method)
    */
-  async createJob(data: JobCreateData): Promise<Job> {
-    return this.post<Job>('/', data);
-  }
-
-  /**
-   * Create new job with FormData (for image uploads)
-   */
-  async createJobWithFormData(formData: FormData, userName: string): Promise<Job> {
-    return this.postFormData<Job>(`/create/${userName}/`, formData);
-  }
-
-  /**
-   * Update job
-   */
-  async updateJob(id: number, data: JobUpdateData): Promise<Job> {
-    return this.patch<Job>(`/${id}/`, data);
-  }
-
-  /**
-   * Update job with FormData (for image uploads)
-   */
-  async updateJobWithFormData(formData: FormData, userName: string): Promise<Job> {
-    return this.postFormData<Job>(`/update/${userName}/`, formData);
+  async createUpdateJob(formData: FormData, userName: string): Promise<Job> {
+    const action = formData.get('action') as string;
+    if (action === 'update') {
+      return this.postFormData<Job>(`/update/${userName}/`, formData);
+    } else if (action === 'close' || action === 'delete') {
+      return this.postFormData<Job>(`/update/${formData.get('job_id')}/`, formData);
+    } else {
+      return this.postFormData<Job>(`/create/${userName}/`, formData);
+    }
   }
 
   /**
@@ -111,7 +91,7 @@ class JobService extends ApiService {
    * Get job expenses/spents
    */
   async getJobSpents(jobId: number): Promise<JobSpent[]> {
-    return this.get<JobSpent[]>(`/${jobId}/spents/`);
+    return this.get<JobSpent[]>(`/spents/list/${jobId}/`);
   }
 
   /**
@@ -129,6 +109,18 @@ class JobService extends ApiService {
   }
 
   /**
+   * Create or update job spent with FormData (unified method)
+   */
+  async createUpdateJobSpent(formData: FormData): Promise<JobSpent> {
+    const action = formData.get('action') as string;
+    if (action === 'update') {
+      return this.postFormData<JobSpent>('/spents/update/', formData);
+    } else {
+      return this.postFormData<JobSpent>('/spents/create/new/', formData);
+    }
+  }
+
+  /**
    * Update job spent
    */
   async updateJobSpent(id: number, data: Partial<JobSpentCreateData>): Promise<JobSpent> {
@@ -138,8 +130,9 @@ class JobService extends ApiService {
   /**
    * Delete job spent
    */
-  async deleteJobSpent(id: number): Promise<void> {
-    return this.delete<void>(`/spents/${id}/`);
+  async deleteJobSpent(formData: FormData): Promise<void> {
+    const id = formData.get('id') as string;
+    return this.postFormData<void>(`/spents/delete/${id}/`, formData);
   }
 
   /**
@@ -150,10 +143,14 @@ class JobService extends ApiService {
   }
 
   /**
-   * Create invoice for job
+   * Create or update invoice for job
    */
-  async createInvoice(jobId: number, data: { price: number; paid: number; charges: any }): Promise<any> {
-    return this.post<any>(`/invoice/create/${jobId}/`, data);
+  async createUpdateInvoice(jobId: number, action: string, data: { price: number; paid: number; charges: any }): Promise<any> {
+    if (action === 'update') {
+      return this.put<any>(`/invoice/update/${jobId}/`, data);
+    } else {
+      return this.post<any>(`/invoice/create/${jobId}/`, data);
+    }
   }
 
   /**
@@ -161,13 +158,6 @@ class JobService extends ApiService {
    */
   async getInvoice(jobId: number): Promise<{ invoice: any; charges: any }> {
     return this.get<{ invoice: any; charges: any }>(`/invoice/${jobId}/`);
-  }
-
-  /**
-   * Update invoice for job
-   */
-  async updateInvoice(jobId: number, data: { price: number; paid: number; charges: any }): Promise<any> {
-    return this.put<any>(`/invoice/update/${jobId}/`, data);
   }
 }
 

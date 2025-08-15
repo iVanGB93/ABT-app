@@ -5,43 +5,35 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-  Vibration,
 } from 'react-native';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
-import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import JobCard from '@/components/jobs/JobCard';
-import { jobFail, setJobs, setJob, setJobMessage } from '@/app/(redux)/jobSlice';
+import { setJob, setJobMessage } from '@/app/(redux)/jobSlice';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { commonStyles } from '@/constants/commonStyles';
-import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
-import { setBusiness } from '@/app/(redux)/settingSlice';
 import { useJobs } from '@/hooks';
 
 export default function Jobs() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { jobMessage } = useSelector((state: RootState) => state.job);
+  const { jobMessage, jobLoading, jobError } = useSelector((state: RootState) => state.job);
   const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { jobs, refresh } = useJobs();
 
-  // Use the Jobs hook
-  const { jobs, loading: isLoading, error, refresh } = useJobs();
-
-  // Auto-refresh when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refresh();
     }, [refresh])
   );
 
-  // Handle job messages (success notifications)
   useEffect(() => {
     if (jobMessage) {
       Toast.show({
@@ -59,16 +51,15 @@ export default function Jobs() {
         (job.description || '').toLowerCase().includes(search.toLowerCase()) ||
         (job.client_name_lastName || '').toLowerCase().includes(search.toLowerCase()),
     )
-    .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || '')) : [];
+    .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')) : [];
 
   const handlePressable = (id: number) => {
     let job = jobs.find((job) => job.id === id);
     dispatch(setJob(job));
-    router.push('/(app)/(jobs)/jobDetails');
+    router.navigate('/(app)/(jobs)/jobDetails');
   };
 
   return (
-    <>
       <ThemedView style={commonStyles.container}>
         <View style={commonStyles.tabHeader}>
           <ThemedText type="subtitle">Jobs</ThemedText>
@@ -90,11 +81,11 @@ export default function Jobs() {
             }}
           />
         </View>
-        {isLoading ? (
+        {jobLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-        ) : error ? (
+        ) : jobError ? (
           <View style={commonStyles.containerCentered}>
-            <ThemedText>{error}</ThemedText>
+            <ThemedText>{jobError}</ThemedText>
             <TouchableOpacity
               style={[commonStyles.button, { backgroundColor: color }]}
               onPress={() => refresh()}
@@ -106,6 +97,7 @@ export default function Jobs() {
           <>
             <FlatList
               data={filteredJobs}
+              keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
               renderItem={({ item }) => {
                 return (
                   <TouchableOpacity onPress={() => handlePressable(item.id)}>
@@ -113,7 +105,7 @@ export default function Jobs() {
                       image={item.image}
                       id={item.id}
                       status={item.status}
-                      client={item.client_name_lastName || 'No client'}
+                      client={item.client}
                       address={item.address}
                       description={item.description}
                       price={item.price}
@@ -133,8 +125,8 @@ export default function Jobs() {
               ListEmptyComponent={
                 <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
                   <ThemedText type="subtitle" style={{ textAlign: 'center' }}>
-                    {error
-                      ? error.toString() + ', pull to refresh'
+                    {jobError
+                      ? jobError.toString() + ', pull to refresh'
                       : 'No jobs found, create your first one'}
                   </ThemedText>
                 </View>
@@ -143,7 +135,7 @@ export default function Jobs() {
               ListFooterComponent={<View style={{ margin: 5 }} />}
               refreshControl={
                 <RefreshControl
-                  refreshing={isLoading}
+                  refreshing={jobLoading}
                   onRefresh={() => refresh()}
                   colors={[color]} // Colores del indicador de carga
                   tintColor={color} // Color del indicador de carga en iOS
@@ -159,6 +151,5 @@ export default function Jobs() {
           </>
         )}
       </ThemedView>
-    </>
   );
 }

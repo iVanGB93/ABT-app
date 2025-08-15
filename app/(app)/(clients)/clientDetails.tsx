@@ -31,14 +31,12 @@ import { useJobs } from '@/hooks';
 export default function ClientDetail() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { clientMessage, client, clientLoading } = useSelector((state: RootState) => state.client);
+  const { jobLoading, jobError } = useSelector((state: RootState) => state.job);
   const [modalVisible, setModalVisible] = useState(false);
   const [isBig, setIsBig] = useState(false);
-
   const dispatch = useAppDispatch();
   const router = useRouter();
-  
-  // Usar useJobs para obtener todos los trabajos
-  const { jobs, loading, error, refresh } = useJobs();
+  const { jobs, refresh } = useJobs();
   const { deleteClient: deleteClientAction } = useClientActions();
 
   // Filtrar trabajos del cliente específico
@@ -202,7 +200,7 @@ export default function ClientDetail() {
 
         <View style={commonStylesDetails.bottom}>
           <ThemedText type="subtitle">Jobs</ThemedText>
-          {loading ? (
+          {jobLoading ? (
             <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
           ) : (
             <View style={commonStylesDetails.list}>
@@ -238,7 +236,7 @@ export default function ClientDetail() {
                 ListFooterComponent={<View style={{ margin: 5 }} />}
                 refreshControl={
                   <RefreshControl
-                    refreshing={loading}
+                    refreshing={jobLoading}
                     onRefresh={() => refresh()}
                     colors={[color]}
                     tintColor={color}
@@ -273,7 +271,7 @@ export default function ClientDetail() {
           onRequestClose={() => setModalVisible(!modalVisible)}
         >
           <View style={commonStylesCards.centeredView}>
-            {loading ? (
+            {clientLoading ? (
               <ActivityIndicator color={color} size="large" />
             ) : (
               <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>

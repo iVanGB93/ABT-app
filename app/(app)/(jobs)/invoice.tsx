@@ -385,8 +385,8 @@ export default function Invoice() {
         if (newFileUri) {
           await Sharing.shareAsync(newFileUri);
         }
-        // Delete the file after sharing
-        // await FileSystem.deleteAsync(newFileUri);
+        //Delete the file after sharing
+        await FileSystem.deleteAsync(newFileUri);
       }
     } catch (error) {
       console.error('Error al generar o enviar el PDF:', error);

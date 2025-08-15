@@ -15,8 +15,6 @@ import { useItemActions } from '@/hooks';
 
 interface ItemFormProps {
   action?: any;
-  isLoading?: boolean;
-  setIsLoading?: any;
 }
 
 interface Errors {
@@ -26,9 +24,9 @@ interface Errors {
   amount?: any;
 }
 
-export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormProps) {
+export default function ItemForm({ action }: ItemFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { item } = useSelector((state: RootState) => state.item);
+  const { item, itemError } = useSelector((state: RootState) => state.item);
   const [name, setName] = useState(action === 'new' ? '' : item?.name || '');
   const [description, setDescription] = useState(action === 'new' ? '' : item?.description || '');
   const [amount, setAmount] = useState<any>(action === 'new' ? 1 : item?.amount || 1);
@@ -44,29 +42,16 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
   const dispatch = useDispatch();
   const router = useRouter();
 
-  // ✨ USAR HOOKS EN LUGAR DE AXIOS
   const { 
-    loading: actionsLoading, 
-    error: actionsError, 
-    createItem, 
-    createItemWithImage,
-    updateItem,
-    updateItemWithImage 
+    createUpdateItem, 
   } = useItemActions();
-
-  // Sync loading state with parent component
-  useEffect(() => {
-    if (setIsLoading) {
-      setIsLoading(actionsLoading);
-    }
-  }, [actionsLoading, setIsLoading]);
 
   // Sync error state
   useEffect(() => {
-    if (actionsError) {
-      setError(actionsError);
+    if (itemError) {
+      setError(itemError);
     }
-  }, [actionsError]);
+  }, [itemError]);
 
   const handleImageOptions = () => setImageModalVisible(true);
 
@@ -113,24 +98,15 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
-        setError('');
-
         let result;
-        
-        // Decidir si usar FormData o datos simples
-        const hasImage = image && image !== '' && !image.includes('default');
-        
-        if (hasImage) {
-          // Usar FormData para manejar la imagen
-          const formData = new FormData();
-          formData.append('action', action);
-          formData.append('id', item?.id || '');
-          formData.append('name', name);
-          formData.append('description', description);
-          formData.append('amount', amount.toString());
-          formData.append('price', price.toString());
-          
-          // Agregar imagen al FormData
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('id', item?.id || '');
+        formData.append('name', name);
+        formData.append('description', description);
+        formData.append('amount', amount.toString());
+        formData.append('price', price.toString());
+        if (image) {
           const uriParts = image.split('.');
           const fileType = uriParts[uriParts.length - 1];
           const fileName = `${name}ItemPicture.${fileType}`;
@@ -139,58 +115,20 @@ export default function ItemForm({ action, isLoading, setIsLoading }: ItemFormPr
             name: fileName,
             type: `image/${fileType}`,
           } as unknown as Blob);
-
-          if (action === 'new') {
-            result = await createItemWithImage(formData);
-          } else {
-            result = await updateItemWithImage(formData);
-          }
-        } else {
-          // Usar datos simples sin imagen
-          const itemData = {
-            name,
-            description,
-            price: parseFloat(price),
-            unit: 'pcs', // Default unit
-            category: '', // Default category
-            stock_quantity: parseInt(amount),
-            is_service: false, // Default to product
-          };
-
-          if (action === 'new') {
-            result = await createItem(itemData);
-          } else {
-            // Para update, incluir el id
-            const updateData = { ...itemData, id: item?.id };
-            result = await updateItem(updateData);
-          }
         }
-
+        result = await createUpdateItem(formData);
         if (result) {
           Vibration.vibrate(15);
           dispatch(setItemMessage(`Item ${action === 'new' ? 'created' : 'updated'} successfully`));
-          
           if (action === 'update') {
             dispatch(setItem(result));
           }
-          
           router.replace('/(app)/(items)');
-        } else if (!actionsError) {
-          // Si no hay resultado pero tampoco error, algo salió mal
-          setError(`Error ${action === 'new' ? 'creating' : 'updating'} your item`);
-          Vibration.vibrate(60);
-        }
-
-      } catch (err: any) {
+        } 
+      } 
+      catch (err: any) {
         Vibration.vibrate(60);
         console.error(`Error ${action === 'new' ? 'creating' : 'updating'} item:`, err);
-        
-        // Manejar errores de autorización como en el código original
-        if (err.response?.status === 401) {
-          router.push('/');
-        } else {
-          setError(`Error ${action === 'new' ? 'creating' : 'updating'} your item`);
-        }
       }
     }
   };

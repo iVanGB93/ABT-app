@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { businessService, type Business, type BusinessStats, type BusinessCreateData } from '@/services';
 
 interface UseBusinessesState {
@@ -26,7 +27,7 @@ interface UseBusinessActionsState {
   loading: boolean;
   error: string | null;
   createBusiness: (data: BusinessCreateData) => Promise<Business | null>;
-  updateBusiness: (id: number, data: Partial<BusinessCreateData>) => Promise<Business | null>;
+  updateBusiness: (data: Partial<BusinessCreateData>) => Promise<Business | null>;
   deleteBusiness: (id: number) => Promise<boolean>;
 }
 
@@ -34,22 +35,29 @@ interface UseBusinessActionsState {
  * Hook para obtener lista de businesses
  */
 export const useBusinesses = (): UseBusinessesState => {
+  const { userName } = useSelector((state: any) => state.auth);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBusinesses = useCallback(async () => {
+    if (!userName) {
+      setError('User not authenticated');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const data = await businessService.getBusinesses();
+      const data = await businessService.getBusinesses(userName);
       setBusinesses(data);
     } catch (err: any) {
       setError(err.message || 'Error loading businesses');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userName]);
 
   useEffect(() => {
     fetchBusinesses();
@@ -104,13 +112,13 @@ export const useBusiness = (id: number | null): UseBusinessState => {
 /**
  * Hook para obtener estadísticas de business
  */
-export const useBusinessStats = (id: number | null): UseBusinessStatsState => {
+export const useBusinessStats = (businessName: string | null): UseBusinessStatsState => {
   const [stats, setStats] = useState<BusinessStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
-    if (!id) {
+    if (!businessName) {
       setLoading(false);
       return;
     }
@@ -118,14 +126,14 @@ export const useBusinessStats = (id: number | null): UseBusinessStatsState => {
     try {
       setLoading(true);
       setError(null);
-      const data = await businessService.getBusinessStats(id);
+      const data = await businessService.getBusinessStats(businessName);
       setStats(data);
     } catch (err: any) {
       setError(err.message || 'Error loading business stats');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [businessName]);
 
   useEffect(() => {
     fetchStats();
@@ -142,13 +150,13 @@ export const useBusinessStats = (id: number | null): UseBusinessStatsState => {
 /**
  * Hook para obtener estadísticas mensuales
  */
-export const useBusinessMonthlyStats = (id: number | null, year: number, month: number): UseBusinessStatsState => {
+export const useBusinessMonthlyStats = (businessName: string | null, year: number, month: number): UseBusinessStatsState => {
   const [stats, setStats] = useState<BusinessStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchMonthlyStats = useCallback(async () => {
-    if (!id) {
+    if (!businessName) {
       setLoading(false);
       return;
     }
@@ -156,14 +164,14 @@ export const useBusinessMonthlyStats = (id: number | null, year: number, month: 
     try {
       setLoading(true);
       setError(null);
-      const data = await businessService.getMonthlyStats(id, year, month);
+      const data = await businessService.getMonthlyStats(businessName, year, month);
       setStats(data);
     } catch (err: any) {
       setError(err.message || 'Error loading monthly stats');
     } finally {
       setLoading(false);
     }
-  }, [id, year, month]);
+  }, [businessName, year, month]);
 
   useEffect(() => {
     fetchMonthlyStats();
@@ -181,14 +189,20 @@ export const useBusinessMonthlyStats = (id: number | null, year: number, month: 
  * Hook para acciones de business (crear, actualizar, eliminar)
  */
 export const useBusinessActions = (): UseBusinessActionsState => {
+  const { userName } = useSelector((state: any) => state.auth);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createBusiness = async (data: BusinessCreateData): Promise<Business | null> => {
+    if (!userName) {
+      setError('User not authenticated');
+      return null;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await businessService.createBusiness(data);
+      const result = await businessService.createBusiness(data, userName);
       return result;
     } catch (err: any) {
       setError(err.message || 'Error creating business');
@@ -198,11 +212,16 @@ export const useBusinessActions = (): UseBusinessActionsState => {
     }
   };
 
-  const updateBusiness = async (id: number, data: Partial<BusinessCreateData>): Promise<Business | null> => {
+  const updateBusiness = async (data: Partial<BusinessCreateData>): Promise<Business | null> => {
+    if (!userName) {
+      setError('User not authenticated');
+      return null;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await businessService.updateBusiness(id, data);
+      const result = await businessService.updateBusiness(data, userName);
       return result;
     } catch (err: any) {
       setError(err.message || 'Error updating business');

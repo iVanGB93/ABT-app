@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Vibration,
   Image,
-  Alert,
   Modal,
 } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
@@ -18,11 +17,9 @@ import { ThemedView } from '@/components/ThemedView';
 import SpentCard from '@/components/jobs/SpentCard';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
-import { setItemMessage, setUsedItems } from '@/app/(redux)/itemSlice';
+import { setUsedItems } from '@/app/(redux)/itemSlice';
 import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import { commonStyles } from '@/constants/commonStyles';
-import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
-import { setBusiness } from '@/app/(redux)/settingSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { setClient } from '@/app/(redux)/clientSlice';
@@ -33,7 +30,7 @@ import { useJobSpents, useJobActions } from '@/hooks/useJobs';
 
 export default function JobDetail() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { job } = useSelector((state: RootState) => state.job);
+  const { job, jobLoading } = useSelector((state: RootState) => state.job);
   const { clients } = useSelector((state: RootState) => state.client);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleFinish, setModalVisibleFinish] = useState(false);
@@ -43,7 +40,7 @@ export default function JobDetail() {
 
   // Use job spents hook and actions
   const { spents, loading: isLoading, error, refresh: refreshSpents } = useJobSpents(job?.id || null);
-  const { deleteJob: deleteJobAction, updateJob, loading: actionLoading } = useJobActions();
+  const { deleteJob: deleteJobAction, createUpdateJob } = useJobActions();
 
   // Auto-refresh when screen comes into focus
   useFocusEffect(
@@ -63,30 +60,33 @@ export default function JobDetail() {
 
   const deleteJob = async () => {
     if (!job?.id) return;
+
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('job_id', job.id.toString());
     
-    const success = await deleteJobAction(job.id);
+    const success = await createUpdateJob(formData);
     if (success) {
       dispatch(setJobMessage('Job deleted successfully'));
-      router.push('/(app)/(jobs)');
-    } else {
-      Alert.alert('Error deleting job');
+      router.replace('/(app)/(jobs)');
     }
   };
 
   const closeJob = async () => {
     if (!job?.id) return;
     
-    const updatedJob = await updateJob({ 
-      status: 'finished',
-      // Add other required fields if needed
-    } as any); // Temporary type assertion
+    const formData = new FormData();
+    formData.append('action', 'close');
+    formData.append('job_id', job.id.toString());
+    
+    const updatedJob = await createUpdateJob(formData);
     
     if (updatedJob) {
+      setModalVisibleFinish(false);
       dispatch(setJobMessage('Job closed successfully'));
-      router.push('/(app)/(jobs)');
+      router.replace('/(app)/(jobs)');
     } else {
-      setModalVisible(false);
-      Alert.alert('Error closing job');
+      setModalVisibleFinish(false);
     }
   };
 
@@ -159,17 +159,17 @@ export default function JobDetail() {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                 <Ionicons name="calendar" size={16} color={color} style={{ marginRight: 4 }} />
-                <ThemedText>{formatDate(job.date)}</ThemedText>
+                <ThemedText>{formatDate(job.created_at)}</ThemedText>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                 <Ionicons name="location" size={16} color={color} style={{ marginRight: 4 }} />
-                <ThemedText style={{ flex: 1 }}>{job.address}</ThemedText>
+                <ThemedText style={{ flex: 1 }}>{job.address ?? 'No address provided'}</ThemedText>
               </View>
             </View>
             <View style={{ alignItems: 'flex-end', justifyContent: 'flex-start', minWidth: 60 }}>
               <View
                 style={{
-                  backgroundColor: job.status === 'finished' ? '#4caf50' : color + '33',
+                  backgroundColor: job.status === 'completed' ? '#4caf50' : color + '33',
                   paddingHorizontal: 12,
                   paddingVertical: 2,
                   borderRadius: 10,
@@ -178,12 +178,12 @@ export default function JobDetail() {
               >
                 <ThemedText
                   style={{
-                    color: job.status === 'finished' ? '#fff' : color,
+                    color: job.status === 'completed' ? '#fff' : color,
                     fontWeight: 'bold',
                     fontSize: 13,
                   }}
                 >
-                  {job.status === 'finished' ? 'Finished' : job.status}
+                  {job.status}
                 </ThemedText>
               </View>
               {job.image ? (
@@ -200,7 +200,7 @@ export default function JobDetail() {
                   />
                 </TouchableOpacity>
               ) : null}
-              {job.status !== 'finished' ? (
+              {job.status !== 'completed' ? (
                 <TouchableOpacity
                   onPress={() => handleClose()}
                   style={[commonStyles.button, { marginTop: 30, padding: 0, borderColor: color }]}
@@ -266,7 +266,7 @@ export default function JobDetail() {
                   id={item.id}
                   description={item.description}
                   amount={item.amount}
-                  image={undefined} // JobSpent doesn't have image
+                  image={item.image}
                   date={item.created_at}
                 />
               );
@@ -298,7 +298,7 @@ export default function JobDetail() {
           />
         )}
       </ThemedView>
-      {job.status !== 'finished' ? (
+      {job.status !== 'completed' ? (
         <TouchableOpacity
           style={[
             commonStyles.button,
@@ -324,7 +324,7 @@ export default function JobDetail() {
         }}
       >
         <View style={commonStylesCards.centeredView}>
-          {isLoading ? (
+          {jobLoading ? (
             <ActivityIndicator style={commonStylesCards.loading} size="large" />
           ) : (
             <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>
@@ -375,7 +375,7 @@ export default function JobDetail() {
         }}
       >
         <View style={commonStylesCards.centeredView}>
-          {isLoading ? (
+          {jobLoading ? (
             <ActivityIndicator style={commonStylesCards.loading} size="large" />
           ) : (
             <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10 }]}>

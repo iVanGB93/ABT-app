@@ -27,9 +27,6 @@ import {
   lightTextColor,
 } from '@/settings';
 import { setJobMessage } from '@/app/(redux)/jobSlice';
-import { clientSetMessage, setClients } from '@/app/(redux)/clientSlice';
-import { authLogout, authSetMessage } from '@/app/(redux)/authSlice';
-import { setBusiness } from '@/app/(redux)/settingSlice';
 import CustomAddress from '../CustomAddress';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesForm } from '@/constants/commonStylesForm';
@@ -37,8 +34,6 @@ import { useClients, useJobActions } from '@/hooks';
 
 interface JobFormProps {
   action?: any;
-  isLoading?: boolean;
-  setIsLoading?: any;
 }
 
 interface Errors {
@@ -48,7 +43,7 @@ interface Errors {
   price?: string;
 }
 
-export default function JobForm({ action, isLoading, setIsLoading }: JobFormProps) {
+export default function JobForm({ action }: JobFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const { clients } = useSelector((state: RootState) => state.client);
@@ -75,7 +70,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
   }>();
 
   const { refresh: refreshClients } = useClients();
-  const { createJobWithFormData, updateJobWithFormData } = useJobActions();
+  const { createUpdateJob } = useJobActions();
 
   const handleImageOptions = () => setImageModalVisible(true);
 
@@ -83,12 +78,9 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
     try {
       await refreshClients();
       Vibration.vibrate(15);
-      setIsLoading(false);
     } catch (error) {
       Vibration.vibrate(60);
-      console.error('Error fetching clients:', error);
       setError('Error al obtener clientes');
-      setIsLoading(false);
     }
   };
 
@@ -202,8 +194,8 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
   };
 
   const handleSubmit = async () => {
-    if (validateForm()) {
-      setIsLoading(true);
+    if (!validateForm()) return;
+    try {
       const formData = new FormData();
       formData.append('action', action);
       formData.append('id', job.id);
@@ -212,7 +204,7 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
       formData.append('description', description);
       formData.append('price', price);
       formData.append('address', address);
-      console.log(formData);
+      // Siempre agregar imagen al FormData (puede ser string o asset)
       if (image !== null && typeof image !== 'string' && image.uri) {
         const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
@@ -223,30 +215,30 @@ export default function JobForm({ action, isLoading, setIsLoading }: JobFormProp
           type: `image/${fileType}`,
         } as unknown as Blob);
       }
-      try {
-        const result = action === 'new' 
-          ? await createJobWithFormData(formData)
-          : await updateJobWithFormData(formData);
-        
-        if (result) {
-          Vibration.vibrate(15);
-          dispatch(setJobMessage('Job ' + (action === 'new' ? 'created' : 'updated') + ' successfully'));
-          router.push('/(app)/(jobs)');
-        } else {
-          setError('Error ' + (action === 'new' ? 'creating' : 'updating') + ' job');
-        }
-        setIsLoading(false);
-      } catch (error) {
+      const result = await createUpdateJob(formData);
+      if (result) {
+        Vibration.vibrate(15);
+        dispatch(setJobMessage('Job ' + (action === 'new' ? 'created' : 'updated') + ' successfully'));
+        router.navigate('/(app)/(jobs)');
+      } else {
+        const errorMsg = `Error ${action === 'new' ? 'creating' : 'updating'} job`;
+        setError(errorMsg);
         Vibration.vibrate(60);
-        console.error('Error creating/updating job:', error);
-        setIsLoading(false);
-        setError('Error ' + (action === 'new' ? 'creating' : 'updating') + ' job');
       }
+    } catch (error) {
+      Vibration.vibrate(60);
+      console.error('Error creating/updating job:', error);
+      setError(`Error ${action === 'new' ? 'creating' : 'updating'} job`);
     }
   };
 
   return (
     <View>
+      {error && (
+        <ThemedText style={commonStyles.errorMsg}>
+          {error}
+        </ThemedText>
+      )}
       {action === 'new' ? (
         <>
           <ThemedText type="subtitle">Client</ThemedText>

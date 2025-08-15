@@ -13,13 +13,13 @@ import { useSelector } from 'react-redux';
 import { darkTextColor, lightTextColor } from '@/settings';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { ThemedText } from '../ThemedText';
-import axiosInstance from '@/axios';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '../ThemedView';
 import { formatDate } from '@/utils/formatDate';
+import { useJobSpentActions } from '@/hooks/useJobs';
 
 interface SpentCardProps {
   image: any;
@@ -33,42 +33,27 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const [modalVisible, setModalVisible] = useState(false);
   const spents = useSelector((state: RootState) => state.item.usedItems);
-  const [imageError, setImageError] = useState(false);
   const [isBig, setIsBig] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const { deleteSpent } = useJobSpentActions();
+
   const handleDelete = () => {
     setModalVisible(true);
   };
 
-  /* const handleEdit = () => {
-    let spent = spents.find(spent => spent.id === id);
-    dispatch(setSpent(spent));
-    navigation.navigate('JobStack', {screen: 'Edit Spent', params: {id: id}})
-  }; */
-
   const handleConfirmedDelete = async () => {
     setIsLoading(true);
-    await axiosInstance
-      .post(
-        `jobs/spents/delete/${id}/`,
-        { action: 'delete' },
-        {
-          headers: {
-            'content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      .then(function (response) {
-        if (response.data.OK) {
-          router.push('/(app)/(jobs)/jobDetails');
-        }
-      })
-      .catch(function (error) {
-        console.error('Error deleting a spent:', error);
-      });
+    setModalVisible(false);
+    const success = await deleteSpent(id);
+    if (success) {
+      router.push('/(app)/(jobs)/jobDetails');
+    } else {
+      console.error('Error deleting spent');
+    }
+    setIsLoading(false);
   };
 
   const toggleImageSize = () => {
@@ -96,7 +81,6 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
               { width: 80, height: 64, borderTopRightRadius: 0, borderBottomRightRadius: 0, backgroundColor: '#eee' },
             ]}
             source={{ uri: image }}
-            onError={() => setImageError(true)}
           />
         </TouchableOpacity>
         <TouchableOpacity onLongPress={() => handleDelete()}>

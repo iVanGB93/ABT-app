@@ -12,7 +12,13 @@ import PhoneInput, {
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
+import {
+  darkMainColor,
+  darkTextColor,
+  lightMainColor,
+  lightTextColor,
+  userImageDefault,
+} from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { clientSetMessage } from '@/app/(redux)/clientSlice';
 import { commonStylesForm } from '@/constants/commonStylesForm';
@@ -21,18 +27,6 @@ import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { useClientActions } from '@/hooks';
 
 interface ClientFormProps {
-  name?: any;
-  setName?: any;
-  lastName?: any;
-  setLastName?: any;
-  phone?: any;
-  setPhone?: any;
-  email?: any;
-  setEmail?: any;
-  address?: any;
-  setAddress?: any;
-  image: any;
-  setImage?: any;
   action?: any;
   id?: string;
 }
@@ -45,37 +39,23 @@ interface Errors {
   address?: string;
 }
 
-export default function ClientForm({
-  name,
-  setName,
-  lastName,
-  setLastName,
-  phone,
-  setPhone,
-  email,
-  setEmail,
-  address,
-  setAddress,
-  image,
-  setImage,
-  action,
-  id = '',
-}: ClientFormProps) {
+export default function ClientForm({ action }: ClientFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
+  const { clientError, client } = useSelector((state: RootState) => state.client);
+  const [name, setName] = useState(action === 'create' ? '' : client.name);
+  const [lastName, setLastName] = useState(action === 'create' ? '' : client.last_name);
+  const [phone, setPhone] = useState(action === 'create' ? '' : client.phone);
+  const [email, setEmail] = useState(action === 'create' ? '' : client.email);
+  const [address, setAddress] = useState(action === 'create' ? '' : client.address);
+  const [image, setImage] = useState(action === 'create' ? userImageDefault : client.image);
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [errors, setErrors] = useState<Errors>({});
-  const [error, setError] = useState<string | null>(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   // Usar el hook de acciones de cliente
-  const { 
-    createUpdateClient, 
-    createUpdateClientWithImage, 
-    error: actionError 
-  } = useClientActions();
+  const { createUpdateClient } = useClientActions();
 
   /* function handlePhoneInputValue(phoneNumber: string) {
     setPhone(selectedCountry?.callingCode + phoneNumber);
@@ -153,54 +133,36 @@ export default function ClientForm({
     if (!validateForm()) return;
 
     try {
-      setError(null);
-      
       const hasImage = image && image !== null;
       const phoneWithCountry = phone ? selectedCountry?.callingCode + phone : '';
-      
+
       let result;
-      if (hasImage) {
-        // Crear FormData para cliente con imagen
-        const formData = new FormData();
-        formData.append('action', action);
-        formData.append('id', id);
-        formData.append('business', business.name);
-        formData.append('name', name);
-        formData.append('last_name', lastName);
-        formData.append('phone', phoneWithCountry);
-        formData.append('email', email || '');
-        formData.append('address', address || '');
-        
-        if (image) {
-          const uriParts = image.split('.');
-          const fileType = uriParts[uriParts.length - 1];
-          const fileName = `${name}ProfilePicture.${fileType}`;
-          formData.append('image', {
-            uri: image,
-            name: fileName,
-            type: `image/${fileType}`,
-          } as unknown as Blob);
-        }
-        
-        result = await createUpdateClientWithImage(formData);
-      } else {
-        // Crear cliente sin imagen
-        result = await createUpdateClient({
-          name,
-          last_name: lastName,
-          phone: phoneWithCountry,
-          email: email || undefined,
-          address: address || undefined,
-        });
+      const formData = new FormData();
+      formData.append('action', action);
+      formData.append('id', client.id ?? '');
+      formData.append('business', business.name);
+      formData.append('name', name);
+      formData.append('last_name', lastName);
+      formData.append('phone', phoneWithCountry);
+      formData.append('email', email || '');
+      formData.append('address', address || '');
+      if (image) {
+        const uriParts = image.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        const fileName = `${name}ProfilePicture.${fileType}`;
+        formData.append('image', {
+          uri: image,
+          name: fileName,
+          type: `image/${fileType}`,
+        } as unknown as Blob);
       }
-      
+      result = await createUpdateClient(formData);
       if (result) {
         dispatch(clientSetMessage('Client created successfully'));
         router.replace('/(app)/(clients)');
       }
     } catch (error: any) {
       console.error(`Error ${action === 'new' ? 'creating' : 'updating'} client:`, error);
-      setError(actionError || `Error ${action === 'new' ? 'creating' : 'updating'} client`);
     }
   };
 
@@ -208,7 +170,7 @@ export default function ClientForm({
 
   return (
     <View>
-      {error ? <ThemedText style={commonStyles.errorMsg}>{error}</ThemedText> : null}
+      {clientError ? <ThemedText style={commonStyles.errorMsg}>{clientError}</ThemedText> : null}
       <ThemedText style={commonStylesForm.label}>Name</ThemedText>
       <View
         style={[
@@ -455,7 +417,14 @@ export default function ClientForm({
               </View>
             </View>
             <TouchableOpacity
-              style={[commonStyles.button, { borderColor: 'red', marginTop: 15, backgroundColor: darkTheme ? darkMainColor : lightMainColor }]}
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: 'red',
+                  marginTop: 15,
+                  backgroundColor: darkTheme ? darkMainColor : lightMainColor,
+                },
+              ]}
               onPress={() => setImageModalVisible(false)}
             >
               <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>

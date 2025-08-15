@@ -20,7 +20,7 @@ import { ThemedText } from '@/components/ThemedText';
 
 export default function JobCreate() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const [isLoading, setIsLoading] = useState(false);
+  const { jobLoading } = useSelector((state: RootState) => state.job);
   const router = useRouter();
 
   return (
@@ -43,7 +43,7 @@ export default function JobCreate() {
           <ThemedText type="subtitle">Create a New Job</ThemedText>
           <ThemedText type="subtitle"></ThemedText>
         </ThemedView>
-        {isLoading ? (
+        {jobLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
         ) : (
           <ThemedSecondaryView
@@ -53,7 +53,7 @@ export default function JobCreate() {
               keyboardShouldPersistTaps={'handled'}
               contentContainerStyle={{ flexGrow: 1 }}
             >
-              <JobForm action="new" isLoading={isLoading} setIsLoading={setIsLoading} />
+              <JobForm action="new" />
             </ScrollView>
           </ThemedSecondaryView>
         )}

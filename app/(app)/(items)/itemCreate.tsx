@@ -21,7 +21,7 @@ import { ThemedText } from '@/components/ThemedText';
 
 export default function ItemCreate() {
   const { darkTheme, color } = useSelector((state: RootState) => state.settings);
-  const [isLoading, setIsLoading] = useState(false);
+  const { itemLoading } = useSelector((state: RootState) => state.item);
   const router = useRouter();
 
   return (
@@ -44,7 +44,7 @@ export default function ItemCreate() {
           <ThemedText type="subtitle">Create Item</ThemedText>
           <ThemedText type="subtitle"></ThemedText>
         </ThemedView>
-        {isLoading ? (
+        {itemLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
         ) : (
           <ThemedSecondaryView
@@ -54,7 +54,7 @@ export default function ItemCreate() {
               keyboardShouldPersistTaps={'handled'}
               contentContainerStyle={{ flexGrow: 1 }}
             >
-              <ItemForm action="new" isLoading={isLoading} setIsLoading={setIsLoading} />
+              <ItemForm action="new"/>
             </ScrollView>
           </ThemedSecondaryView>
         )}

@@ -25,25 +25,32 @@ export const itemSlice = createSlice({
         setItem: (state, action: PayloadAction<any>) => {
             state.item = action.payload;
             state.itemLoading = false;
+            state.itemError = null;
         },
         setItems: (state, action: PayloadAction<any>) => {
             state.items = action.payload;
             state.itemLoading = false;
+            state.itemError = null;
         },
         setUsedItems: (state, action: PayloadAction<any>) => {
             state.usedItems = action.payload;
             state.itemLoading = false;
+            state.itemError = null;
         },
         setItemMessage: (state, action: PayloadAction<any>) => {
             state.itemMessage = action.payload
             state.itemLoading = false;
+            state.itemError = null;
         },
         setItemLoading: (state, action: PayloadAction<boolean>) => {
             state.itemLoading = action.payload;
+            state.itemError = null;
+            state.itemMessage = null;
         },
         itemFail: (state, action: PayloadAction<string>) => {
             state.itemError = action.payload;
             state.itemLoading = false;
+            state.itemMessage = null;
         },
     }
 });

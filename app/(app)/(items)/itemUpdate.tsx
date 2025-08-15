@@ -20,7 +20,7 @@ import { ThemedView } from '@/components/ThemedView';
 
 export default function ItemUpdate() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const [isLoading, setIsLoading] = useState(false);
+  const { itemLoading } = useSelector((state: RootState) => state.item);
   const router = useRouter();
 
   return (
@@ -43,7 +43,7 @@ export default function ItemUpdate() {
           <ThemedText type="subtitle">Update Item</ThemedText>
           <ThemedText type="subtitle"></ThemedText>
         </ThemedView>
-        {isLoading ? (
+        {itemLoading ? (
           <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
         ) : (
           <ThemedSecondaryView
@@ -53,7 +53,7 @@ export default function ItemUpdate() {
               keyboardShouldPersistTaps={'handled'}
               contentContainerStyle={{ flexGrow: 1 }}
             >
-              <ItemForm action="update" isLoading={isLoading} setIsLoading={setIsLoading} />
+              <ItemForm action="update" />
             </ScrollView>
           </ThemedSecondaryView>
         )}

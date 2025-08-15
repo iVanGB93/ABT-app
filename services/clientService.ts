@@ -45,22 +45,9 @@ class ClientService extends ApiService {
   }
 
   /**
-   * Create or update client (unified method)
-   */
-  async createUpdateClient(data: ClientCreateData & { id?: number }, userName: string): Promise<Client> {
-    if (data.id) {
-      // Update existing client
-      return this.post<Client>(`/update/${userName}/`, data);
-    } else {
-      // Create new client
-      return this.post<Client>(`/create/${userName}/`, data);
-    }
-  }
-
-  /**
    * Create or update client with FormData (unified method for image upload)
    */
-  async createUpdateClientWithImage(formData: FormData, userName: string): Promise<Client> {
+  async createUpdateClient(formData: FormData, userName: string): Promise<Client> {
     const action = formData.get('action') as string;
     if (action === 'update') {
       return this.postFormData<Client>(`/update/${userName}/`, formData);
@@ -76,15 +63,6 @@ class ClientService extends ApiService {
     // Extract id from formData to use in URL, assuming it's there
     const id = formData.get('id');
     return this.postFormData<void>(`/delete/${id}/`, formData);
-  }
-
-  /**
-   * Get client's jobs - not implemented in original API
-   */
-  async getClientJobs(id: number): Promise<any[]> {
-    // This endpoint doesn't exist in your current API
-    // Would need to filter jobs by client_id
-    return [];
   }
 }
 

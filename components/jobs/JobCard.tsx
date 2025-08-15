@@ -43,12 +43,27 @@ export default function JobCard({
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
 
   const statusIcon = (status: string) => {
-    if (status === 'active') {
-      return <FontAwesome name="wrench" color="orange" size={20} />;
-    } else if (status === 'new') {
-      return <FontAwesome style={{ color: 'red', fontSize: 20 }} name="exclamation" />;
-    } else {
-      return <Ionicons style={{ color: 'green', fontSize: 20 }} name="checkmark-done-sharp" />;
+    switch (status) {
+      case 'pending':
+        return <FontAwesome name="clock-o" color="orange" size={20} />;
+      case 'confirmed':
+        return <FontAwesome name="check-circle" color="blue" size={20} />;
+      case 'in_progress':
+        return <FontAwesome name="wrench" color="orange" size={20} />;
+      case 'on_hold':
+        return <FontAwesome name="pause-circle" color="gray" size={20} />;
+      case 'review':
+        return <FontAwesome name="search" color="purple" size={20} />;
+      case 'completed':
+        return <Ionicons name="checkmark-done-sharp" color="green" size={20} />;
+      case 'cancelled':
+        return <FontAwesome name="times-circle" color="red" size={20} />;
+      case 'invoiced':
+        return <FontAwesome name="file-text" color="teal" size={20} />;
+      case 'paid':
+        return <FontAwesome name="money" color="green" size={20} />;
+      default:
+        return <FontAwesome name="question-circle" color="gray" size={20} />;
     }
   };
 

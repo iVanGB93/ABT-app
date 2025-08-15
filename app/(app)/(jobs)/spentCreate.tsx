@@ -30,9 +30,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { commonStylesForm } from '@/constants/commonStylesForm';
-import { setItemMessage, setItems } from '@/app/(redux)/itemSlice';
 import { useItems } from '@/hooks';
-import { useJobActions } from '@/hooks/useJobs';
+import { useJobSpentActions } from '@/hooks/useJobs';
 
 interface Errors {
   client?: string;
@@ -60,7 +59,7 @@ export default function SpentCreate() {
   const dispatch = useAppDispatch();
 
   const { refresh: refreshItems } = useItems();
-  const { createSpentWithFormData } = useJobActions();
+  const { createUpdateSpent } = useJobSpentActions();
 
   const getItems = async () => {
     setIsLoading(true);
@@ -166,7 +165,7 @@ export default function SpentCreate() {
       }
       
       try {
-        const result = await createSpentWithFormData(formData);
+        const result = await createUpdateSpent(formData);
         if (result) {
           router.push('/(app)/(jobs)/jobDetails');
         }

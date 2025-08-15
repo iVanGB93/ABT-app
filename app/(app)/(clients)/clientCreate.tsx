@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   ActivityIndicator,
@@ -10,7 +10,7 @@ import { RootState } from '@/app/(redux)/store';
 import { useRouter } from 'expo-router';
 
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
-import { darkMainColor, lightMainColor, userImageDefault } from '@/settings';
+import { darkMainColor, lightMainColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import ClientForm from '@/components/clients/ClientForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
@@ -19,12 +19,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ClientCreate() {
-  const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [image, setImage] = useState<string | null>(userImageDefault);
   const { clientLoading } = useSelector((state: RootState) => state.client);
   const { darkTheme, color } = useSelector((state: RootState) => state.settings);
   const router = useRouter();
@@ -56,21 +50,7 @@ export default function ClientCreate() {
           style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
         >
           <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
-            <ClientForm
-              name={name}
-              setName={setName}
-              lastName={lastName}
-              setLastName={setLastName}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
-              address={address}
-              setAddress={setAddress}
-              image={image}
-              setImage={setImage}
-              action="new"
-            />
+            <ClientForm action="create" />
           </ScrollView>
         </ThemedSecondaryView>
       )}

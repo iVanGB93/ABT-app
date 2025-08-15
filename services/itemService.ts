@@ -77,6 +77,18 @@ class ItemService extends ApiService {
   }
 
   /**
+   * Create or update item with FormData (unified method)
+   */
+  async createUpdateItem(formData: FormData, businessName: string): Promise<Item> {
+    const action = formData.get('action') as string;
+    if (action === 'update') {
+      return this.postFormData<Item>(`/update/${businessName}/`, formData);
+    } else {
+      return this.postFormData<Item>(`/create/${businessName}/`, formData);
+    }
+  }
+
+  /**
    * Delete item
    */
   async deleteItem(id: number, businessName: string): Promise<void> {

@@ -53,10 +53,15 @@ export const jobSlice = createSlice({
             state.jobLoading = false;
             state.jobError = null;
         },
+        setJobLoading: (state, action: PayloadAction<boolean>) => {
+            state.jobLoading = action.payload;
+            state.jobError = null;
+            state.jobMessage = null;
+        },
     }
 });
 
-export const { setJobMessage, setJob, setJobs, jobFail, setInvoice, setCharges } = jobSlice.actions;
+export const { setJobMessage, setJob, setJobs, jobFail, setInvoice, setCharges, setJobLoading } = jobSlice.actions;
 
 export const jobReducer = jobSlice.reducer;
 export default jobSlice.reducer;

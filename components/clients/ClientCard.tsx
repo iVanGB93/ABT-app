@@ -3,10 +3,9 @@ import { View, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 
 import { ThemedText } from '@/components/ThemedText';
-import { RootState, useAppDispatch } from '@/app/(redux)/store';
+import { RootState} from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { commonStylesCards } from '@/constants/commonStylesCard';
-import { ThemedView } from '../ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ClientCardProps {

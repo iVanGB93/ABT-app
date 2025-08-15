@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   RefreshControl,
-  FlatList,
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
@@ -15,15 +14,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import { businessSetMessage, setBusinesses } from '@/app/(redux)/businessSlice';
-import axiosInstance from '@/axios';
 import { setBusiness, setMessage, cleanSettings } from '@/app/(redux)/settingSlice';
-import BusinessCard from '@/components/business/BusinessCard';
-import { commonStyles } from '@/constants/commonStyles';
 import { darkMainColor, darkSecondColor, lightMainColor, lightSecondColor } from '@/settings';
-import { authLogout } from '../../(redux)/authSlice';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { useClients, useJobs } from '@/hooks';
 import { useBusinessExtras } from '@/hooks/useBusinessExtras';
@@ -31,24 +24,20 @@ import { useBusinessExtras } from '@/hooks/useBusinessExtras';
 export default function IndexBusiness() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
-  const { businesses, businessMessage } = useSelector((state: RootState) => state.business);
+  const { jobLoading, jobError } = useSelector((state: RootState) => state.job);
+  const { clientLoading, clientError } = useSelector((state: RootState) => state.client);
 
   // Using new hooks for data fetching
+  const { clients, refresh: refreshClients } = useClients();
+
+  const { jobs, refresh: refreshJobs } = useJobs();
+
   const {
-    clients,
-    loading: clientsLoading,
-    error: clientsError,
-    refresh: refreshClients,
-  } = useClients();
-
-  const { jobs, loading: jobsLoading, error: jobsError, refresh: refreshJobs } = useJobs();
-
-  const { 
-    extraExpenses, 
-    extraIncome, 
-    loading: extrasLoading, 
+    extraExpenses,
+    extraIncome,
+    loading: extrasLoading,
     error: extrasError,
-    refresh: refreshExtras 
+    refresh: refreshExtras,
   } = useBusinessExtras();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -70,7 +59,7 @@ export default function IndexBusiness() {
   };
 
   const activeJobs = Array.isArray(jobs)
-    ? jobs.filter((job: any) => job.status === 'new' || job.status === 'active').length
+    ? jobs.filter((job: any) => job.status === 'pending' || job.status === 'in_progress').length
     : 0;
 
   // Calculate total revenue (jobs + extra income)
@@ -92,31 +81,31 @@ export default function IndexBusiness() {
   const totalClients = Array.isArray(clients) ? clients.length : 0;
 
   // Show loading state
-  const isLoading = clientsLoading || jobsLoading || extrasLoading;
+  const isLoading = clientLoading || jobLoading || extrasLoading;
 
   // Show error if any
-  const hasError = clientsError || jobsError || extrasError;
+  const hasError = clientError || jobError || extrasError;
 
   // Toast error messages
   useEffect(() => {
-    if (clientsError) {
+    if (clientError) {
       Toast.show({
         type: 'error',
         text1: 'Error loading clients',
-        text2: clientsError,
+        text2: clientError,
       });
     }
-  }, [clientsError]);
+  }, [clientError]);
 
   useEffect(() => {
-    if (jobsError) {
+    if (jobError) {
       Toast.show({
         type: 'error',
         text1: 'Error loading jobs',
-        text2: jobsError,
+        text2: jobError,
       });
     }
-  }, [jobsError]);
+  }, [jobError]);
 
   useEffect(() => {
     if (extrasError) {
@@ -272,7 +261,9 @@ export default function IndexBusiness() {
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             Quick Overview
           </ThemedText>
-          {(clientsLoading || jobsLoading || extrasLoading) && <ActivityIndicator size="small" color={color} />}
+          {(clientLoading || jobLoading || extrasLoading) && (
+            <ActivityIndicator size="small" color={color} />
+          )}
         </View>
         <View style={styles.statsGrid}>
           {renderStatCard(
@@ -298,7 +289,7 @@ export default function IndexBusiness() {
             () => router.navigate('/(app)/(clients)'),
           )}
           {renderStatCard(
-            'Net Profit', 
+            'Net Profit',
             isLoading ? '...' : `$${netProfit.toFixed(0)}`,
             'trending-up',
             netProfit >= 0 ? '#4CAF50' : '#FF5722',

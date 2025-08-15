@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,7 +10,7 @@ import { RootState } from '@/app/(redux)/store';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 
-import { darkMainColor, lightMainColor, userImageDefault } from '@/settings';
+import { darkMainColor, lightMainColor } from '@/settings';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStyles } from '@/constants/commonStyles';
 import ClientForm from '@/components/clients/ClientForm';
@@ -21,13 +21,7 @@ import { ThemedText } from '@/components/ThemedText';
 
 export default function ClientUpdate() {
   const { darkTheme, color } = useSelector((state: RootState) => state.settings);
-  const { client, clientLoading } = useSelector((state: RootState) => state.client);
-  const [name, setName] = useState(client.name);
-  const [lastName, setLastName] = useState(client.last_name);
-  const [phone, setPhone] = useState(client.phone);
-  const [email, setEmail] = useState(client.email);
-  const [address, setAddress] = useState(client.address);
-  const [image, setImage] = useState<string | null>(client.image || userImageDefault);
+  const { clientLoading } = useSelector((state: RootState) => state.client);
   const router = useRouter();
 
   return (
@@ -57,22 +51,7 @@ export default function ClientUpdate() {
           style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
         >
           <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
-            <ClientForm
-              name={name}
-              setName={setName}
-              lastName={lastName}
-              setLastName={setLastName}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
-              address={address}
-              setAddress={setAddress}
-              image={image}
-              setImage={setImage}
-              action="update"
-              id={client.id}
-            />
+            <ClientForm action="update" />
           </ScrollView>
         </ThemedSecondaryView>
       )}

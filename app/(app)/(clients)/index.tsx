@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   RefreshControl,
@@ -23,19 +23,13 @@ import { useClients } from '@/hooks';
 
 export default function Clients() {
   const { color, business, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { clientMessage } = useSelector((state: RootState) => state.client);
+  const { clientMessage, clientLoading, clientError } = useSelector((state: RootState) => state.client);
   const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const {
-    clients,
-    loading: clientsLoading,
-    error: clientsError,
-    refresh: refreshClients,
-  } = useClients(search);
+  const { clients, refresh: refreshClients } = useClients(search);
 
-  // Mostrar mensajes de éxito
   useEffect(() => {
     if (clientMessage) {
       Toast.show({
@@ -47,24 +41,21 @@ export default function Clients() {
     }
   }, [clientMessage]);
 
-  // Refresca la lista cuando se enfoca la pantalla
   useFocusEffect(
     React.useCallback(() => {
-      // Refrescar la lista cuando se regresa a esta pantalla
       refreshClients();
-    }, [refreshClients])
+    }, [refreshClients]),
   );
 
-  // Manejar errores del hook
   useEffect(() => {
-    if (clientsError) {
+    if (clientError) {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: clientsError,
+        text2: clientError,
       });
     }
-  }, [clientsError]);
+  }, [clientError]);
 
   const handlePressable = (id: number) => {
     let client = clients.find((client: any) => client.id === id);
@@ -99,11 +90,11 @@ export default function Clients() {
           }}
         />
       </View>
-      {clientsLoading ? (
+      {clientLoading ? (
         <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-      ) : clientsError ? (
+      ) : clientError ? (
         <View style={commonStyles.containerCentered}>
-          <ThemedText>{clientsError}</ThemedText>
+          <ThemedText>{clientError}</ThemedText>
           <TouchableOpacity
             style={[commonStyles.button, { borderColor: color }]}
             onPress={() => handleRefresh()}
@@ -119,11 +110,7 @@ export default function Clients() {
             renderItem={({ item }) => {
               return (
                 <TouchableOpacity onPress={() => handlePressable(item.id)}>
-                  <ClientCard
-                    name={item.name}
-                    last_name={item.last_name}
-                    image={item.image}
-                  />
+                  <ClientCard name={item.name} last_name={item.last_name} image={item.image} />
                 </TouchableOpacity>
               );
             }}
@@ -146,7 +133,7 @@ export default function Clients() {
             ListFooterComponent={<View style={{ margin: 5 }} />}
             refreshControl={
               <RefreshControl
-                refreshing={clientsLoading}
+                refreshing={clientLoading || false}
                 onRefresh={() => handleRefresh()}
                 colors={[color]} // Colores del indicador de carga
                 tintColor={color} // Color del indicador de carga en iOS

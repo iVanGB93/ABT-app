@@ -22,20 +22,16 @@ import { useItems } from '@/hooks';
 
 export default function Items() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { itemMessage } = useSelector((state: RootState) => state.item);
+  const { itemMessage, itemLoading, itemError } = useSelector((state: RootState) => state.item);
   const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  // ✨ USAR HOOKS EN LUGAR DE AXIOS
   const {
     items,
-    loading: itemsLoading,
-    error: itemsError,
     refresh: refreshItems,
   } = useItems(search);
 
-  // Mostrar mensajes de éxito
   useEffect(() => {
     if (itemMessage) {
       Toast.show({
@@ -79,9 +75,9 @@ export default function Items() {
           }}
         />
       </View>
-      {itemsError ? (
+      {itemError ? (
         <>
-          <ThemedText>{itemsError}</ThemedText>
+          <ThemedText>{itemError}</ThemedText>
           <TouchableOpacity
             style={[commonStyles.button, { backgroundColor: color }]}
             onPress={() => handleRefresh()}
@@ -89,7 +85,7 @@ export default function Items() {
             <ThemedText>Try again</ThemedText>
           </TouchableOpacity>
         </>
-      ) : itemsLoading ? (
+      ) : itemLoading ? (
         <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
       ) : (
         <>
@@ -129,7 +125,7 @@ export default function Items() {
             ListFooterComponent={<View style={{ margin: 5 }} />}
             refreshControl={
               <RefreshControl
-                refreshing={itemsLoading}
+                refreshing={itemLoading}
                 onRefresh={() => handleRefresh()}
                 colors={[color]} // Colores del indicador de carga
                 tintColor={color} // Color del indicador de carga en iOS

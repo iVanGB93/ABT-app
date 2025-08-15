@@ -49,11 +49,10 @@ export default function BusinessDetails() {
 
   // Use custom hooks
   const { extraExpenses, extraIncome, loading: extrasLoading, refresh: refreshExtras } = useBusinessExtras();
-  const { jobs, loading: jobsLoading, refresh: refreshJobs } = useJobs();
+  const { jobs, refresh: refreshJobs } = useJobs();
   const { businessMessage } = useSelector((state: RootState) => state.business);
 
   const isLoading = extrasLoading;
-  const isLoadingJob = jobsLoading;
 
   // Auto-refresh when screen comes into focus
   useFocusEffect(

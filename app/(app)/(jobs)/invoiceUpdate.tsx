@@ -29,6 +29,7 @@ import { StatusBar } from 'expo-status-bar';
 import { commonStylesForm } from '@/constants/commonStylesForm';
 import { commonStylesCards } from '@/constants/commonStylesCard';
 import { useJobActions } from '@/hooks';
+import InvoiceForm from '@/components/jobs/invoiceForm';
 
 interface Errors {
   description?: string;
@@ -52,7 +53,7 @@ export default function InvoiceUpdate() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const { updateInvoice } = useJobActions();
+  const { createUpdateInvoice } = useJobActions();
 
   const validateForm = () => {
     let errors: Errors = {};
@@ -65,7 +66,7 @@ export default function InvoiceUpdate() {
     if (Object.keys(newCharges).length !== 0) {
       setLoading(true);
       try {
-        const result = await updateInvoice(job.id, { price: price, paid: paid, charges: newCharges });
+        const result = await createUpdateInvoice(job.id, 'update', { price: price, paid: paid, charges: newCharges });
         if (result) {
           dispatch(setInvoice(result));
           router.push('/(app)/(jobs)/invoice');
@@ -121,8 +122,6 @@ export default function InvoiceUpdate() {
   };
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
@@ -142,189 +141,9 @@ export default function InvoiceUpdate() {
         {loading ? (
           <ActivityIndicator style={commonStyles.loading} color={color} size={36} />
         ) : (
-          <ThemedSecondaryView
-            style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
-          >
-            <ThemedText style={commonStyles.text_action}>{job.description}</ThemedText>
-            <ThemedText style={[commonStyles.text_action, { textAlign: 'right' }]}>
-              for {job.client}
-            </ThemedText>
-
-            <FlatList
-              data={newCharges}
-              renderItem={({ item }) => {
-                return (
-                  <View style={styles.dataContainer}>
-                    <TouchableOpacity onPress={() => handleChargeDelete(item.id)}>
-                      <ThemedText style={commonStyles.text_action}>
-                        {item.description}{' '}
-                        <Ionicons style={{ color: 'red', fontSize: 20 }} name="trash-outline" />
-                      </ThemedText>
-                    </TouchableOpacity>
-                    <ThemedText style={commonStyles.text_action}>${item.amount}</ThemedText>
-                  </View>
-                );
-              }}
-              ItemSeparatorComponent={() => (
-                <View style={{ height: 10, borderTopColor: 'white', borderTopWidth: 1 }} />
-              )}
-              ListEmptyComponent={
-                <ThemedText style={commonStyles.text_action}>
-                  No charges added yet
-                </ThemedText>
-              }
-              ListFooterComponent={
-                <View style={{ height: 10, borderTopColor: 'white', borderTopWidth: 1 }} />
-              }
-            />
-            <TouchableOpacity
-              style={[commonStyles.button, { borderColor: color, alignSelf: 'center' }]}
-              onPress={() => setModalVisible(true)}
-            >
-              <ThemedText>
-                + Charge
-              </ThemedText>
-            </TouchableOpacity>
-            <View style={[commonStyles.action, { justifyContent: 'space-between' }]}>
-              <ThemedText style={[commonStyles.text_action, { marginTop: 0 }]} type="subtitle">
-                Price
-              </ThemedText>
-              <ThemedText style={commonStyles.text_action}>${price}</ThemedText>
-            </View>
-            <ThemedText style={commonStyles.text_action} type="subtitle">
-              Paid
-            </ThemedText>
-            <View style={commonStyles.action}>
-              <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
-              <TextInput
-                style={[
-                  commonStyles.textInput,
-                  { color: darkTheme ? darkTextColor : lightTextColor },
-                ]}
-                placeholder="Enter amount paid"
-                placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-                value={paid}
-                onChangeText={setPaid}
-                keyboardType="numeric"
-              />
-            </View>
-            {errors.paid ? <Text style={commonStyles.errorMsg}>{errors.paid}</Text> : null}
-
-            <View
-              style={{
-                width: '100%',
-                flexDirection: 'row',
-                justifyContent: 'space-evenly',
-                marginTop: 15,
-              }}
-            >
-              <TouchableOpacity
-                style={[commonStyles.button, { borderColor: color }]}
-                onPress={() => handleSubmit()}
-              >
-                <ThemedText >
-                  Save
-                </ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[commonStyles.button, { borderColor: 'red' }]}
-                onPress={() => router.back()}
-              >
-                <ThemedText style={{ color: 'red' }}>
-                  Cancel
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-            <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => {
-                Alert.alert('Action canceled.');
-                setModalVisible(!modalVisible);
-              }}
-            >
-              <View style={commonStyles.containerCentered}>
-                <ThemedSecondaryView style={[commonStylesCards.card, { padding: 10, width: '90%'}]}>
-                  <ThemedText type="subtitle" style={{ textAlign: 'center', margin: 5 }}>
-                    New Charge
-                  </ThemedText>
-                  <ThemedText style={commonStyles.text_action} type="subtitle">
-                    Description
-                  </ThemedText>
-                  <View style={commonStyles.action}>
-                    <Ionicons name="text" color={darkTheme ? darkTextColor : lightTextColor} />
-                    <TextInput
-                      style={[
-                        commonStyles.textInput,
-                        { color: darkTheme ? darkTextColor : lightTextColor },
-                      ]}
-                      placeholder="Enter description"
-                      placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-                      value={description}
-                      autoFocus={true}
-                      onChangeText={setDescription}
-                    />
-                  </View>
-                  {errors.description ? (
-                    <Text style={commonStyles.errorMsg}>{errors.description}</Text>
-                  ) : null}
-                  <ThemedText style={commonStyles.text_action} type="subtitle">
-                    How much?
-                  </ThemedText>
-                  <View style={commonStyles.action}>
-                    <Ionicons
-                      name="cash-outline"
-                      color={darkTheme ? darkTextColor : lightTextColor}
-                    />
-                    <TextInput
-                      style={[
-                        commonStyles.textInput,
-                        { color: darkTheme ? darkTextColor : lightTextColor },
-                      ]}
-                      placeholder="Enter amount"
-                      placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-                      value={amount}
-                      onChangeText={setAmount}
-                      keyboardType="numeric"
-                    />
-                  </View>
-                  {errors.amount ? <Text style={commonStyles.errorMsg}>{errors.amount}</Text> : null}
-                  <View
-                    style={[styles.dataContainer, { padding: 10, justifyContent: 'space-evenly' }]}
-                  >
-                    <TouchableOpacity
-                      style={[commonStyles.button, { borderColor: color, marginHorizontal: 5, flex: 1 }]}
-                      onPress={() => handleCharge()}
-                    >
-                      <ThemedText>
-                        Save
-                      </ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        [commonStyles.button, { borderColor: 'red', marginHorizontal: 5, flex: 1 }],
-                      ]}
-                      onPress={() => setModalVisible(!modalVisible)}
-                    >
-                      <ThemedText style={{ color: 'red' }}>
-                        Cancel
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </View>
-                </ThemedSecondaryView>
-              </View>
-            </Modal>
-            <CustomAlert
-              title="Invoice error"
-              visible={alertVisible}
-              message={error}
-              onClose={() => setAlertVisible(false)}
-            />
-          </ThemedSecondaryView>
+          <InvoiceForm action="update" loading={loading} setLoading={setLoading} />
         )}
       </KeyboardAvoidingView>
-    </>
   );
 }
 

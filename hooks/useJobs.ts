@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { jobService, type Job, type JobCreateData, type JobUpdateData, type JobSpent, type JobSpentCreateData } from '@/services';
+import { jobService, type Job, type JobCreateData, type JobSpent, type JobSpentCreateData } from '@/services';
+import { jobFail, setJobLoading, setJobs } from '@/app/(redux)/jobSlice';
+import { useAppDispatch } from '@/app/(redux)/store';
 
 interface UseJobsState {
   jobs: Job[];
-  loading: boolean;
-  error: string | null;
   refresh: () => Promise<void>;
 }
 
@@ -24,20 +24,15 @@ interface UseJobSpentsState {
 }
 
 interface UseJobActionsState {
-  loading: boolean;
-  error: string | null;
-  createJob: (data: JobCreateData) => Promise<Job | null>;
-  createJobWithFormData: (formData: FormData) => Promise<Job | null>;
-  updateJob: (data: JobUpdateData) => Promise<Job | null>;
-  updateJobWithFormData: (formData: FormData) => Promise<Job | null>;
+  createUpdateJob: (formData: FormData) => Promise<Job | null>;
   deleteJob: (id: number) => Promise<boolean>;
-  createSpent: (data: JobSpentCreateData) => Promise<JobSpent | null>;
-  createSpentWithFormData: (formData: FormData) => Promise<JobSpent | null>;
-  updateSpent: (id: number, data: Partial<JobSpentCreateData>) => Promise<JobSpent | null>;
-  deleteSpent: (id: number) => Promise<boolean>;
   generateInvoice: (jobId: number) => Promise<string | null>;
-  createInvoice: (jobId: number, data: { price: number; paid: number; charges: any }) => Promise<any>;
-  updateInvoice: (jobId: number, data: { price: number; paid: number; charges: any }) => Promise<any>;
+  createUpdateInvoice: (jobId: number, action: string, data: { price: number; paid: number; charges: any }) => Promise<any>;
+}
+
+interface UseJobSpentActionsState {
+  createUpdateSpent: (formData: FormData) => Promise<JobSpent | null>;
+  deleteSpent: (id: number) => Promise<boolean>;
 }
 
 /**
@@ -45,28 +40,23 @@ interface UseJobActionsState {
  */
 export const useJobs = (filters?: { status?: string; client?: number }): UseJobsState => {
   const { business } = useSelector((state: any) => state.settings);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { jobs } = useSelector((state: any) => state.job);
+  const dispatch = useAppDispatch();
 
   const businessName = business?.name;
 
   const fetchJobs = useCallback(async () => {
     if (!businessName) {
-      setLoading(false);
-      setError('No business selected');
+      dispatch(jobFail('No business selected'));
       return;
     }
 
     try {
-      setLoading(true);
-      setError(null);
+      dispatch(setJobLoading(true));
       const data = await jobService.getJobs(businessName, filters);
-      setJobs(data);
+      dispatch(setJobs(data));
     } catch (err: any) {
-      setError(err.message || 'Error loading jobs');
-    } finally {
-      setLoading(false);
+      dispatch(jobFail(err.message || 'Error loading jobs'));
     }
   }, [businessName, filters]);
 
@@ -76,8 +66,6 @@ export const useJobs = (filters?: { status?: string; client?: number }): UseJobs
 
   return {
     jobs,
-    loading,
-    error,
     refresh: fetchJobs,
   };
 };
@@ -198,203 +186,123 @@ export const useJobInvoice = (jobId: number | null): { invoice: any; charges: an
     refresh: fetchInvoice,
   };
 };
+
 export const useJobActions = (): UseJobActionsState => {
   const { userName } = useSelector((state: any) => state.auth);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { jobs } = useSelector((state: any) => state.job);
+  const dispatch = useAppDispatch();
 
-  const createJob = async (data: JobCreateData): Promise<Job | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.createJob(data);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error creating job');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createJobWithFormData = async (formData: FormData): Promise<Job | null> => {
+  const createUpdateJob = async (formData: FormData): Promise<Job | null> => {
     if (!userName) {
-      setError('User not authenticated');
+      dispatch(jobFail('User not authenticated'));
       return null;
     }
 
     try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.createJobWithFormData(formData, userName);
+      dispatch(setJobLoading(true));
+      
+      const result = await jobService.createUpdateJob(formData, userName);
+      const action = formData.get('action') as string;
+      const id = formData.get('id') || formData.get('job_id'); 
+      
+      // Actualizar Redux store de manera inteligente
+      if ((action === 'update' || action === 'close') && id) {
+        // Update/Close: reemplazar job existente
+        const updatedJobs = jobs.map((job: Job) => 
+          job.id === parseInt(id as string) ? result : job
+        );
+        dispatch(setJobs(updatedJobs));
+      } else {
+        // Create: agregar nuevo job
+        dispatch(setJobs([...jobs, result]));
+      }
+      
       return result;
     } catch (err: any) {
-      setError(err.message || 'Error creating job');
+      const action = formData.get('action') as string;
+      dispatch(jobFail(err.message || `Error ${action === 'update' ? 'updating' : action === 'close' ? 'closing' : 'creating'} job`));
       return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateJob = async (data: JobUpdateData): Promise<Job | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.updateJob(data.id, data);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error updating job');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateJobWithFormData = async (formData: FormData): Promise<Job | null> => {
-    if (!userName) {
-      setError('User not authenticated');
-      return null;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.updateJobWithFormData(formData, userName);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error updating job');
-      return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const deleteJob = async (id: number): Promise<boolean> => {
     try {
-      setLoading(true);
-      setError(null);
+      dispatch(setJobLoading(true));
       await jobService.deleteJob(id);
+      
+      // Actualizar Redux store
+      const updatedJobs = jobs.filter((job: Job) => job.id !== id);
+      dispatch(setJobs(updatedJobs));
       return true;
     } catch (err: any) {
-      setError(err.message || 'Error deleting job');
+      dispatch(jobFail(err.message || 'Error deleting job'));
       return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createSpent = async (data: JobSpentCreateData): Promise<JobSpent | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.createJobSpent(data);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error creating spent');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createSpentWithFormData = async (formData: FormData): Promise<JobSpent | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.createJobSpentWithFormData(formData);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error creating spent');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateSpent = async (id: number, data: Partial<JobSpentCreateData>): Promise<JobSpent | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.updateJobSpent(id, data);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error updating spent');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteSpent = async (id: number): Promise<boolean> => {
-    try {
-      setLoading(true);
-      setError(null);
-      await jobService.deleteJobSpent(id);
-      return true;
-    } catch (err: any) {
-      setError(err.message || 'Error deleting spent');
-      return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const generateInvoice = async (jobId: number): Promise<string | null> => {
     try {
-      setLoading(true);
-      setError(null);
+      dispatch(setJobLoading(true));
       const result = await jobService.generateInvoice(jobId);
       return result.invoice_url;
     } catch (err: any) {
-      setError(err.message || 'Error generating invoice');
+      dispatch(jobFail(err.message || 'Error generating invoice'));
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
-  const createInvoice = async (jobId: number, data: { price: number; paid: number; charges: any }): Promise<any> => {
+  const createUpdateInvoice = async (jobId: number, action: string, data: { price: number; paid: number; charges: any }): Promise<any> => {
     try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.createInvoice(jobId, data);
+      const result = await jobService.createUpdateInvoice(jobId, action, data);
       return result;
     } catch (err: any) {
-      setError(err.message || 'Error creating invoice');
+      dispatch(jobFail(err.message || 'Error creating invoice'));
       return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateInvoice = async (jobId: number, data: { price: number; paid: number; charges: any }): Promise<any> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await jobService.updateInvoice(jobId, data);
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error updating invoice');
-      return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   return {
-    loading,
-    error,
-    createJob,
-    createJobWithFormData,
-    updateJob,
-    updateJobWithFormData,
+    createUpdateJob,
     deleteJob,
-    createSpent,
-    createSpentWithFormData,
-    updateSpent,
-    deleteSpent,
     generateInvoice,
-    createInvoice,
-    updateInvoice,
+    createUpdateInvoice,
+  };
+};
+
+/**
+ * Hook para acciones de job spents (crear, actualizar, eliminar)
+ */
+export const useJobSpentActions = (): UseJobSpentActionsState => {
+  const dispatch = useAppDispatch();
+
+  const createUpdateSpent = async (formData: FormData): Promise<JobSpent | null> => {
+    try {
+      dispatch(setJobLoading(true));
+      const result = await jobService.createUpdateJobSpent(formData);
+      return result;
+    } catch (err: any) {
+      const action = formData.get('action') as string;
+      dispatch(jobFail(err.message || `Error ${action === 'update' ? 'updating' : 'creating'} spent`));
+      return null;
+    }
+  };
+
+  const deleteSpent = async (id: number): Promise<boolean> => {
+    try {
+      dispatch(setJobLoading(true));
+      const formData = new FormData();
+      formData.append('action', 'delete');
+      formData.append('id', id.toString());
+      await jobService.deleteJobSpent(formData);
+      return true;
+    } catch (err: any) {
+      dispatch(jobFail(err.message || 'Error deleting spent'));
+      return false;
+    }
+  };
+
+  return {
+    createUpdateSpent,
+    deleteSpent,
   };
 };
