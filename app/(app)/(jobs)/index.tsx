@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +19,81 @@ import { setJob, setJobMessage } from '@/app/(redux)/jobSlice';
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { commonStyles } from '@/constants/commonStyles';
 import { useJobs } from '@/hooks';
+
+// Helper function to format date
+const formatDateHeader = (dateString: string): string => {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Reset time to compare dates only
+  today.setHours(0, 0, 0, 0);
+  yesterday.setHours(0, 0, 0, 0);
+  const targetDate = new Date(date);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const isCurrentYear = date.getFullYear() === today.getFullYear();
+
+  if (targetDate.getTime() === today.getTime()) {
+    return isCurrentYear ? 'Today' : `Today, ${date.getFullYear()}`;
+  } else if (targetDate.getTime() === yesterday.getTime()) {
+    return isCurrentYear ? 'Yesterday' : `Yesterday, ${date.getFullYear()}`;
+  } else {
+    // Always show the year for clarity
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+};
+
+// Helper function to group jobs by date
+const groupJobsByDate = (jobs: any[]) => {
+  const grouped: { [key: string]: any[] } = {};
+  
+  jobs.forEach(job => {
+    if (job.created_at) {
+      const date = new Date(job.created_at).toDateString();
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(job);
+    }
+  });
+
+  // Convert to array and sort by date (newest first)
+  return Object.entries(grouped)
+    .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+    .flatMap(([dateString, jobs]) => [
+      { type: 'date_header', date: dateString, id: `header-${dateString}` },
+      ...jobs.map(job => ({ ...job, type: 'job' }))
+    ]);
+};
+
+// Date separator component
+const DateSeparator = ({ date, color }: { date: string, color: string }) => (
+  <View style={{
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    borderRadius: 8,
+    marginHorizontal: 10,
+    marginVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  }}>
+    <Ionicons name="calendar-outline" size={18} color={color} style={{ marginRight: 8 }} />
+    <ThemedText style={{ 
+      fontSize: 16, 
+      fontWeight: '600',
+      color: color 
+    }}>
+      {formatDateHeader(date)}
+    </ThemedText>
+  </View>
+);
 
 export default function Jobs() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
@@ -45,13 +120,16 @@ export default function Jobs() {
     }
   }, [jobMessage]);
 
-  const filteredJobs = Array.isArray(jobs) ? [...jobs]
-    .filter(
+  const filteredAndGroupedJobs = useMemo(() => {
+    if (!Array.isArray(jobs)) return [];
+    const filtered = jobs.filter(
       (job) =>
         (job.description || '').toLowerCase().includes(search.toLowerCase()) ||
         (job.client_name_lastName || '').toLowerCase().includes(search.toLowerCase()),
-    )
-    .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')) : [];
+    );
+    const sorted = filtered.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+    return groupJobsByDate(sorted);
+  }, [jobs, search]);
 
   const handlePressable = (id: number) => {
     let job = jobs.find((job) => job.id === id);
@@ -96,9 +174,15 @@ export default function Jobs() {
         ) : (
           <>
             <FlatList
-              data={filteredJobs}
+              data={filteredAndGroupedJobs}
               keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
               renderItem={({ item }) => {
+                // Render date separator
+                if (item.type === 'date_header') {
+                  return <DateSeparator date={item.date} color={color} />;
+                }
+
+                // Render job card
                 return (
                   <TouchableOpacity onPress={() => handlePressable(item.id)}>
                     <JobCard
@@ -116,9 +200,15 @@ export default function Jobs() {
                   </TouchableOpacity>
                 );
               }}
-              ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+              ItemSeparatorComponent={({ leadingItem }) => {
+                // No separator after date headers
+                if (leadingItem?.type === 'date_header') {
+                  return null;
+                }
+                return <View style={{ height: 5 }} />;
+              }}
               contentContainerStyle={
-                filteredJobs.length === 0
+                filteredAndGroupedJobs.length === 0
                   ? { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }
                   : undefined
               }

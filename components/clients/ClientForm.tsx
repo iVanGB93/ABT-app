@@ -337,7 +337,7 @@ export default function ClientForm({ action }: ClientFormProps) {
           ]}
           onPress={() => handleSubmit()}
         >
-          <ThemedText>{action === 'new' ? 'Create' : 'Update'}</ThemedText>
+          <ThemedText>{action === 'create' ? 'Create' : 'Update'}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[

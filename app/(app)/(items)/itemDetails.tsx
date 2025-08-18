@@ -168,7 +168,7 @@ export default function ItemDetail() {
         </View>
 
         <View style={commonStylesDetails.bottom}>
-          <ThemedText type="subtitle">Used in</ThemedText>
+          <ThemedText type="subtitle">Used in {usedItems.length} jobs</ThemedText>
           {loading ? (
             <ActivityIndicator style={commonStyles.loading} size="large" />
           ) : (
@@ -186,7 +186,7 @@ export default function ItemDetail() {
                       address={item.address}
                       description={item.description}
                       price={item.price}
-                      date={item.date}
+                      date={item.updated_at}
                       inDetail={true}
                     />
                   </TouchableOpacity>
@@ -194,7 +194,7 @@ export default function ItemDetail() {
                 ItemSeparatorComponent={() => (
                   <View
                     style={{
-                      height: 16,
+                      height: 5,
                     }}
                   />
                 )}

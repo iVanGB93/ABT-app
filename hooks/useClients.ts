@@ -53,15 +53,29 @@ export const useClients = (searchQuery?: string): UseClientsState => {
 
   // Filter clients by search query if provided
   const filteredClients = useMemo(() => {
-    if (!searchQuery || !clients) return clients || [];
+    if (!searchQuery || !clients) {
+      // Sort all clients alphabetically by name (create copy first)
+      return [...(clients || [])].sort((a: Client, b: Client) => {
+        const nameA = (a.name || '').toLowerCase();
+        const nameB = (b.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    }
     
-    return clients.filter((client: Client) =>
-      client.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.phone?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter and sort clients by search query (create copy first)
+    return clients
+      .filter((client: Client) =>
+        client.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a: Client, b: Client) => {
+        const nameA = (a.name || '').toLowerCase();
+        const nameB = (b.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
   }, [clients, searchQuery]);
 
   return {
@@ -125,10 +139,22 @@ export const useClientActions = (): UseClientActionsState => {
         const updatedClients = clients.map((client: Client) => 
           client.id === parseInt(id as string) ? result : client
         );
-        dispatch(setClients(updatedClients));
+        // Sort the updated list alphabetically
+        const sortedClients = updatedClients.sort((a: Client, b: Client) => {
+          const nameA = (a.name || '').toLowerCase();
+          const nameB = (b.name || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        dispatch(setClients(sortedClients));
       } else {
-        // Create: agregar nuevo cliente
-        dispatch(setClients([...clients, result]));
+        // Create: agregar nuevo cliente y ordenar
+        const newClientsList = [...clients, result];
+        const sortedClients = newClientsList.sort((a: Client, b: Client) => {
+          const nameA = (a.name || '').toLowerCase();
+          const nameB = (b.name || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        dispatch(setClients(sortedClients));
       }
       
       return result;

@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
@@ -24,39 +25,36 @@ export default function JobCreate() {
   const router = useRouter();
 
   return (
-      <KeyboardAvoidingView
-        behavior="padding"
-        keyboardVerticalOffset={100}
-        style={[
-          commonStyles.container,
-          { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
-        ]}
-      >
-        <ThemedView style={commonStyles.tabHeader}>
-          <TouchableOpacity
-            onPress={() => {
-              router.back();
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
-          </TouchableOpacity>
-          <ThemedText type="subtitle">Create a New Job</ThemedText>
-          <ThemedText type="subtitle"></ThemedText>
-        </ThemedView>
-        {jobLoading ? (
-          <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
-        ) : (
-          <ThemedSecondaryView
-            style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
-          >
-            <ScrollView
-              keyboardShouldPersistTaps={'handled'}
-              contentContainerStyle={{ flexGrow: 1 }}
-            >
-              <JobForm action="new" />
-            </ScrollView>
-          </ThemedSecondaryView>
-        )}
-      </KeyboardAvoidingView>
+    <KeyboardAvoidingView
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      style={[
+        commonStyles.container,
+        { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
+      ]}
+    >
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.replace('/(app)/(jobs)');
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Create a New Job</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
+      {jobLoading ? (
+        <ActivityIndicator style={commonStyles.containerCentered} color={color} size="large" />
+      ) : (
+        <ThemedSecondaryView
+          style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
+        >
+          <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
+            <JobForm action="new" />
+          </ScrollView>
+        </ThemedSecondaryView>
+      )}
+    </KeyboardAvoidingView>
   );
 }

@@ -18,6 +18,7 @@ interface BiometricSetupPromptProps {
   onClose: () => void;
   credentials: {
     username: string;
+    password: string;
     token: string;
     refreshToken: string;
   };

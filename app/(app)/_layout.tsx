@@ -58,6 +58,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="(schedule)"
+        options={{
+          title: 'Schedule',
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome size={focused ? 28 : 26} name="calendar" color={color} />
+          ),
+        }}
+        listeners={{
+          tabPress: vibrateTab,
+        }}
+      />
+      <Tabs.Screen
         name="(business)"
         options={{
           title: 'Business',

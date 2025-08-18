@@ -6,7 +6,7 @@ export default function BusinessLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="index" options={{ headerShown: false, animation: 'simple_push' }} />
       <Stack.Screen name="businessDetails" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="businessMonthDetails" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="businessUpdate" options={{ headerShown: false, animation: 'fade' }} />

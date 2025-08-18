@@ -183,7 +183,7 @@ export default function JobDetail() {
                     fontSize: 13,
                   }}
                 >
-                  {job.status}
+                  {job.status === 'in_progress' ? 'in progress' : job.status}
                 </ThemedText>
               </View>
               {job.image ? (
@@ -267,7 +267,7 @@ export default function JobDetail() {
                   description={item.description}
                   amount={item.amount}
                   image={item.image}
-                  date={item.created_at}
+                  date={item.date}
                 />
               );
             }}

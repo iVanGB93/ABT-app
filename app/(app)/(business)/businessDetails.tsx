@@ -7,34 +7,23 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Image,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Toast from 'react-native-toast-message';
-import { StatusBar } from 'expo-status-bar';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import BusinessCard from '@/components/business/BusinessCard';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import {
   darkMainColor,
-  darkSecondColor,
-  darkTextColor,
   lightMainColor,
-  lightSecondColor,
-  lightTextColor,
 } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { businessSetMessage, setExtraExpenses, setExtraIncome } from '@/app/(redux)/businessSlice';
-import { commonStylesDetails } from '@/constants/commonStylesDetails';
 import ExtrasCard from '@/components/business/ExtrasCard';
 import { Ionicons } from '@expo/vector-icons';
-import { jobFail, setJobs } from '@/app/(redux)/jobSlice';
 import { setBusiness } from '@/app/(redux)/settingSlice';
-import { authLogout } from '@/app/(redux)/authSlice';
 import { useBusinessExtras } from '@/hooks/useBusinessExtras';
 import { useJobs } from '@/hooks/useJobs';
 import { useCallback } from 'react';
@@ -111,7 +100,7 @@ export default function BusinessDetails() {
       {/* Financial Overview */}
       <View style={styles.statsContainer}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(app)/(business)')}>
             <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
           </TouchableOpacity>
           <ThemedText type="subtitle">
@@ -212,7 +201,8 @@ export default function BusinessDetails() {
             </View>
           ) : (
             <>
-              {(activeTab === 'expenses' ? extraExpenses : extraIncome)?.length === 0 ? (
+              {!Array.isArray(activeTab === 'expenses' ? extraExpenses : extraIncome) || 
+               (activeTab === 'expenses' ? extraExpenses : extraIncome).length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <View style={styles.emptyStateIcon}>
                     <Ionicons
@@ -365,7 +355,7 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
@@ -472,14 +462,15 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   tabsContainer: {
-    marginBottom: 5,
+    flex: 1,
+    paddingHorizontal: 16,
   },
   tabsHeader: {
-    marginBottom: 5,
+    marginBottom: 16,
   },
   tabBar: {
     flexDirection: 'row',
-    marginBottom: 5,
+    marginBottom: 16,
   },
   tab: {
     flex: 1,
@@ -501,7 +492,6 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     flex: 1,
-    maxHeight: 400,
   },
   centeredContainer: {
     alignItems: 'center',

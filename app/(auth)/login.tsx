@@ -70,6 +70,7 @@ export default function Login() {
           if (response.data.access !== undefined) {
             const credentials = {
               username: username,
+              password: password, // Add password for biometric fallback
               token: response.data.access,
               refreshToken: response.data.refresh,
             };

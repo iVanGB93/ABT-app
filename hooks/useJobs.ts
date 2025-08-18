@@ -277,7 +277,6 @@ export const useJobSpentActions = (): UseJobSpentActionsState => {
 
   const createUpdateSpent = async (formData: FormData): Promise<JobSpent | null> => {
     try {
-      dispatch(setJobLoading(true));
       const result = await jobService.createUpdateJobSpent(formData);
       return result;
     } catch (err: any) {

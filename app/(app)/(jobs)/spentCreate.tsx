@@ -36,7 +36,7 @@ import { useJobSpentActions } from '@/hooks/useJobs';
 interface Errors {
   client?: string;
   description?: string;
-  amount?: string;
+  price?: string;
   job?: string;
 }
 
@@ -48,7 +48,7 @@ export default function SpentCreate() {
   const [isEnabled, setIsEnabled] = useState<any>(false);
   const [itemsName, setItemsName] = useState<any>('');
   const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [price, setPrice] = useState('');
   type ImageType = { uri: string } | string;
   const [image, setImage] = useState<ImageType>(itemImageDefault);
   const [errors, setErrors] = useState<Errors>({});
@@ -88,11 +88,11 @@ export default function SpentCreate() {
     setIsEnabled((previousState: any) => !previousState);
     if (!isEnabled) {
       setDescription(item.name);
-      setAmount(item.price);
+      setPrice(item.price);
       setImage(item.image ? item.image : itemImageDefault);
     } else {
       setDescription('');
-      setAmount('');
+      setPrice('');
       setImage(itemImageDefault);
     }
   };
@@ -100,7 +100,7 @@ export default function SpentCreate() {
   const handleSelect = (name: string) => {
     const itemList = items.filter((item: { name: string }) => item.name === name);
     setItem(itemList[0]);
-    setAmount(itemList[0].price);
+    setPrice(itemList[0].price);
     setDescription(itemList[0].name);
     setImage(itemList[0].image ? itemList[0].image : itemImageDefault);
   };
@@ -138,7 +138,7 @@ export default function SpentCreate() {
   const validateForm = () => {
     let errors: Errors = {};
     if (!description) errors.description = 'Description is required';
-    if (!amount) errors.amount = 'Amount is required';
+    if (!price) errors.price = 'Price is required';
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -150,7 +150,7 @@ export default function SpentCreate() {
       formData.append('action', 'new');
       formData.append('job_id', job.id);
       formData.append('description', description);
-      formData.append('amount', amount);
+      formData.append('amount', price);
       formData.append('use_item', isEnabled);
       formData.append('item_id', isEnabled ? item.id : '');
       if (image !== null && typeof image !== 'string' && image.uri) {
@@ -309,7 +309,7 @@ export default function SpentCreate() {
               </>
             )}
             <ThemedText style={commonStylesForm.label} type="subtitle">
-              Amount
+              Price
             </ThemedText>
             <View
               style={[
@@ -319,22 +319,22 @@ export default function SpentCreate() {
             >
               <Ionicons name="cash-outline" color={darkTheme ? darkTextColor : lightTextColor} />
               {isEnabled ? (
-                <ThemedText> $ {amount}</ThemedText>
+                <ThemedText> $ {price}</ThemedText>
               ) : (
                 <TextInput
                   style={[
                     commonStyles.textInput,
                     { color: darkTheme ? darkTextColor : lightTextColor },
                   ]}
-                  placeholder={amount ? amount.toString() : "Enter spent's amount"}
+                  placeholder={price ? price.toString() : "Enter spent's price"}
                   placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-                  value={amount ? amount.toString() : ''}
-                  onChangeText={setAmount}
+                  value={price ? price.toString() : ''}
+                  onChangeText={setPrice}
                   keyboardType="numeric"
                 />
               )}
             </View>
-            {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+            {errors.price ? <Text style={styles.errorText}>{errors.price}</Text> : null}
 
             <View style={{ alignItems: 'center', marginTop: 15 }}>
               <TouchableOpacity onPress={handleImageOptions} activeOpacity={0.8}>

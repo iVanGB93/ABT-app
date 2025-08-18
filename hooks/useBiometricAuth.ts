@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
+import axiosInstance from '@/axios';
 
 interface BiometricAuthState {
   isAvailable: boolean;
@@ -14,6 +15,7 @@ interface BiometricAuthState {
 
 interface StoredCredentials {
   username: string;
+  password: string; // Add password for fallback login
   token: string;
   refreshToken: string;
 }
@@ -26,6 +28,8 @@ interface BiometricAuthActions {
   getBiometricTypeNames: () => string[];
   authenticateAndGetCredentials: (reason?: string) => Promise<StoredCredentials | null>;
   getStoredUserInfo: () => Promise<{ username: string } | null>;
+  refreshStoredTokens: () => Promise<StoredCredentials | null>;
+  loginWithStoredCredentials: () => Promise<StoredCredentials | null>;
 }
 
 const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
@@ -122,7 +126,7 @@ export const useBiometricAuth = (): BiometricAuthState & BiometricAuthActions =>
     }
   };
 
-  // Authenticate and return stored credentials
+  // Authenticate and return stored credentials with auto-refresh
   const authenticateAndGetCredentials = async (reason?: string): Promise<StoredCredentials | null> => {
     try {
       setError(null);
@@ -139,12 +143,44 @@ export const useBiometricAuth = (): BiometricAuthState & BiometricAuthActions =>
 
       // Get stored credentials
       const storedCredsString = await SecureStore.getItemAsync(STORED_CREDENTIALS_KEY);
-      if (storedCredsString) {
-        return JSON.parse(storedCredsString) as StoredCredentials;
+      if (!storedCredsString) {
+        setError('No stored credentials found');
+        return null;
       }
 
-      setError('No stored credentials found');
-      return null;
+      let credentials = JSON.parse(storedCredsString) as StoredCredentials;
+
+      // Strategy 1: Try to refresh tokens using refresh token
+      console.log('Strategy 1: Attempting to refresh tokens...');
+      try {
+        const refreshedCredentials = await refreshStoredTokens();
+        
+        if (refreshedCredentials) {
+          console.log('✅ Tokens refreshed successfully with refresh token');
+          return refreshedCredentials;
+        }
+      } catch (refreshError) {
+        console.log('❌ Refresh token strategy failed:', refreshError);
+      }
+
+      // Strategy 2: If refresh fails, try login with stored username/password
+      console.log('Strategy 2: Attempting login with stored credentials...');
+      try {
+        const loginCredentials = await loginWithStoredCredentials();
+        
+        if (loginCredentials) {
+          console.log('✅ Login successful with stored username/password');
+          return loginCredentials;
+        }
+      } catch (loginError) {
+        console.log('❌ Username/password login strategy failed:', loginError);
+      }
+
+      // Strategy 3: If all fails, return current credentials as last resort
+      // This might still work if axiosInstance handles token refresh automatically
+      console.log('Strategy 3: Using current tokens as fallback (axiosInstance will handle refresh)');
+      return credentials;
+
     } catch (err: any) {
       setError(err.message || 'Error retrieving credentials');
       return null;
@@ -215,6 +251,114 @@ export const useBiometricAuth = (): BiometricAuthState & BiometricAuthActions =>
     }
   };
 
+  // Refresh stored tokens using refreshToken
+  const refreshStoredTokens = async (): Promise<StoredCredentials | null> => {
+    try {
+      setError(null);
+
+      if (!hasStoredCredentials) {
+        setError('No stored credentials to refresh');
+        return null;
+      }
+
+      // Get current stored credentials
+      const storedCredsString = await SecureStore.getItemAsync(STORED_CREDENTIALS_KEY);
+      if (!storedCredsString) {
+        setError('No stored credentials found');
+        return null;
+      }
+
+      const currentCredentials = JSON.parse(storedCredsString) as StoredCredentials;
+
+      // Use refresh token to get new access token
+      const response = await axiosInstance.post('token/refresh/', {
+        refresh: currentCredentials.refreshToken
+      });
+
+      if (response.data.access) {
+        // Create new credentials with refreshed token
+        const newCredentials: StoredCredentials = {
+          ...currentCredentials,
+          token: response.data.access,
+          // If refresh token is also renewed, update it
+          refreshToken: response.data.refresh || currentCredentials.refreshToken
+        };
+
+        // Store the new credentials
+        await SecureStore.setItemAsync(STORED_CREDENTIALS_KEY, JSON.stringify(newCredentials));
+        
+        return newCredentials;
+      } else {
+        setError('Failed to refresh token');
+        return null;
+      }
+    } catch (err: any) {
+      // If refresh token is also expired, we need to clear stored credentials
+      if (err.response?.status === 401) {
+        setError('Refresh token expired. Please login again.');
+        await disableBiometric(); // Clear stored credentials
+        return null;
+      }
+      
+      setError(err.message || 'Error refreshing tokens');
+      return null;
+    }
+  };
+
+  // Login with stored username and password (fallback method)
+  const loginWithStoredCredentials = async (): Promise<StoredCredentials | null> => {
+    try {
+      setError(null);
+
+      if (!hasStoredCredentials) {
+        setError('No stored credentials available');
+        return null;
+      }
+
+      // Get stored credentials
+      const storedCredsString = await SecureStore.getItemAsync(STORED_CREDENTIALS_KEY);
+      if (!storedCredsString) {
+        setError('No stored credentials found');
+        return null;
+      }
+
+      const credentials = JSON.parse(storedCredsString) as StoredCredentials;
+
+      // Make login request with username and password
+      const response = await axiosInstance.post('token/', {
+        username: credentials.username,
+        password: credentials.password
+      });
+
+      if (response.data.access && response.data.refresh) {
+        // Create new credentials with fresh tokens
+        const newCredentials: StoredCredentials = {
+          ...credentials, // Keep username and password
+          token: response.data.access,
+          refreshToken: response.data.refresh
+        };
+
+        // Update stored credentials with new tokens
+        await SecureStore.setItemAsync(STORED_CREDENTIALS_KEY, JSON.stringify(newCredentials));
+        
+        return newCredentials;
+      } else {
+        setError('Login response missing tokens');
+        return null;
+      }
+    } catch (err: any) {
+      // If login fails due to invalid credentials, clear stored data
+      if (err.response?.status === 401) {
+        setError('Stored credentials are invalid. Please login again.');
+        await disableBiometric(); // Clear invalid credentials
+        return null;
+      }
+      
+      setError(err.message || 'Error during fallback login');
+      return null;
+    }
+  };
+
   // Get human-readable biometric type names
   const getBiometricTypeNames = (): string[] => {
     return supportedTypes.map(type => {
@@ -253,5 +397,7 @@ export const useBiometricAuth = (): BiometricAuthState & BiometricAuthActions =>
     getBiometricTypeNames,
     authenticateAndGetCredentials,
     getStoredUserInfo,
+    refreshStoredTokens,
+    loginWithStoredCredentials,
   };
 };
