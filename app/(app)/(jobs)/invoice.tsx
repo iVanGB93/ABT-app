@@ -404,7 +404,7 @@ export default function Invoice() {
       <ThemedView style={commonStyles.tabHeader}>
         <TouchableOpacity
           onPress={() => {
-            router.back();
+            router.navigate('/(app)/(jobs)/jobDetails');
           }}
         >
           <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />

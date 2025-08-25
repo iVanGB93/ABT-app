@@ -14,6 +14,11 @@ export default function BusinessLayout() {
       <Stack.Screen name="businessIncomeCreate" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="businessIncomeUpdate" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="businessExpenseUpdate" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="settings" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="businessSettings" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="profileEdit" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="styleSettings" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="biometricSettings" options={{ headerShown: false, animation: 'fade' }} />
     </Stack>
   );
 }

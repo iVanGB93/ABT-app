@@ -208,9 +208,9 @@ export default function IndexBusiness() {
         </View>
         <TouchableOpacity
           style={[styles.profileButton, { backgroundColor: color + '20' }]}
-          onPress={() => router.navigate('/(app)/(profile)')}
+          onPress={() => router.navigate('/(app)/(business)/settings')}
         >
-          <Ionicons name="person-outline" size={24} color={color} />
+          <Ionicons name="settings-outline" size={24} color={color} />
         </TouchableOpacity>
       </View>
       <View
@@ -293,7 +293,7 @@ export default function IndexBusiness() {
             isLoading ? '...' : `$${netProfit.toFixed(0)}`,
             'trending-up',
             netProfit >= 0 ? '#4CAF50' : '#FF5722',
-            () => router.navigate('/(app)/(business)/businessDetails'),
+            () => router.navigate('/(app)/(business)/businessMonthDetails'),
           )}
         </View>
       </View>

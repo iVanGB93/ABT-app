@@ -53,6 +53,7 @@ export default function JobForm({ action }: JobFormProps) {
   const [clientSelected, setClientSelected] = useState<string | undefined>(); // "Nombre Apellido"
   const [description, setDescription] = useState(action === 'new' ? '' : job.description);
   const [address, setAddress] = useState(action === 'new' ? '' : job.address);
+  const [address2, setAddress2] = useState(action === 'new' ? '' : job.address2);
   const [price, setPrice] = useState(action === 'new' ? '' : job.price);
   const [image, setImage] = useState(
     action === 'new' ? jobImageDefault : { uri: job.image ? job.image : jobImageDefault },
@@ -128,6 +129,7 @@ export default function JobForm({ action }: JobFormProps) {
     // si el switch está activo, actualiza la dirección automáticamente
     if (isEnabled && found?.address) {
       setAddress(found.address);
+      setAddress2(found.address2);
     }
   }, [clientSelected, clients, isEnabled]);
 
@@ -204,6 +206,7 @@ export default function JobForm({ action }: JobFormProps) {
       formData.append('description', description);
       formData.append('price', price);
       formData.append('address', address);
+      formData.append('address2', address2);
       // Siempre agregar imagen al FormData (puede ser string o asset)
       if (image !== null && typeof image !== 'string' && image.uri) {
         const uriParts = image.uri.split('.');
@@ -364,7 +367,28 @@ export default function JobForm({ action }: JobFormProps) {
         </View>
       )}
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
-
+      <View
+        style={[
+          commonStylesForm.action,
+          { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', marginBottom: 5, marginTop: 10 },
+        ]}
+      >
+        <Ionicons
+          style={{ marginBottom: 5, fontSize: 16 }}
+          name='duplicate'
+          color={darkTheme ? darkTextColor : lightTextColor}
+        />
+        <TextInput
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
+          placeholder={address2 ? address2 : "apt, suit, etc"}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+          value={address2}
+          onChangeText={setAddress2}
+        />
+      </View>
       <ThemedText style={[commonStylesForm.label, { marginTop: 5 }]} type="subtitle">
         Price
       </ThemedText>

@@ -47,6 +47,7 @@ export default function ClientForm({ action }: ClientFormProps) {
   const [phone, setPhone] = useState(action === 'create' ? '' : client.phone);
   const [email, setEmail] = useState(action === 'create' ? '' : client.email);
   const [address, setAddress] = useState(action === 'create' ? '' : client.address);
+  const [address2, setAddress2] = useState(action === 'create' ? '' : client.address2);
   const [image, setImage] = useState(action === 'create' ? userImageDefault : client.image);
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [errors, setErrors] = useState<Errors>({});
@@ -133,9 +134,7 @@ export default function ClientForm({ action }: ClientFormProps) {
     if (!validateForm()) return;
 
     try {
-      const hasImage = image && image !== null;
       const phoneWithCountry = phone ? selectedCountry?.callingCode + phone : '';
-
       let result;
       const formData = new FormData();
       formData.append('action', action);
@@ -146,6 +145,7 @@ export default function ClientForm({ action }: ClientFormProps) {
       formData.append('phone', phoneWithCountry);
       formData.append('email', email || '');
       formData.append('address', address || '');
+      formData.append('address2', address2 || '');
       if (image) {
         const uriParts = image.split('.');
         const fileType = uriParts[uriParts.length - 1];
@@ -289,6 +289,28 @@ export default function ClientForm({ action }: ClientFormProps) {
         />
       </View>
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
+      <View
+        style={[
+          commonStylesForm.action,
+          { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', marginBottom: 5, marginTop: 10 },
+        ]}
+      >
+        <Ionicons
+          style={{ marginBottom: 5, fontSize: 16 }}
+          name='duplicate'
+          color={darkTheme ? darkTextColor : lightTextColor}
+        />
+        <TextInput
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
+          placeholder={address2 ? address2 : "apt, suit, etc"}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+          value={address2}
+          onChangeText={setAddress2}
+        />
+      </View>
 
       <View style={{ alignItems: 'center', marginTop: 15 }}>
         <View style={{ position: 'relative' }}>

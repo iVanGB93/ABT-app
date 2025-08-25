@@ -85,7 +85,7 @@ export default function Profile() {
                 dispatch(setBusinessLogo(newLogo));
                 //downloadLogo();
                 setLoading(false);
-                router.push('/(app)/(profile)/');
+                router.push('/(app)/(business)/settings');
             } else {
                 setError(response.data.message);
                 setLoading(false);

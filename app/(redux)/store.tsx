@@ -8,6 +8,7 @@ import { settingReducer } from './settingSlice';
 import { jobReducer } from './jobSlice';
 import { itemReducer } from './itemSlice';
 import { businessReducer } from './businessSlice';
+import { paymentReducer } from './paymentSlice';
 
 const persistConfig = {
   key: "root",
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   client: clientReducer,
   job: jobReducer,
   item: itemReducer,
+  payment: paymentReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

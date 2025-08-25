@@ -81,6 +81,7 @@ export default function BiometricSettings() {
 
       const credentials = {
         username: userName,
+        password: '', // Add empty password since we're using token-based auth
         token: token,
         refreshToken: refreshToken,
       };

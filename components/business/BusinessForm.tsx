@@ -21,7 +21,13 @@ import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import axiosInstance from '@/axios';
-import { darkTextColor, lightTextColor, darkMainColor, lightMainColor } from '@/settings';
+import {
+  darkTextColor,
+  lightTextColor,
+  darkMainColor,
+  lightMainColor,
+  businessLogoDefault,
+} from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import { ThemedSecondaryView } from '../ThemedSecondaryView';
 import { businessSetError, businessSetMessage } from '@/app/(redux)/businessSlice';
@@ -53,10 +59,11 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
   const [phone, setPhone] = useState(action === 'create' ? '' : business.phone);
   const [email, setEmail] = useState(action === 'create' ? '' : business.email);
   const [address, setAddress] = useState(action === 'create' ? '' : business.address);
+  const [address2, setAddress2] = useState(action === 'create' ? '' : business.address2);
   const [description, setDescription] = useState(action === 'create' ? '' : business.description);
   const [website, setWebsite] = useState(action === 'create' ? '' : business.website);
-  const [image, setImage] = useState<string | null>(
-    action === 'create' ? null : business.logo || null,
+  const [image, setImage] = useState(
+    action === 'create' ? businessLogoDefault : business.logo || businessLogoDefault,
   );
   const [owners, setOwners] = useState<string[]>([]);
   const [errors, setErrors] = useState<Errors>({});
@@ -70,6 +77,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
   const [useAccountPhone, setUseAccountPhone] = useState(false);
   const [useAccountEmail, setUseAccountEmail] = useState(false);
   const [useAccountAddress, setUseAccountAddress] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -92,6 +100,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       setAddress(profile.address ?? '');
     } else {
       setAddress(action === 'create' ? '' : business.address);
+      setAddress2(action === 'create' ? '' : business.address2);
     }
   }, [useAccountAddress, profile.address]);
 
@@ -148,7 +157,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         errors.email = 'Email is invalid!';
       }
     }
-    if (!phone) errors.phone = "Phone is required";
+    if (!phone) errors.phone = 'Phone is required';
     if (!address) errors.address = 'Address is required';
     setErrors(errors);
     return Object.keys(errors).length === 0;
@@ -206,6 +215,7 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       formData.append('phone', phone ? selectedCountry?.callingCode + phone : '');
       formData.append('email', email);
       formData.append('address', address);
+      formData.append('address2', address2);
       if (image !== null) {
         const uriParts = image.split('.');
         const fileType = uriParts[uriParts.length - 1];
@@ -265,14 +275,19 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
       <ThemedText style={commonStylesForm.label} type="subtitle">
         Name
       </ThemedText>
-      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View
+        style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+      >
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="person"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder={name ? name : "Enter business's name"}
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={name}
@@ -357,7 +372,10 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
+          style={[
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
+          ]}
           placeholder="Enter business's email"
           placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
           value={email}
@@ -390,7 +408,9 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         </View>
       </View>
 
-      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View
+        style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+      >
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
           name="location"
@@ -403,102 +423,178 @@ export default function BusinessForm({ action, isLoading, setIsLoading }: Busine
         />
       </View>
       {errors.address ? <Text style={commonStyles.errorMsg}>{errors.address}</Text> : null}
-      <ThemedText style={commonStylesForm.label} type="subtitle">
-        Description (optional)
-      </ThemedText>
-      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
+      <View
+        style={[
+          commonStylesForm.action,
+          { borderBottomColor: darkTheme ? '#f2f2f2' : '#000', marginBottom: 5, marginTop: 10 },
+        ]}
+      >
         <Ionicons
           style={{ marginBottom: 5, fontSize: 16 }}
-          name="person-add"
+          name="duplicate"
           color={darkTheme ? darkTextColor : lightTextColor}
         />
         <TextInput
-          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
-          placeholder={description ? description : "Enter business's desciption"}
-          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-          value={description}
-          onChangeText={setDescription}
-        />
-      </View>
-      {errors.description ? <Text style={commonStyles.errorMsg}>{errors.description}</Text> : null}
-      <ThemedText style={commonStylesForm.label} type="subtitle">
-        Website (optional)
-      </ThemedText>
-      <View style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}>
-        <Ionicons
-          style={{ marginBottom: 5, fontSize: 16 }}
-          name="globe"
-          color={darkTheme ? darkTextColor : lightTextColor}
-        />
-        <TextInput
-          style={[commonStylesForm.textInput, { color: darkTheme ? darkTextColor : lightTextColor }]}
-          placeholder={website ? website : "Enter business's website"}
-          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
-          value={website}
-          onChangeText={setWebsite}
-        />
-      </View>
-      <ThemedText style={commonStylesForm.label} type="subtitle">
-        Owner(s) {userName}
-      </ThemedText>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 10,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          {(owners ?? []).map((email, idx) => (
-            <View
-              key={email}
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}
-            >
-              <ThemedText style={commonStyles.text_action} type="subtitle">
-                {email}
-              </ThemedText>
-              {email !== userName && (
-                <TouchableOpacity
-                  onPress={() => setOwners((owners ?? []).filter((o) => o !== email))}
-                >
-                  <Ionicons
-                    name="close-circle-outline"
-                    size={20}
-                    color="red"
-                    style={{ marginLeft: 8 }}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-        </View>
-        <TouchableOpacity onPress={() => setInviteModalVisible(true)}>
-          <Ionicons name="add-circle-outline" size={28} color={color} />
-        </TouchableOpacity>
-      </View>
-      <View
-        style={{
-          width: '100%',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          alignItems: 'center',
-          marginTop: 10,
-        }}
-      >
-        <TouchableOpacity
           style={[
-            commonStyles.button,
-            {
-              borderColor: color,
-              backgroundColor: darkTheme ? darkMainColor : lightMainColor,
-            },
+            commonStylesForm.textInput,
+            { color: darkTheme ? darkTextColor : lightTextColor },
           ]}
-          onPress={() => handleImage()}
-        >
-          <ThemedText>Add Logo</ThemedText>
-        </TouchableOpacity>
-        {image && <Image source={{ uri: image }} style={commonStylesForm.image} />}
+          placeholder={address2 ? address2 : 'apt, suit, etc'}
+          placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+          value={address2}
+          onChangeText={setAddress2}
+        />
+      </View>
+
+      {/* Toggle button for optional fields */}
+      <TouchableOpacity
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingVertical: 12,
+          marginTop: 10,
+          marginBottom: 10,
+          borderRadius: 8,
+          backgroundColor: darkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+        }}
+        onPress={() => setShowOptionalFields(!showOptionalFields)}
+      >
+        <ThemedText style={{ marginRight: 8, fontSize: 14, fontWeight: '500' }}>
+          {showOptionalFields ? 'Hide' : 'Show'} Additional Details
+        </ThemedText>
+        <Ionicons
+          name={showOptionalFields ? 'chevron-up' : 'chevron-down'}
+          size={20}
+          color={color}
+        />
+      </TouchableOpacity>
+
+      {/* Optional fields - only show when expanded */}
+      {showOptionalFields && (
+        <>
+          <ThemedText style={commonStylesForm.label} type="subtitle">
+            Description
+          </ThemedText>
+          <View
+            style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+          >
+            <Ionicons
+              style={{ marginBottom: 5, fontSize: 16 }}
+              name="document-text"
+              color={darkTheme ? darkTextColor : lightTextColor}
+            />
+            <TextInput
+              style={[
+                commonStylesForm.textInput,
+                { color: darkTheme ? darkTextColor : lightTextColor },
+              ]}
+              placeholder={description ? description : 'Enter business description'}
+              placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+          {errors.description ? (
+            <Text style={commonStyles.errorMsg}>{errors.description}</Text>
+          ) : null}
+
+          <ThemedText style={commonStylesForm.label} type="subtitle">
+            Website
+          </ThemedText>
+          <View
+            style={[commonStylesForm.action, { borderBottomColor: darkTheme ? '#f2f2f2' : '#000' }]}
+          >
+            <Ionicons
+              style={{ marginBottom: 5, fontSize: 16 }}
+              name="globe"
+              color={darkTheme ? darkTextColor : lightTextColor}
+            />
+            <TextInput
+              style={[
+                commonStylesForm.textInput,
+                { color: darkTheme ? darkTextColor : lightTextColor },
+              ]}
+              placeholder={website ? website : 'Enter business website'}
+              placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+              value={website}
+              onChangeText={setWebsite}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+          </View>
+
+          <ThemedText style={commonStylesForm.label} type="subtitle">
+            Owner(s) {userName}
+          </ThemedText>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 10,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              {(owners ?? []).map((email, idx) => (
+                <View
+                  key={email}
+                  style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}
+                >
+                  <ThemedText style={commonStyles.text_action} type="subtitle">
+                    {email}
+                  </ThemedText>
+                  {email !== userName && (
+                    <TouchableOpacity
+                      onPress={() => setOwners((owners ?? []).filter((o) => o !== email))}
+                    >
+                      <Ionicons
+                        name="close-circle-outline"
+                        size={20}
+                        color="red"
+                        style={{ marginLeft: 8 }}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity onPress={() => setInviteModalVisible(true)}>
+              <Ionicons name="add-circle-outline" size={28} color={color} />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+      <View style={{ alignItems: 'center', marginTop: 15 }}>
+        <View style={{ position: 'relative' }}>
+          <TouchableOpacity onPress={handleImage} activeOpacity={0.8}>
+            <Image source={{ uri: image }} style={commonStyles.imageCircle} />
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                backgroundColor: color,
+                borderRadius: 16,
+                width: 32,
+                height: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: darkTheme ? darkMainColor : lightMainColor,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 3,
+              }}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
       <View
         style={{

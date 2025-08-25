@@ -49,6 +49,7 @@ export default function SpentCreate() {
   const [itemsName, setItemsName] = useState<any>('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [amount, setAmount] = useState(1);
   type ImageType = { uri: string } | string;
   const [image, setImage] = useState<ImageType>(itemImageDefault);
   const [errors, setErrors] = useState<Errors>({});
@@ -150,7 +151,8 @@ export default function SpentCreate() {
       formData.append('action', 'new');
       formData.append('job_id', job.id);
       formData.append('description', description);
-      formData.append('amount', price);
+      formData.append('price', price);
+      formData.append('amount', amount.toString());
       formData.append('use_item', isEnabled);
       formData.append('item_id', isEnabled ? item.id : '');
       if (image !== null && typeof image !== 'string' && image.uri) {
@@ -163,7 +165,7 @@ export default function SpentCreate() {
           type: `image/${fileType}`,
         } as unknown as Blob);
       }
-      
+
       try {
         const result = await createUpdateSpent(formData);
         if (result) {
@@ -203,9 +205,7 @@ export default function SpentCreate() {
         >
           <ScrollView>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <ThemedText style={[styles.label, { marginBottom: 0 }]}>
-              Job: {job.description}
-            </ThemedText>
+            <ThemedText type="subtitle">Job: {job.description}</ThemedText>
             <View
               style={{
                 flexDirection: 'row',
@@ -278,6 +278,52 @@ export default function SpentCreate() {
                   search={true}
                   searchPlaceHolder={'Type to search'}
                 />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    margin: 10,
+                  }}
+                >
+                  <ThemedText type="default">How many items?</ThemedText>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity
+                      onPress={() => setAmount(Math.max(1, amount - 1))}
+                      style={{
+                        padding: 10,
+                        marginRight: 10,
+                      }}
+                    >
+                      <Ionicons name="remove" size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <TextInput
+                      style={[
+                        commonStyles.textInput,
+                        {
+                          color: darkTheme ? darkTextColor : lightTextColor,
+                          textAlign: 'center',
+                          maxWidth: 60,
+                          borderBottomWidth: 1,
+                          borderBottomColor: darkTheme ? '#f2f2f2' : '#000',
+                        },
+                      ]}
+                      placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+                      value={amount.toString()}
+                      onChangeText={(text) => setAmount(Math.max(1, Number(text) || 1))}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity
+                      onPress={() => setAmount(amount + 1)}
+                      style={{
+                        padding: 10,
+                        marginLeft: 10,
+                      }}
+                    >
+                      <Ionicons name="add" size={20} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
                 {errors.job ? <Text style={styles.errorText}>{errors.job}</Text> : null}
               </>
             ) : (

@@ -157,15 +157,9 @@ export const useItemActions = (): UseItemActionsState => {
   };
 
   const deleteItem = async (id: number): Promise<boolean> => {
-    if (!business?.name) {
-      dispatch(itemFail('No business selected'));
-      return false;
-    }
-
     try {
       dispatch(setItemLoading(true));
-      await itemService.deleteItem(id, business.name);
-      
+      await itemService.deleteItem(id);
       // Actualizar Redux store
       const updatedItems = items.filter((item: Item) => item.id !== id);
       dispatch(setItems(updatedItems));
@@ -217,15 +211,10 @@ export const useItemDetails = (itemId: number | null): UseItemDetailsState => {
   }, [itemId, dispatch]);
 
   const deleteItem = async (id: number): Promise<boolean> => {
-    if (!business?.name) {
-      setError('No business selected');
-      return false;
-    }
-
     try {
       setLoading(true);
       setError(null);
-      await itemService.deleteItem(id, business.name);
+      await itemService.deleteItem(id);
       return true;
     } catch (err: any) {
       setError(err.message || 'Error deleting item');

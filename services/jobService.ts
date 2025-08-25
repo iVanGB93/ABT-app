@@ -33,8 +33,9 @@ export interface JobCreateData {
 export interface JobSpent {
   id: number;
   job: number;
+  name?: string;
   description: string;
-  amount: number;
+  price: number;
   date: string;
   image?: string;
   created_at: string;

@@ -13,7 +13,7 @@ import { darkMainColor, lightMainColor } from '@/settings';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { commonStyles } from '@/constants/commonStyles';
 import { commonStylesForm } from '@/constants/commonStylesForm';
-import ProfileForm from '@/components/profile/ProfileForm';
+import ProfileForm from '@/components/business/ProfileForm';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Ionicons } from '@expo/vector-icons';

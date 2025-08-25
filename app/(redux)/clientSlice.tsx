@@ -13,6 +13,7 @@ const initialState: ClientState = {
     client: {},
     clients: [],
     clientMessage: null,
+    clientError: null,
     clientLoading: false,
 };
 
@@ -37,7 +38,7 @@ export const clientSlice = createSlice({
             state.clientError = null;
             state.clientLoading = false;
         },
-        clientFail: (state, action: PayloadAction<string>) => {
+        clientFail: (state, action: PayloadAction<string | null>) => {
             state.clientError = action.payload;
             state.clientMessage = null;
             state.clientLoading = false;

@@ -16,7 +16,7 @@ import { Vibration } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import { clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
+import { clientFail, clientSetMessage, setClient } from '@/app/(redux)/clientSlice';
 import ClientCard from '@/components/clients/ClientCard';
 import { commonStyles } from '@/constants/commonStyles';
 import { useClients } from '@/hooks';
@@ -41,12 +41,6 @@ export default function Clients() {
     }
   }, [clientMessage]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      refreshClients();
-    }, [refreshClients]),
-  );
-
   useEffect(() => {
     if (clientError) {
       Toast.show({
@@ -54,8 +48,15 @@ export default function Clients() {
         text1: 'Error',
         text2: clientError,
       });
+    dispatch(clientFail(null));
     }
   }, [clientError]);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshClients();
+    }, [refreshClients]),
+  );
 
   const handlePressable = (id: number) => {
     let client = clients.find((client: any) => client.id === id);

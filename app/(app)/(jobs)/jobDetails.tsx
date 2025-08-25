@@ -4,11 +4,10 @@ import {
   RefreshControl,
   FlatList,
   TouchableOpacity,
-  Vibration,
   Image,
   Modal,
 } from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter, useFocusEffect } from 'expo-router';
 
@@ -57,6 +56,30 @@ export default function JobDetail() {
       dispatch(setUsedItems(spents));
     }
   }, [spents, dispatch]);
+
+  // Process spents data to ensure unique items
+  const processedSpents = useMemo(() => {
+    if (!spents || !Array.isArray(spents)) return [];
+    
+    // Remove duplicates by ID and filter out invalid items
+    const seenIds = new Set();
+    const filtered = spents.filter((item) => {
+      if (item.id && seenIds.has(item.id)) {
+        console.warn(`Duplicate spent ID found: ${item.id}`);
+        return false;
+      }
+      if (item.id) {
+        seenIds.add(item.id);
+      }
+      return true;
+    });
+    
+    console.log('Original spents length:', spents.length);
+    console.log('Filtered spents length:', filtered.length);
+    console.log('Spent IDs:', filtered.map(item => item.id));
+    
+    return filtered;
+  }, [spents]);
 
   const deleteJob = async () => {
     if (!job?.id) return;
@@ -165,6 +188,12 @@ export default function JobDetail() {
                 <Ionicons name="location" size={16} color={color} style={{ marginRight: 4 }} />
                 <ThemedText style={{ flex: 1 }}>{job.address ?? 'No address provided'}</ThemedText>
               </View>
+              {job.address2 && job.address2 !== 'no extra address saved' ?
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                <Ionicons name="duplicate" size={16} color={color} style={{ marginRight: 4 }} />
+                 <ThemedText>{job.address2}</ThemedText>
+              </View>
+              : null}
             </View>
             <View style={{ alignItems: 'flex-end', justifyContent: 'flex-start', minWidth: 60 }}>
               <View
@@ -259,13 +288,23 @@ export default function JobDetail() {
           <ActivityIndicator style={commonStylesDetails.loading} size="large" />
         ) : (
           <FlatList
-            data={spents}
-            renderItem={({ item }) => {
+            data={processedSpents}
+            keyExtractor={(item, index) => {
+              // Ensure unique keys - use id if available, otherwise use index with unique suffix
+              if (item.id) {
+                return `spent-${item.id}`;
+              } else {
+                // Generate unique key using index and timestamp
+                return `spent-noId-${index}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+              }
+            }}
+            renderItem={({ item, index }) => {
               return (
                 <SpentCard
                   id={item.id}
+                  name={item.name}
                   description={item.description}
-                  amount={item.amount}
+                  price={item.price}
                   image={item.image}
                   date={item.date}
                 />
@@ -274,7 +313,7 @@ export default function JobDetail() {
             ItemSeparatorComponent={() => (
               <View
                 style={{
-                  height: 16,
+                  height: 10,
                 }}
               />
             )}

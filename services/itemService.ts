@@ -33,49 +33,18 @@ class ItemService extends ApiService {
   constructor() {
     super('items');
   }
-
   /**
    * Get all items for a business
    */
   async getItems(businessName: string, params?: { category?: string; is_service?: boolean }): Promise<Item[]> {
     return this.get<Item[]>(`/list/${businessName}/`, params);
   }
-
   /**
    * Get item by ID
    */
   async getItem(id: number): Promise<Item> {
     return this.get<Item>(`/${id}/`);
   }
-
-  /**
-   * Create new item
-   */
-  async createItem(data: ItemCreateData, businessName: string): Promise<Item> {
-    return this.post<Item>(`/create/${businessName}/`, data);
-  }
-
-  /**
-   * Create new item with FormData (for image upload)
-   */
-  async createItemWithImage(formData: FormData, businessName: string): Promise<Item> {
-    return this.postFormData<Item>(`/create/${businessName}/`, formData);
-  }
-
-  /**
-   * Update item
-   */
-  async updateItem(data: ItemUpdateData, businessName: string): Promise<Item> {
-    return this.post<Item>(`/update/${businessName}/`, data);
-  }
-
-  /**
-   * Update item with FormData (for image upload)
-   */
-  async updateItemWithImage(formData: FormData, businessName: string): Promise<Item> {
-    return this.postFormData<Item>(`/update/${businessName}/`, formData);
-  }
-
   /**
    * Create or update item with FormData (unified method)
    */
@@ -87,21 +56,18 @@ class ItemService extends ApiService {
       return this.postFormData<Item>(`/create/${businessName}/`, formData);
     }
   }
-
   /**
    * Delete item
    */
-  async deleteItem(id: number, businessName: string): Promise<void> {
-    return this.post<void>(`/delete/${businessName}/`, { action: 'delete', id });
+  async deleteItem(id: number): Promise<void> {
+    return this.delete<void>(`/delete/${id}/`);
   }
-
   /**
    * Get jobs where this item is used
    */
   async getUsedItems(itemId: number): Promise<any[]> {
     return this.get<any[]>(`/used/${itemId}/`);
   }
-
   /**
    * Search items for a business
    */

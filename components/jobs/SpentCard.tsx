@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  Pressable,
   Image,
   ActivityIndicator,
   Modal,
@@ -20,16 +19,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '../ThemedView';
 import { formatDate } from '@/utils/formatDate';
 import { useJobSpentActions } from '@/hooks/useJobs';
+import { useItemActions } from '@/hooks/useItems';
 
 interface SpentCardProps {
   image: any;
   id: any;
+  name?: any;
   description: any;
-  amount: any;
+  price: any;
   date: any;
 }
 
-export default function SpentCard({ image, id, description, amount, date }: SpentCardProps) {
+export default function SpentCard({ image, id, name, description, price, date }: SpentCardProps) {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const [modalVisible, setModalVisible] = useState(false);
   const spents = useSelector((state: RootState) => state.item.usedItems);
@@ -39,6 +40,7 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
   const router = useRouter();
 
   const { deleteSpent } = useJobSpentActions();
+  const { deleteItem } = useItemActions();
 
   const handleDelete = () => {
     setModalVisible(true);
@@ -47,7 +49,13 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
   const handleConfirmedDelete = async () => {
     setIsLoading(true);
     setModalVisible(false);
-    const success = await deleteSpent(id);
+    let success;
+    if (name) {
+      console.log('Deleting item:', id);
+      success = await deleteItem(id);
+    } else {
+      success = await deleteSpent(id);
+    }
     if (success) {
       router.push('/(app)/(jobs)/jobDetails');
     } else {
@@ -85,8 +93,8 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
         </TouchableOpacity>
         <TouchableOpacity onLongPress={() => handleDelete()}>
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <ThemedText style={commonStylesCards.name}>{description}</ThemedText>
-            <ThemedText style={commonStylesCards.LabelText}>Price: ${amount}</ThemedText>
+            <ThemedText style={commonStylesCards.name}>{name ? name : description}</ThemedText>
+            <ThemedText style={commonStylesCards.LabelText}>Price: ${price}</ThemedText>
             <ThemedText style={commonStylesCards.LabelText}>{formatDate(date)}</ThemedText>
           </View>
         </TouchableOpacity>
@@ -140,12 +148,12 @@ export default function SpentCard({ image, id, description, amount, date }: Spen
           <TouchableOpacity onPress={toggleImageSize} style={commonStylesCards.expandedImage}>
             <Image source={{ uri: image }} style={commonStylesCards.expandedImage} />
           </TouchableOpacity>
-          <Pressable
+          <TouchableOpacity
             style={[commonStylesCards.button, { marginHorizontal: 5, flex: 1 }]}
             onPress={() => setIsBig(!isBig)}
           >
             <Text style={{ color: 'white', textAlign: 'center', fontSize: 20 }}>Close</Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </Modal>
     </ThemedView>

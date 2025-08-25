@@ -1,4 +1,4 @@
-export const production: boolean = true;
+export const production: boolean = false;
 
 export const baseURL: string = production
   ? 'https://abt.qbared.com/api/'
@@ -24,3 +24,4 @@ export const spentImageDefault: string = 'https://abt-media.nyc3.cdn.digitalocea
 export const itemImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/itemDefault.jpg';
 export const businessExpenseImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/expenseDefault.jpg';
 export const businessIncomeImageDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/incomeDefault.jpg';
+export const businessLogoDefault: string = 'https://abt-media.nyc3.cdn.digitaloceanspaces.com/logoDefault.jpg';

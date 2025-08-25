@@ -58,19 +58,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="(schedule)"
-        options={{
-          title: 'Schedule',
-          headerShown: false,
-          tabBarIcon: ({ color, focused }) => (
-            <FontAwesome size={focused ? 28 : 26} name="calendar" color={color} />
-          ),
-        }}
-        listeners={{
-          tabPress: vibrateTab,
-        }}
-      />
-      <Tabs.Screen
         name="(business)"
         options={{
           title: 'Business',
@@ -84,12 +71,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="(items)"
+        name="(schedule)"
         options={{
-          title: 'Items',
+          title: 'Schedule',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <FontAwesome size={focused ? 28 : 26} name="briefcase" color={color} />
+            <FontAwesome size={focused ? 28 : 26} name="calendar" color={color} />
           ),
         }}
         listeners={{
@@ -97,12 +84,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="(profile)"
+        name="(items)"
         options={{
-          title: 'Profile',
+          title: 'Items',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <FontAwesome size={focused ? 28 : 26} name="cogs" color={color} />
+            <FontAwesome size={focused ? 28 : 26} name="briefcase" color={color} />
           ),
         }}
         listeners={{

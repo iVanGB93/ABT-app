@@ -1,39 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { KeyboardAvoidingView, ActivityIndicator, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/app/(redux)/store';
 
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { ThemedText } from '@/components/ThemedText';
-import { darkMainColor, darkTextColor, lightMainColor, lightTextColor } from '@/settings';
+import { darkMainColor, lightMainColor } from '@/settings';
 import { commonStyles } from '@/constants/commonStyles';
 import BusinessForm from '@/components/business/BusinessForm';
 import { commonStylesForm } from '@/constants/commonStylesForm';
-import Toast from 'react-native-toast-message';
-import { setError, setMessage } from '../(redux)/settingSlice';
 
 export default function BusinessCreate() {
   const [isLoading, setIsLoading] = useState(false);
-  const { darkTheme, error, message } = useSelector((state: RootState) => state.settings);
-
-  useEffect(() => {
-  if (error) {
-    Toast.show({
-      type: 'error',
-      text1: 'Error',
-      text2: error,
-    });
-    setError(null);
-  }
-  if (message) {
-    Toast.show({
-      type: 'success',
-      text1: 'Success',
-      text2: message,
-    });
-    setMessage(null);
-  }
-}, [error, message]);
+  const { darkTheme } = useSelector((state: RootState) => state.settings);
 
   return (
     <KeyboardAvoidingView
@@ -47,7 +26,7 @@ export default function BusinessCreate() {
         },
       ]}
     >
-      <ThemedText type="title">Create New Business</ThemedText>
+      <ThemedText style={{textAlign: 'center'}} type="title">Create New Business</ThemedText>
       {isLoading ? (
         <ActivityIndicator style={commonStyles.containerCentered} size="large" />
       ) : (
