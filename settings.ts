@@ -1,4 +1,4 @@
-export const production: boolean = false;
+export const production: boolean = true;
 
 export const baseURL: string = production
   ? 'https://abt.qbared.com/api/'
@@ -7,7 +7,7 @@ export const baseImageURL: string = production
   ? 'https://abt.qbared.com'
   : 'http://172.20.6.179:8000';
 
-export const version: string = '1.0.14';
+export const version: string = '1.0.15';
 
 export const darkMainColor: string = '#000000';
 export const darkSecondColor: string = '#2A2A2A';
