@@ -1,73 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  Switch,
-} from 'react-native';
+import { TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { usePayment } from '@/hooks/usePayment';
-import { PaymentMethodType, BusinessPaymentMethod, PaymentMethodCreateData } from '@/services/paymentService';
+import {
+  PaymentMethodType,
+  BusinessPaymentMethod,
+  PaymentMethodCreateData,
+} from '@/services/paymentService';
+import { usePaymentMethodActions } from '@/hooks/usePayment';
 import { commonStyles } from '@/constants/commonStyles';
+import { ThemedText } from '../ThemedText';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/app/(redux)/store';
+import { darkSecondColor, darkTextColor, lightSecondColor, lightTextColor } from '@/settings';
+import { ThemedView } from '../ThemedView';
+import { commonStylesForm } from '@/constants/commonStylesForm';
 
 interface PaymentMethodFormProps {
-  paymentTypes: PaymentMethodType[];
-  editingMethod?: BusinessPaymentMethod | null;
-  businessId: number;
-  onSave: () => void;
-  onCancel: () => void;
+  action?: any;
 }
 
-export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
-  paymentTypes,
-  editingMethod,
-  businessId,
-  onSave,
-  onCancel,
-}) => {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const secondaryColor = useThemeColor({}, 'tabIconDefault');
-  const borderColor = useThemeColor({}, 'tabIconDefault') + '30';
-
-  const { createMethod, updateMethod, isLoading } = usePayment();
-
-  const [formData, setFormData] = useState({
-    payment_type_id: 0,
-    account_email: '',
-    account_phone: '',
-    account_username: '',
-    account_number: '',
-    display_name: '',
-    notes: '',
-    is_enabled: true,
-    is_default: false,
-  });
-
+export default function PaymentMethodForm({ action }: PaymentMethodFormProps) {
+  const { refreshPaymentMethodTypes, paymentMethodTypes, createMethod, updateMethod, isLoading } =
+    usePaymentMethodActions();
+  const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
+  const { paymentMethods } = useSelector((state: RootState) => state.business);
+  const [account_username, setAccount_username] = useState(action === 'create' ? '' : '');
+  const [account_email, setAccount_email] = useState(action === 'create' ? '' : '');
+  const [account_phone, setAccount_phone] = useState(action === 'create' ? '' : '');
+  const [notes, setNotes] = useState(action === 'create' ? '' : '');
+  const [is_enabled, setIs_enabled] = useState(action === 'create' ? true : false);
+  const [is_default, setIs_default] = useState(action === 'create' ? false : false);
   const [selectedType, setSelectedType] = useState<PaymentMethodType | null>(null);
+  const router = useRouter();
+
+  const display_name = selectedType ? `My ${selectedType.name} Account` : '';
 
   useEffect(() => {
-    if (editingMethod) {
-      setFormData({
-        payment_type_id: editingMethod.payment_type.id,
-        account_email: editingMethod.account_email || '',
-        account_phone: editingMethod.account_phone || '',
-        account_username: editingMethod.account_username || '',
-        account_number: editingMethod.account_number || '',
-        display_name: editingMethod.display_name || '',
-        notes: editingMethod.notes || '',
-        is_enabled: editingMethod.is_enabled,
-        is_default: editingMethod.is_default,
-      });
-      setSelectedType(editingMethod.payment_type);
-    }
-  }, [editingMethod]);
+    refreshPaymentMethodTypes();
+  }, []);
 
   const validateForm = () => {
     if (!selectedType) {
@@ -75,17 +46,17 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
       return false;
     }
 
-    if (selectedType.requires_email && !formData.account_email) {
+    if (selectedType.requires_email && !account_email) {
       Alert.alert('Error', `${selectedType.name} requires an email address`);
       return false;
     }
 
-    if (selectedType.requires_phone && !formData.account_phone) {
+    if (selectedType.requires_phone && !account_phone) {
       Alert.alert('Error', `${selectedType.name} requires a phone number`);
       return false;
     }
 
-    if (selectedType.requires_username && !formData.account_username) {
+    if (selectedType.requires_username && !account_username) {
       Alert.alert('Error', `${selectedType.name} requires a username`);
       return false;
     }
@@ -98,24 +69,33 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
 
     try {
       const paymentData: PaymentMethodCreateData = {
-        payment_type_id: formData.payment_type_id,
-        account_email: formData.account_email || undefined,
-        account_phone: formData.account_phone || undefined,
-        account_username: formData.account_username || undefined,
-        account_number: formData.account_number || undefined,
-        display_name: formData.display_name || undefined,
-        notes: formData.notes || undefined,
-        is_enabled: formData.is_enabled,
-        is_default: formData.is_default,
+        action: action,
+        payment_type_id: selectedType?.id || 0,
+        account_email,
+        account_phone,
+        account_username,
+        display_name,
+        notes,
+        is_enabled,
+        is_default,
       };
-
-      if (editingMethod) {
-        await updateMethod(businessId, editingMethod.id, paymentData);
+      if (action === 'create') {
+        const result = await createMethod(business.id, paymentData);
+        if (result && (result as any).OK) {
+          router.replace('/(app)/(business)/(paymentMethods)');
+        } else {
+          const errorMessage =
+            (result as any)?.error || (result as any)?.message || 'Failed to create payment method';
+          Alert.alert('Error', errorMessage);
+        }
       } else {
-        await createMethod(businessId, paymentData);
+        const result = await updateMethod(business.id, paymentData);
+        if (result) {
+          router.replace('/(app)/(business)/(paymentMethods)');
+        } else {
+          Alert.alert('Error', 'Failed to update payment method');
+        }
       }
-      
-      onSave();
     } catch (error) {
       console.error('Error saving payment method:', error);
     }
@@ -123,250 +103,283 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
 
   const handleTypeSelect = (type: PaymentMethodType) => {
     setSelectedType(type);
-    setFormData(prev => ({
+    console.log(type);
+
+    /* setFormData((prev) => ({
       ...prev,
       payment_type_id: type.id,
       display_name: prev.display_name || type.name,
-    }));
+    })); */
   };
 
   const getPaymentIcon = (code: string) => {
     const icons: { [key: string]: keyof typeof Ionicons.glyphMap } = {
-      'paypal': 'logo-paypal',
-      'venmo': 'card',
-      'cashapp': 'cash',
-      'zelle': 'flash',
-      'bank_transfer': 'business',
-      'stripe': 'card',
-      'apple_pay': 'logo-apple',
-      'google_pay': 'logo-google',
+      paypal: 'logo-paypal',
+      venmo: 'card',
+      cashapp: 'cash',
+      zelle: 'flash',
+      bank_transfer: 'business',
+      stripe: 'card',
+      apple_pay: 'logo-apple',
+      google_pay: 'logo-google',
     };
     return icons[code] || 'card-outline';
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: textColor }]}>
-          {editingMethod ? 'Edit Payment Method' : 'Add Payment Method'}
-        </Text>
-      </View>
-
-      {/* Payment Type Selection */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: textColor }]}>Payment Method Type</Text>
-        <View style={styles.typeGrid}>
-          {paymentTypes.filter(type => type.is_active).map((type) => (
-            <TouchableOpacity
-              key={type.id}
-              style={[
+    <ScrollView>
+      {paymentMethodTypes.length === 0 ? (
+        <ThemedText type="default" style={{ textAlign: 'center' }}>
+          No payment methods available, sorry
+        </ThemedText>
+      ) : (
+        <>
+          <ThemedText type="subtitle" style={{ textAlign: 'center', marginBottom: 5 }}>
+            Payment Method Type
+          </ThemedText>
+          <ThemedView style={styles.typeGrid}>
+            {paymentMethodTypes
+              .filter((type) => {
+              const isActive = type.is_active;
+              const isNotInPaymentMethods = !paymentMethods.some((method: any) => method.payment_type === type.id);
+              return isActive && isNotInPaymentMethods;
+              })
+              .map((type) => (
+              <TouchableOpacity
+                key={type.id}
+                style={[
                 styles.typeCard,
-                { 
-                  borderColor: borderColor,
-                  backgroundColor: selectedType?.id === type.id ? tintColor + '20' : 'transparent'
-                }
-              ]}
-              onPress={() => handleTypeSelect(type)}
-            >
-              <Ionicons
+                {
+                  borderColor: darkTheme ? darkTextColor : lightTextColor,
+                  backgroundColor: selectedType?.id === type.id ? color + '20' : 'transparent',
+                },
+                ]}
+                onPress={() => handleTypeSelect(type)}
+              >
+                <Ionicons
                 name={getPaymentIcon(type.code)}
                 size={32}
-                color={selectedType?.id === type.id ? tintColor : secondaryColor}
-              />
-              <Text style={[
-                styles.typeName, 
-                { 
-                  color: selectedType?.id === type.id ? tintColor : textColor,
-                  fontWeight: selectedType?.id === type.id ? '600' : '400'
+                color={
+                  selectedType?.id === type.id
+                  ? color
+                  : darkTheme
+                  ? darkTextColor
+                  : lightTextColor
                 }
-              ]}>
+                />
+                <ThemedText
+                style={[
+                  styles.typeName,
+                  {
+                  color:
+                    selectedType?.id === type.id
+                    ? color
+                    : darkTheme
+                    ? darkTextColor
+                    : lightTextColor,
+                  fontWeight: selectedType?.id === type.id ? '600' : '400',
+                  },
+                ]}
+                >
                 {type.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
+                </ThemedText>
+              </TouchableOpacity>
+              ))}
+          </ThemedView>
+        </>
+      )}
       {/* Form Fields */}
       {selectedType && (
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: textColor }]}>Account Details</Text>
-
-          {/* Display Name */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: textColor }]}>Display Name</Text>
-            <TextInput
-              style={[styles.textInput, { borderColor, color: textColor }]}
-              value={formData.display_name}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, display_name: text }))}
-              placeholder={`My ${selectedType.name} Account`}
-              placeholderTextColor={secondaryColor}
-            />
-          </View>
-
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle" style={{ textAlign: 'center' }}>
+            {display_name}
+          </ThemedText>
+          <ThemedText type="default" style={{ textAlign: 'center' }}>
+            add your details
+          </ThemedText>
           {/* Email (if required) */}
           {selectedType.requires_email && (
-            <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: textColor }]}>
-                Email Address *
-              </Text>
-              <TextInput
-                style={[styles.textInput, { borderColor, color: textColor }]}
-                value={formData.account_email}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, account_email: text }))}
-                placeholder="your@email.com"
-                placeholderTextColor={secondaryColor}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            <ThemedView style={styles.fieldContainer}>
+              <ThemedText style={commonStylesForm.label}>Email Address *</ThemedText>
+              <ThemedView
+                style={[
+                  commonStylesForm.action,
+                  { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+                ]}
+              >
+                <Ionicons
+                  style={{ marginBottom: 5, fontSize: 16 }}
+                  name="mail"
+                  color={darkTheme ? darkTextColor : lightTextColor}
+                />
+                <TextInput
+                  style={[commonStylesForm.textInput, { borderColor: color, color: color }]}
+                  value={account_email}
+                  onChangeText={(text) => setAccount_email(text)}
+                  placeholder={account_email ? account_email : 'your@email.com'}
+                  placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </ThemedView>
+            </ThemedView>
           )}
-
           {/* Phone (if required) */}
           {selectedType.requires_phone && (
-            <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: textColor }]}>
-                Phone Number *
-              </Text>
-              <TextInput
-                style={[styles.textInput, { borderColor, color: textColor }]}
-                value={formData.account_phone}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, account_phone: text }))}
-                placeholder="+1 (555) 123-4567"
-                placeholderTextColor={secondaryColor}
-                keyboardType="phone-pad"
-              />
-            </View>
+            <ThemedView style={styles.fieldContainer}>
+              <ThemedText style={commonStylesForm.label}>Phone Number *</ThemedText>
+              <ThemedView
+                style={[
+                  commonStylesForm.action,
+                  { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+                ]}
+              >
+                <Ionicons
+                  style={{ marginBottom: 5, fontSize: 16 }}
+                  name="call"
+                  color={darkTheme ? darkTextColor : lightTextColor}
+                />
+                <TextInput
+                  style={[
+                    commonStylesForm.textInput,
+                    { color: darkTheme ? darkTextColor : lightTextColor },
+                  ]}
+                  value={account_phone}
+                  onChangeText={(text) => setAccount_phone(text)}
+                  placeholder={account_phone ? account_phone : '+1 (555) 123-4567'}
+                  placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+                  keyboardType="phone-pad"
+                />
+              </ThemedView>
+            </ThemedView>
           )}
-
           {/* Username (if required) */}
           {selectedType.requires_username && (
-            <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: textColor }]}>
-                Username *
-              </Text>
-              <TextInput
-                style={[styles.textInput, { borderColor, color: textColor }]}
-                value={formData.account_username}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, account_username: text }))}
-                placeholder="username"
-                placeholderTextColor={secondaryColor}
-                autoCapitalize="none"
-              />
-            </View>
+            <ThemedView style={styles.fieldContainer}>
+              <ThemedText style={commonStylesForm.label}>Username *</ThemedText>
+              <ThemedView
+                style={[
+                  commonStylesForm.action,
+                  { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+                ]}
+              >
+                <Ionicons
+                  style={{ marginBottom: 5, fontSize: 16 }}
+                  name="person"
+                  color={darkTheme ? darkTextColor : lightTextColor}
+                />
+                <TextInput
+                  style={[
+                    commonStylesForm.textInput,
+                    { color: darkTheme ? darkTextColor : lightTextColor },
+                  ]}
+                  value={account_username}
+                  onChangeText={(text) => setAccount_username(text)}
+                  placeholder="username"
+                  placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+                  autoCapitalize="none"
+                />
+              </ThemedView>
+            </ThemedView>
           )}
-
-          {/* Account Number (optional) */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: textColor }]}>Account Number (Optional)</Text>
-            <TextInput
-              style={[styles.textInput, { borderColor, color: textColor }]}
-              value={formData.account_number}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, account_number: text }))}
-              placeholder="Last 4 digits"
-              placeholderTextColor={secondaryColor}
-              maxLength={4}
-              keyboardType="numeric"
-            />
-          </View>
-
           {/* Notes */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: textColor }]}>Notes (Optional)</Text>
-            <TextInput
-              style={[styles.textInput, styles.textArea, { borderColor, color: textColor }]}
-              value={formData.notes}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
-              placeholder="Additional notes..."
-              placeholderTextColor={secondaryColor}
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
+          <ThemedView style={styles.fieldContainer}>
+            <ThemedText style={commonStylesForm.label}>Notes (Optional)</ThemedText>
+            <ThemedView
+              style={[
+                commonStylesForm.action,
+                { borderBottomColor: darkTheme ? darkTextColor : lightTextColor },
+              ]}
+            >
+              <TextInput
+                style={[
+                  commonStylesForm.textInput,
+                  { color: darkTheme ? darkTextColor : lightTextColor },
+                ]}
+                value={notes}
+                onChangeText={(text) => setNotes(text)}
+                placeholder="Additional notes..."
+                placeholderTextColor={darkTheme ? darkTextColor : lightTextColor}
+              />
+            </ThemedView>
+          </ThemedView>
           {/* Settings */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Settings</Text>
-            
-            <View style={styles.switchContainer}>
-              <Text style={[styles.switchLabel, { color: textColor }]}>Enabled</Text>
-              <Switch
-                value={formData.is_enabled}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, is_enabled: value }))}
-                trackColor={{ false: secondaryColor + '30', true: tintColor + '30' }}
-                thumbColor={formData.is_enabled ? tintColor : secondaryColor}
-              />
-            </View>
+          <ThemedView style={styles.section}>
+            <ThemedText type="subtitle">Settings</ThemedText>
 
-            <View style={styles.switchContainer}>
-              <Text style={[styles.switchLabel, { color: textColor }]}>Set as Default</Text>
+            <ThemedView style={styles.switchContainer}>
+              <ThemedText type="subtitle">Enabled</ThemedText>
               <Switch
-                value={formData.is_default}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, is_default: value }))}
-                trackColor={{ false: secondaryColor + '30', true: tintColor + '30' }}
-                thumbColor={formData.is_default ? tintColor : secondaryColor}
+                value={is_enabled}
+                onValueChange={(value) => setIs_enabled(value)}
+                trackColor={{
+                  false: darkTheme ? darkTextColor + '30' : lightTextColor + '30',
+                  true: darkTheme ? darkTextColor + '30' : lightTextColor + '30',
+                }}
+                thumbColor={is_enabled ? color : darkTheme ? darkTextColor : lightTextColor}
               />
-            </View>
-          </View>
-        </View>
+            </ThemedView>
+
+            <ThemedView style={styles.switchContainer}>
+              <ThemedText type="subtitle">Set as Default</ThemedText>
+              <Switch
+                value={is_default}
+                onValueChange={(value) => setIs_default(value)}
+                trackColor={{
+                  false: darkTheme ? darkTextColor + '30' : lightTextColor + '30',
+                  true: darkTheme ? darkTextColor + '30' : lightTextColor + '30',
+                }}
+                thumbColor={is_default ? color : darkTheme ? darkTextColor : lightTextColor}
+              />
+            </ThemedView>
+          </ThemedView>
+          <ThemedView style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                commonStyles.button,
+                {
+                  borderColor: color,
+                  backgroundColor: darkTheme ? darkSecondColor : lightSecondColor,
+                },
+              ]}
+              onPress={() => handleSave()}
+              disabled={isLoading || !selectedType}
+            >
+              <ThemedText>
+                {isLoading ? 'Saving...' : action === 'create' ? 'Save' : 'Update'}
+              </ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[commonStyles.button, { borderColor: 'red' }]}
+              onPress={() => router.back()}
+            >
+              <ThemedText style={{ color: 'red' }}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </ThemedView>
       )}
-
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.cancelButton, { borderColor: secondaryColor }]}
-          onPress={onCancel}
-        >
-          <Text style={[styles.buttonText, { color: secondaryColor }]}>Cancel</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
-          onPress={handleSave}
-          disabled={isLoading || !selectedType}
-        >
-          <Text style={[styles.buttonText, { color: tintColor === '#fff' ? '#000' : 'white' }]}>
-            {isLoading ? 'Saving...' : editingMethod ? 'Update' : 'Save'}
-          </Text>
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
   section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    marginTop: 20,
+    paddingHorizontal: 10,
   },
   typeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
+    justifyContent: 'center',
   },
   typeCard: {
-    width: '45%',
-    padding: 16,
+    width: '40%',
+    padding: 15,
     borderWidth: 2,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
-    minHeight: 100,
+    minHeight: 70,
     justifyContent: 'center',
   },
   typeName: {
@@ -377,27 +390,11 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 16,
   },
-  fieldLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    minHeight: 48,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
   switchContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 5,
   },
   switchLabel: {
     fontSize: 16,
@@ -405,24 +402,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     gap: 12,
-    marginTop: 24,
-    marginBottom: 32,
-  },
-  button: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    borderWidth: 2,
-  },
-  saveButton: {
-    // backgroundColor set dynamically
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: 10,
   },
 });

@@ -12,37 +12,23 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
 
 import { useAppDispatch, RootState } from '@/app/(redux)/store';
 import { setBusiness, setColor } from '@/app/(redux)/settingSlice';
-import { authLogout } from '@/app/(redux)/authSlice';
-import axiosInstance from '@/axios';
 import {
-  baseImageURL,
   darkMainColor,
-  darkSecondColor,
-  darkTextColor,
   lightMainColor,
-  lightSecondColor,
-  lightTextColor,
 } from '@/settings';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { useRouter } from 'expo-router';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
-import { StatusBar } from 'expo-status-bar';
 
 export default function Profile() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
-  const { userName } = useSelector((state: RootState) => state.auth);
-  const [newName, setNewName] = useState(business.business_name);
-  const [newLogo, setNewLogo] = useState<any>(business.logo);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -117,33 +103,31 @@ export default function Profile() {
     }; */
 
   return (
-    <>
-      <StatusBar style={darkTheme ? 'light' : 'dark'} />
-      <KeyboardAvoidingView
-        behavior="padding"
-        keyboardVerticalOffset={100}
-        style={[
-          commonStyles.container,
-          { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
-        ]}
-      >
-        <ThemedView style={commonStyles.tabHeader}>
-          <TouchableOpacity
-            onPress={() => {
-              router.back();
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
-          </TouchableOpacity>
-          <ThemedText type="subtitle">Edit App Settings</ThemedText>
-          <ThemedText type="subtitle"></ThemedText>
-        </ThemedView>
-        {loading ? (
-          <ActivityIndicator style={commonStyles.containerCentered} size="large" />
-        ) : (
-          <ScrollView>
-            <ThemedSecondaryView style={styles.sectionContainer}>
-              {/* <View style={styles.rowContainer}>
+    <KeyboardAvoidingView
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      style={[
+        commonStyles.container,
+        { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
+      ]}
+    >
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Edit App Settings</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
+      {loading ? (
+        <ActivityIndicator style={commonStyles.containerCentered} size="large" />
+      ) : (
+        <ScrollView>
+          <ThemedSecondaryView style={styles.sectionContainer}>
+            {/* <View style={styles.rowContainer}>
                         { newLogo === '@/assets/images/logoDefault.png' ?
                         <Image source={require('@/assets/images/logoDefault.png')} style={[styles.image, { borderColor: color, margin: 'auto' }]} />
                         :
@@ -160,54 +144,53 @@ export default function Profile() {
                             <ThemedText type="subtitle" style={{color: color}}>Save</ThemedText>
                         </TouchableOpacity>
                     </View> */}
-              <View style={styles.rowContainer}>
-                <ThemedText type="subtitle">Pick a Color</ThemedText>
+            <View style={styles.rowContainer}>
+              <ThemedText type="subtitle">Pick a Color</ThemedText>
+            </View>
+            <View style={styles.rowContainer}>
+              <View style={commonStyles.colorsContainer}>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#009d93' }]}
+                  onPress={() => dispatch(setColor('#009d93'))}
+                ></TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#694fad' }]}
+                  onPress={() => dispatch(setColor('#694fad'))}
+                ></TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#09dd' }]}
+                  onPress={() => dispatch(setColor('#09dd'))}
+                ></TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#d02860' }]}
+                  onPress={() => dispatch(setColor('#d02860'))}
+                ></TouchableOpacity>
               </View>
-              <View style={styles.rowContainer}>
-                <View style={commonStyles.colorsContainer}>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#009d93' }]}
-                    onPress={() => dispatch(setColor('#009d93'))}
-                  ></TouchableOpacity>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#694fad' }]}
-                    onPress={() => dispatch(setColor('#694fad'))}
-                  ></TouchableOpacity>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#09dd' }]}
-                    onPress={() => dispatch(setColor('#09dd'))}
-                  ></TouchableOpacity>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#d02860' }]}
-                    onPress={() => dispatch(setColor('#d02860'))}
-                  ></TouchableOpacity>
-                </View>
+            </View>
+            <View style={styles.rowContainerLast}>
+              <View style={commonStyles.colorsContainer}>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#FFD700' }]}
+                  onPress={() => dispatch(setColor('#FFD700'))}
+                ></TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#6C2EB4' }]}
+                  onPress={() => dispatch(setColor('#6C2EB4'))}
+                ></TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#00BFFF' }]}
+                  onPress={() => dispatch(setColor('#00BFFF'))}
+                ></TouchableOpacity>
+                <TouchableOpacity
+                  style={[commonStyles.color, { backgroundColor: '#20CFCF' }]}
+                  onPress={() => dispatch(setColor('#20CFCF'))}
+                ></TouchableOpacity>
               </View>
-              <View style={styles.rowContainerLast}>
-                <View style={commonStyles.colorsContainer}>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#FFD700' }]}
-                    onPress={() => dispatch(setColor('#FFD700'))}
-                  ></TouchableOpacity>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#6C2EB4' }]}
-                    onPress={() => dispatch(setColor('#6C2EB4'))}
-                  ></TouchableOpacity>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#00BFFF' }]}
-                    onPress={() => dispatch(setColor('#00BFFF'))}
-                  ></TouchableOpacity>
-                  <TouchableOpacity
-                    style={[commonStyles.color, { backgroundColor: '#20CFCF' }]}
-                    onPress={() => dispatch(setColor('#20CFCF'))}
-                  ></TouchableOpacity>
-                </View>
-              </View>
-            </ThemedSecondaryView>
-          </ScrollView>
-        )}
-      </KeyboardAvoidingView>
-    </>
+            </View>
+          </ThemedSecondaryView>
+        </ScrollView>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 

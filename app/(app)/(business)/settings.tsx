@@ -20,7 +20,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { commonStyles } from '@/constants/commonStyles';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
-import { commonStylesCards } from '@/constants/commonStylesCard';
 import axiosInstance from '@/axios';
 
 export default function Settings() {
@@ -148,13 +147,13 @@ export default function Settings() {
               </ThemedText>
               <SettingItem
                 icon="business"
-                title="Business Settings"
+                title="Business Information"
                 onPress={() => router.push('/(app)/(business)/businessSettings')}
               />
               <SettingItem
                 icon="card"
                 title="Payment Methods"
-                onPress={() => router.push('/(app)/(business)/paymentSettings')}
+                onPress={() => router.navigate('/(app)/(business)/(paymentMethods)')}
               />
               <SettingItem
                 icon="person-circle"

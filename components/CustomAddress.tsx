@@ -38,7 +38,7 @@ export default function CustomAddress({ placeholder, setAddress }: CustomAddress
           height: 26,
         },
         textInput: {
-          height: 26,
+          height: 30,
           color: darkTheme ? darkTextColor : lightTextColor,
           fontSize: 16,
           backgroundColor: 'transparent',

@@ -274,22 +274,6 @@ export default function BiometricSettings() {
         </TouchableOpacity>
       )}
 
-      {/* View stored credentials button */}
-      {isEnabled && hasStoredCredentials && (
-        <TouchableOpacity
-          style={[
-            styles.testButton,
-            { borderColor: '#007AFF', backgroundColor: darkTheme ? '#333' : '#f8f9fa' }
-          ]}
-          onPress={handleViewStoredCredentials}
-        >
-          <Ionicons name="information-circle" size={24} color="#007AFF" />
-          <ThemedText style={{ marginLeft: 12, color: '#007AFF' }}>
-            View Stored User Info
-          </ThemedText>
-        </TouchableOpacity>
-      )}
-
       {!isAvailable && (
         <ThemedSecondaryView style={styles.section}>
           <View style={styles.infoContainer}>

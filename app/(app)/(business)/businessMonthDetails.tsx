@@ -19,6 +19,8 @@ import axiosInstance from '@/axios';
 import { setBusiness } from '@/app/(redux)/settingSlice';
 import { authLogout } from '../../(redux)/authSlice';
 import { darkMainColor, lightMainColor } from '@/settings';
+import { ThemedView } from '@/components/ThemedView';
+import { commonStyles } from '@/constants/commonStyles';
 
 interface MonthlyData {
   totalRevenue: number;
@@ -39,7 +41,7 @@ export default function BusinessMonthDetails() {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { jobs } = useSelector((state: RootState) => state.job);
   const { businessMessage, extraExpenses, extraIncome } = useSelector(
-    (state: RootState) => state.business
+    (state: RootState) => state.business,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -62,8 +64,18 @@ export default function BusinessMonthDetails() {
   const router = useRouter();
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   const calculateMonthlyData = () => {
@@ -72,30 +84,42 @@ export default function BusinessMonthDetails() {
     const targetYear = selectedYear;
 
     // Filter data for selected month
-    const monthJobs = Array.isArray(jobs) ? jobs.filter((job: any) => {
-      const jobDate = new Date(job.date);
-      return jobDate.getMonth() === targetMonth && jobDate.getFullYear() === targetYear;
-    }) : [];
+    const monthJobs = Array.isArray(jobs)
+      ? jobs.filter((job: any) => {
+          const jobDate = new Date(job.date);
+          return jobDate.getMonth() === targetMonth && jobDate.getFullYear() === targetYear;
+        })
+      : [];
 
-    const monthExpenses = Array.isArray(extraExpenses) ? extraExpenses.filter((expense: any) => {
-      const expenseDate = new Date(expense.date);
-      return expenseDate.getMonth() === targetMonth && expenseDate.getFullYear() === targetYear;
-    }) : [];
+    const monthExpenses = Array.isArray(extraExpenses)
+      ? extraExpenses.filter((expense: any) => {
+          const expenseDate = new Date(expense.date);
+          return expenseDate.getMonth() === targetMonth && expenseDate.getFullYear() === targetYear;
+        })
+      : [];
 
-    const monthIncome = Array.isArray(extraIncome) ? extraIncome.filter((income: any) => {
-      const incomeDate = new Date(income.date);
-      return incomeDate.getMonth() === targetMonth && incomeDate.getFullYear() === targetYear;
-    }) : [];
+    const monthIncome = Array.isArray(extraIncome)
+      ? extraIncome.filter((income: any) => {
+          const incomeDate = new Date(income.date);
+          return incomeDate.getMonth() === targetMonth && incomeDate.getFullYear() === targetYear;
+        })
+      : [];
 
     // Calculate metrics
-    const jobRevenue = monthJobs.reduce((sum: number, job: any) => sum + (Number(job.price) || 0), 0);
-    const extraIncomeTotal = monthIncome.reduce((sum: number, income: any) => sum + (Number(income.amount) || 0), 0);
+    const jobRevenue = monthJobs.reduce(
+      (sum: number, job: any) => sum + (Number(job.price) || 0),
+      0,
+    );
+    const extraIncomeTotal = monthIncome.reduce(
+      (sum: number, income: any) => sum + (Number(income.amount) || 0),
+      0,
+    );
     const totalRevenue = jobRevenue + extraIncomeTotal;
 
     const deductibleExpenses = monthExpenses
       .filter((expense: any) => expense.tax_deductible)
       .reduce((sum: number, expense: any) => sum + (Number(expense.amount) || 0), 0);
-    
+
     const nonDeductibleExpenses = monthExpenses
       .filter((expense: any) => !expense.tax_deductible)
       .reduce((sum: number, expense: any) => sum + (Number(expense.amount) || 0), 0);
@@ -132,7 +156,13 @@ export default function BusinessMonthDetails() {
     setIsLoading(false);
   };
 
-  const renderStatCard = (title: string, value: string, icon: string, iconColor: string, subtitle?: string) => (
+  const renderStatCard = (
+    title: string,
+    value: string,
+    icon: string,
+    iconColor: string,
+    subtitle?: string,
+  ) => (
     <View style={[styles.statCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
       <View style={styles.statHeader}>
         <Ionicons name={icon as any} size={24} color={iconColor} />
@@ -145,7 +175,13 @@ export default function BusinessMonthDetails() {
     </View>
   );
 
-  const renderLargeStatCard = (title: string, value: string, icon: string, iconColor: string, subtitle: string) => (
+  const renderLargeStatCard = (
+    title: string,
+    value: string,
+    icon: string,
+    iconColor: string,
+    subtitle: string,
+  ) => (
     <View style={[styles.largeStatCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
       <View style={styles.largeStatHeader}>
         <View style={[styles.largeIconContainer, { backgroundColor: iconColor + '20' }]}>
@@ -179,226 +215,250 @@ export default function BusinessMonthDetails() {
   };
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: darkTheme ? darkMainColor : lightMainColor, marginTop: 30 }]}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isLoading}
-          onRefresh={handleRefresh}
-          colors={[color]}
-          tintColor={color}
-        />
-      }
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
-          </TouchableOpacity>
-          <View>
-            <ThemedText type="title" style={styles.welcomeText}>
-              Monthly Report
-            </ThemedText>
-            <ThemedText style={styles.businessName}>
-              {business?.name || 'Your Business'}
-            </ThemedText>
-          </View>
-        </View>
-      </View>
-
-      {/* Month Selector */}
+    <ThemedView style={commonStyles.container}>
+      <ThemedView style={commonStyles.tabHeader}>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={darkTheme ? '#fff' : '#000'} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle">Monthly Report</ThemedText>
+        <ThemedText type="subtitle"></ThemedText>
+      </ThemedView>
       <View style={styles.monthSelector}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.monthButton, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
           onPress={() => changeMonth('prev')}
         >
           <Ionicons name="chevron-back" size={20} color={color} />
         </TouchableOpacity>
-        
+
         <View style={[styles.monthDisplay, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}>
           <ThemedText style={styles.monthText}>
             {months[selectedMonth]} {selectedYear}
           </ThemedText>
         </View>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={[styles.monthButton, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
           onPress={() => changeMonth('next')}
         >
           <Ionicons name="chevron-forward" size={20} color={color} />
         </TouchableOpacity>
       </View>
+      <ScrollView
+        style={[
+          styles.container,
+          { backgroundColor: darkTheme ? darkMainColor : lightMainColor },
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            colors={[color]}
+            tintColor={color}
+          />
+        }
+      >
+        {/* Month Selector */}
 
-      {/* Revenue Overview */}
-      <View style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Revenue Overview</ThemedText>
-        
-        {renderLargeStatCard(
-          'Total Revenue',
-          `$${monthlyData.totalRevenue.toFixed(2)}`,
-          'cash',
-          '#4CAF50',
-          'All income sources combined'
-        )}
-        
-        <View style={styles.statsGrid}>
-          {renderStatCard(
-            'Job Revenue',
-            `$${monthlyData.jobRevenue.toFixed(2)}`,
-            'briefcase',
-            '#2196F3',
-            `${monthlyData.jobs.length} jobs`
-          )}
-          {renderStatCard(
-            'Extra Income',
-            `$${monthlyData.extraIncome.toFixed(2)}`,
-            'add-circle',
+        {/* Revenue Overview */}
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Revenue Overview
+          </ThemedText>
+
+          {renderLargeStatCard(
+            'Total Revenue',
+            `$${monthlyData.totalRevenue.toFixed(2)}`,
+            'cash',
             '#4CAF50',
-            `${monthlyData.income.length} entries`
+            'All income sources combined',
           )}
-        </View>
-      </View>
 
-      {/* Expenses Breakdown */}
-      <View style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Expenses Breakdown</ThemedText>
-        
-        <View style={styles.statsGrid}>
-          {renderStatCard(
-            'Tax Deductible',
-            `$${monthlyData.deductibleExpenses.toFixed(2)}`,
-            'receipt',
+          <View style={styles.statsGrid}>
+            {renderStatCard(
+              'Job Revenue',
+              `$${monthlyData.jobRevenue.toFixed(2)}`,
+              'briefcase',
+              '#2196F3',
+              `${monthlyData.jobs.length} jobs`,
+            )}
+            {renderStatCard(
+              'Extra Income',
+              `$${monthlyData.extraIncome.toFixed(2)}`,
+              'add-circle',
+              '#4CAF50',
+              `${monthlyData.income.length} entries`,
+            )}
+          </View>
+        </View>
+
+        {/* Expenses Breakdown */}
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Expenses Breakdown
+          </ThemedText>
+
+          <View style={styles.statsGrid}>
+            {renderStatCard(
+              'Tax Deductible',
+              `$${monthlyData.deductibleExpenses.toFixed(2)}`,
+              'receipt',
+              '#FF9800',
+              'Business expenses',
+            )}
+            {renderStatCard(
+              'Non-Deductible',
+              `$${monthlyData.nonDeductibleExpenses.toFixed(2)}`,
+              'remove-circle',
+              '#FF5722',
+              'Personal expenses',
+            )}
+          </View>
+
+          {renderLargeStatCard(
+            'Total Expenses',
+            `$${monthlyData.totalExpenses.toFixed(2)}`,
+            'card',
             '#FF9800',
-            'Business expenses'
-          )}
-          {renderStatCard(
-            'Non-Deductible',
-            `$${monthlyData.nonDeductibleExpenses.toFixed(2)}`,
-            'remove-circle',
-            '#FF5722',
-            'Personal expenses'
+            `${monthlyData.expenses.length} total expenses`,
           )}
         </View>
-        
-        {renderLargeStatCard(
-          'Total Expenses',
-          `$${monthlyData.totalExpenses.toFixed(2)}`,
-          'card',
-          '#FF9800',
-          `${monthlyData.expenses.length} total expenses`
-        )}
-      </View>
 
-      {/* Financial Summary */}
-      <View style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Financial Summary</ThemedText>
-        
-        <View style={styles.statsGrid}>
-          {renderStatCard(
-            'Net Profit',
-            `${monthlyData.netProfit >= 0 ? '+' : '-'}$${Math.abs(monthlyData.netProfit).toFixed(2)}`,
-            monthlyData.netProfit >= 0 ? 'trending-up' : 'trending-down',
-            monthlyData.netProfit >= 0 ? '#4CAF50' : '#FF5722',
-            'After all expenses'
-          )}
-          {renderStatCard(
-            'Taxable Income',
-            `$${monthlyData.taxableIncome.toFixed(2)}`,
-            'document-text',
+        {/* Financial Summary */}
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Financial Summary
+          </ThemedText>
+
+          <View style={styles.statsGrid}>
+            {renderStatCard(
+              'Net Profit',
+              `${monthlyData.netProfit >= 0 ? '+' : '-'}$${Math.abs(monthlyData.netProfit).toFixed(
+                2,
+              )}`,
+              monthlyData.netProfit >= 0 ? 'trending-up' : 'trending-down',
+              monthlyData.netProfit >= 0 ? '#4CAF50' : '#FF5722',
+              'After all expenses',
+            )}
+            {renderStatCard(
+              'Taxable Income',
+              `$${monthlyData.taxableIncome.toFixed(2)}`,
+              'document-text',
+              '#9C27B0',
+              'Revenue - deductibles',
+            )}
+          </View>
+
+          {renderLargeStatCard(
+            'Estimated Tax',
+            `$${monthlyData.estimatedTax.toFixed(2)}`,
+            'calculator',
             '#9C27B0',
-            'Revenue - deductibles'
+            '25% of taxable income (estimated)',
           )}
         </View>
-        
-        {renderLargeStatCard(
-          'Estimated Tax',
-          `$${monthlyData.estimatedTax.toFixed(2)}`,
-          'calculator',
-          '#9C27B0',
-          '25% of taxable income (estimated)'
-        )}
-      </View>
 
-      {/* Performance Metrics */}
-      <View style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Performance Metrics</ThemedText>
-        
-        <View style={styles.statsGrid}>
-          {renderStatCard(
-            'Profit Margin',
-            `${monthlyData.totalRevenue > 0 ? ((monthlyData.netProfit / monthlyData.totalRevenue) * 100).toFixed(1) : '0'}%`,
-            'pie-chart',
-            color,
-            'Profitability ratio'
-          )}
-          {renderStatCard(
-            'Avg Job Value',
-            `$${monthlyData.jobs.length > 0 ? (monthlyData.jobRevenue / monthlyData.jobs.length).toFixed(0) : '0'}`,
-            'stats-chart',
-            '#607D8B',
-            'Per job average'
-          )}
+        {/* Performance Metrics */}
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Performance Metrics
+          </ThemedText>
+
+          <View style={styles.statsGrid}>
+            {renderStatCard(
+              'Profit Margin',
+              `${
+                monthlyData.totalRevenue > 0
+                  ? ((monthlyData.netProfit / monthlyData.totalRevenue) * 100).toFixed(1)
+                  : '0'
+              }%`,
+              'pie-chart',
+              color,
+              'Profitability ratio',
+            )}
+            {renderStatCard(
+              'Avg Job Value',
+              `$${
+                monthlyData.jobs.length > 0
+                  ? (monthlyData.jobRevenue / monthlyData.jobs.length).toFixed(0)
+                  : '0'
+              }`,
+              'stats-chart',
+              '#607D8B',
+              'Per job average',
+            )}
+          </View>
+
+          <View style={styles.statsGrid}>
+            {renderStatCard(
+              'Expense Ratio',
+              `${
+                monthlyData.totalRevenue > 0
+                  ? ((monthlyData.totalExpenses / monthlyData.totalRevenue) * 100).toFixed(1)
+                  : '0'
+              }%`,
+              'analytics',
+              '#FF9800',
+              'Expenses vs Revenue',
+            )}
+            {renderStatCard(
+              'Tax Efficiency',
+              `${
+                monthlyData.totalExpenses > 0
+                  ? ((monthlyData.deductibleExpenses / monthlyData.totalExpenses) * 100).toFixed(1)
+                  : '0'
+              }%`,
+              'shield-checkmark',
+              '#4CAF50',
+              'Deductible percentage',
+            )}
+          </View>
         </View>
-        
-        <View style={styles.statsGrid}>
-          {renderStatCard(
-            'Expense Ratio',
-            `${monthlyData.totalRevenue > 0 ? ((monthlyData.totalExpenses / monthlyData.totalRevenue) * 100).toFixed(1) : '0'}%`,
-            'analytics',
-            '#FF9800',
-            'Expenses vs Revenue'
-          )}
-          {renderStatCard(
-            'Tax Efficiency',
-            `${monthlyData.totalExpenses > 0 ? ((monthlyData.deductibleExpenses / monthlyData.totalExpenses) * 100).toFixed(1) : '0'}%`,
-            'shield-checkmark',
-            '#4CAF50',
-            'Deductible percentage'
-          )}
+
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Month Actions
+          </ThemedText>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
+            onPress={() => router.navigate('/(app)/(business)/businessIncomeCreate')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#4CAF50' + '20' }]}>
+              <Ionicons name="add-circle" size={24} color="#4CAF50" />
+            </View>
+            <View style={styles.actionContent}>
+              <ThemedText style={styles.actionTitle}>Add Income</ThemedText>
+              <ThemedText style={styles.actionSubtitle}>Record additional revenue</ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={darkTheme ? '#666' : '#999'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
+            onPress={() => router.navigate('/(app)/(business)/businessExpenseCreate')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#FF9800' + '20' }]}>
+              <Ionicons name="remove-circle" size={24} color="#FF9800" />
+            </View>
+            <View style={styles.actionContent}>
+              <ThemedText style={styles.actionTitle}>Add Expense</ThemedText>
+              <ThemedText style={styles.actionSubtitle}>Track business costs</ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={darkTheme ? '#666' : '#999'} />
+          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Month Actions</ThemedText>
-        
-        <TouchableOpacity 
-          style={[styles.actionCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
-          onPress={() => router.navigate('/(app)/(business)/businessIncomeCreate')}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: '#4CAF50' + '20' }]}>
-            <Ionicons name="add-circle" size={24} color="#4CAF50" />
-          </View>
-          <View style={styles.actionContent}>
-            <ThemedText style={styles.actionTitle}>Add Income</ThemedText>
-            <ThemedText style={styles.actionSubtitle}>Record additional revenue</ThemedText>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={darkTheme ? '#666' : '#999'} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionCard, { backgroundColor: darkTheme ? '#2A2A2A' : '#F8F9FA' }]}
-          onPress={() => router.navigate('/(app)/(business)/businessExpenseCreate')}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: '#FF9800' + '20' }]}>
-            <Ionicons name="remove-circle" size={24} color="#FF9800" />
-          </View>
-          <View style={styles.actionContent}>
-            <ThemedText style={styles.actionTitle}>Add Expense</ThemedText>
-            <ThemedText style={styles.actionSubtitle}>Track business costs</ThemedText>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={darkTheme ? '#666' : '#999'} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Bottom spacing */}
-      <View style={{ height: 40 }} />
-    </ScrollView>
+        {/* Bottom spacing */}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </ThemedView>
   );
 }
 
@@ -437,7 +497,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 5,
   },
   monthButton: {
     width: 44,

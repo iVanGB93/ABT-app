@@ -15,7 +15,7 @@ import Toast from 'react-native-toast-message';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
-import { setItem, setItemMessage } from '@/app/(redux)/itemSlice';
+import { itemFail, setItem, setItemMessage } from '@/app/(redux)/itemSlice';
 import ItemCard from '@/components/items/ItemCard';
 import { commonStyles } from '@/constants/commonStyles';
 import { useItems } from '@/hooks';
@@ -26,11 +26,7 @@ export default function Items() {
   const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  const {
-    items,
-    refresh: refreshItems,
-  } = useItems(search);
+  const { items, refresh: refreshItems } = useItems(search);
 
   useEffect(() => {
     if (itemMessage) {
@@ -41,7 +37,18 @@ export default function Items() {
       });
       dispatch(setItemMessage(null));
     }
-  }, [itemMessage, dispatch]);
+  }, [itemMessage]);
+
+  useEffect(() => {
+    if (itemError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: itemError,
+      });
+      dispatch(itemFail(null));
+    }
+  }, [itemError]);
 
   const handlePressable = (id: string) => {
     let item = items.find((item: any) => item.id === parseInt(id));

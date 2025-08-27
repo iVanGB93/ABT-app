@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 
@@ -27,7 +28,7 @@ export default function ItemCreate() {
   return (
       <KeyboardAvoidingView
         behavior="padding"
-        keyboardVerticalOffset={100}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
         style={[
           commonStyles.container,
           { backgroundColor: darkTheme ? darkMainColor : lightMainColor },

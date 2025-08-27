@@ -7,6 +7,7 @@ export interface BusinessState {
     businessError?: string | null;
     extraExpenses: any;
     extraIncome: any;
+    paymentMethods?: any;
 };
 
 const initialState: BusinessState = {
@@ -15,6 +16,7 @@ const initialState: BusinessState = {
     businessError: null,
     extraExpenses: [],
     extraIncome: [],
+    paymentMethods: [],
 };
 
 export const businessSlice = createSlice({
@@ -38,11 +40,14 @@ export const businessSlice = createSlice({
         setExtraIncome: (state, action: PayloadAction<any>) => {
             state.extraIncome = action.payload;
         },
+        setPaymentMethods: (state, action: PayloadAction<any>) => {
+            state.paymentMethods = action.payload;
+        }
     }
 });
 
 
-export const { businessSetMessage, businessSetError, setBusinesses, setExtraExpenses, setExtraIncome } = businessSlice.actions;
+export const { businessSetMessage, businessSetError, setBusinesses, setExtraExpenses, setExtraIncome, setPaymentMethods } = businessSlice.actions;
 
 export const businessReducer = businessSlice.reducer;
 

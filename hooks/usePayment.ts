@@ -1,49 +1,120 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '@/app/(redux)/store';
-import {
-  // Async actions
-  loadPaymentMethodTypes,
-  loadBusinessPaymentMethods,
-  createBusinessPaymentMethod,
-  updateBusinessPaymentMethodThunk,
-  deleteBusinessPaymentMethod,
-  setDefaultPaymentMethodThunk,
-  // Sync actions
-  setSelectedPaymentMethod,
-  setPaymentMessage,
-  clearPaymentErrors,
-  resetPaymentState,
-  setDefaultPaymentMethod,
-  togglePaymentMethodEnabled,
-  // Selectors
-  selectPaymentMethodTypes,
-  selectActivePaymentMethodTypes,
-  selectBusinessPaymentMethods,
-  selectEnabledPaymentMethods,
-  selectDefaultPaymentMethod,
-  selectPaymentMethodByType,
-  selectIsPaymentMethodConfigured,
-} from '@/app/(redux)/paymentSlice';
-import { PaymentMethodCreateData, PaymentMethodUpdateData, BusinessPaymentMethod } from '@/services/paymentService';
+import React, { useState, useCallback } from 'react';
+import paymentService, { PaymentMethodCreateData, PaymentMethodUpdateData, BusinessPaymentMethod, PaymentMethodType } from '@/services/paymentService';
 
+export const usePaymentMethods = (businessId: number) => {
+  const [paymentMethods, setPaymentMethods] = useState<BusinessPaymentMethod[]>([]);
+
+  const fetchPaymentMethods = useCallback(async () => {
+    try {
+      const data = await paymentService.getBusinessPaymentMethods(businessId);
+      setPaymentMethods(data);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+      await fetchPaymentMethods();
+    }, [fetchPaymentMethods]);
+
+  return {
+    paymentMethods,
+    refreshPaymentMethods: refresh,
+  };
+}
+
+export const usePaymentMethodActions = () => {
+  const [ paymentMethodTypes, setPaymentMethodTypes ] = useState<PaymentMethodType[]>([]);
+  const [ isLoading, setIsLoading ] = useState(false);
+
+  const loadTypes = useCallback(async () => {
+    try {
+      const data = await paymentService.getPaymentMethodTypes();
+      setPaymentMethodTypes(data);
+    } catch (error) {
+      console.error('Error loading payment method types:', error);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    await loadTypes();
+  }, [loadTypes]);
+
+  const createMethod = (businessId: number, data: PaymentMethodCreateData) => {
+    setIsLoading(true);
+    try {
+      const result = paymentService.createBusinessPaymentMethod(businessId, data);
+      return result
+    } catch (error) {
+      console.error('Error creating payment method:', error);
+      return error;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const updateMethod = (businessId: number, data: PaymentMethodCreateData) => {
+    setIsLoading(true);
+    try {
+      const result = paymentService.createBusinessPaymentMethod(businessId, data);
+      return result
+    } catch (error) {
+      console.error('Error creating payment method:', error);
+      return error;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const deleteMethod = async (businessId: number, paymentMethodId: number) => {
+    try {
+      await paymentService.deleteBusinessPaymentMethod(businessId, paymentMethodId);
+      return true
+    } catch (error) {
+      console.error('Error deleting payment method:', error);
+      return false
+    }
+  };
+
+  const setDefault = (paymentMethodId: number) => {
+    /* dispatch(setDefaultPaymentMethod(paymentMethodId)); */
+    return
+  }
+
+  const toggleEnabled = (paymentMethodId: number) => {
+    /* dispatch(togglePaymentMethodEnabled(paymentMethodId)); */
+    return
+  }
+
+  return {
+    paymentMethodTypes,
+    refreshPaymentMethodTypes: refresh,
+    isLoading,
+    createMethod,
+    updateMethod,
+    deleteMethod,
+    setDefault,
+    toggleEnabled,
+  };
+}
+/* 
 export const usePayment = () => {
   const dispatch = useDispatch<AppDispatch>();
   const paymentState = useSelector((state: RootState) => state.payment);
-
-  // Async actions
-  const loadTypes = () => dispatch(loadPaymentMethodTypes());
-  
-  const loadMethods = (businessId: number) => 
-    dispatch(loadBusinessPaymentMethods(businessId));
-  
-  const createMethod = (businessId: number, data: PaymentMethodCreateData) =>
-    dispatch(createBusinessPaymentMethod({ businessId, data }));
   
   const updateMethod = (businessId: number, paymentMethodId: number, data: PaymentMethodUpdateData) =>
     dispatch(updateBusinessPaymentMethodThunk({ businessId, paymentMethodId, data }));
-  
-  const deleteMethod = (businessId: number, paymentMethodId: number) =>
-    dispatch(deleteBusinessPaymentMethod({ businessId, paymentMethodId }));
+
+  const deleteMethod = async (businessId: number, paymentMethodId: number) => {
+    try {
+      await paymentService.deleteBusinessPaymentMethod(businessId, paymentMethodId);
+      return true
+    } catch (error) {
+      console.error('Error deleting payment method:', error);
+      return false
+    }
+  };
 
   const setDefaultMethod = (businessId: number, paymentMethodId: number) =>
     dispatch(setDefaultPaymentMethodThunk({ businessId, paymentMethodId }));
@@ -70,9 +141,6 @@ export const usePayment = () => {
     ...paymentState,
     
     // Actions
-    loadTypes,
-    loadMethods,
-    createMethod,
     updateMethod,
     deleteMethod,
     setDefaultMethod,
@@ -84,7 +152,6 @@ export const usePayment = () => {
     toggleEnabled,
     
     // Computed values
-    isLoading: paymentState.paymentTypesLoading || paymentState.paymentMethodsLoading,
     hasErrors: !!(paymentState.paymentTypesError || paymentState.paymentMethodsError),
     errorMessage: paymentState.paymentTypesError || paymentState.paymentMethodsError,
   };
@@ -113,3 +180,4 @@ export const usePaymentSelectors = () => {
     isPaymentMethodConfigured,
   };
 };
+ */

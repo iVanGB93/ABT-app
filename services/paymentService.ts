@@ -32,11 +32,11 @@ export interface BusinessPaymentMethod {
 }
 
 export interface PaymentMethodCreateData {
+  action: string;
   payment_type_id: number;
   account_email?: string;
   account_phone?: string;
   account_username?: string;
-  account_number?: string;
   is_enabled?: boolean;
   is_default?: boolean;
   display_name?: string;
@@ -71,13 +71,7 @@ export class PaymentService {
    * Obtener métodos de pago configurados para un negocio
    */
   async getBusinessPaymentMethods(businessId: number): Promise<BusinessPaymentMethod[]> {
-    try {
-      const response = await this.api.get<BusinessPaymentMethod[]>(`/business/${businessId}/payment-methods/`);
-      return response;
-    } catch (error) {
-      console.error('Error fetching business payment methods:', error);
-      throw new Error('Failed to load business payment methods');
-    }
+    return this.api.get<BusinessPaymentMethod[]>(`/business/${businessId}/payment-methods/`);
   }
 
   /**
@@ -87,13 +81,7 @@ export class PaymentService {
     businessId: number,
     data: PaymentMethodCreateData
   ): Promise<BusinessPaymentMethod> {
-    try {
-      const response = await this.api.post<BusinessPaymentMethod>(`/business/${businessId}/payment-methods/`, data);
-      return response;
-    } catch (error) {
-      console.error('Error creating business payment method:', error);
-      throw new Error('Failed to create payment method');
-    }
+    return this.api.post<BusinessPaymentMethod>(`/business/${businessId}/payment-methods/`, data);
   }
 
   /**

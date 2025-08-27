@@ -47,7 +47,7 @@ export const itemSlice = createSlice({
             state.itemError = null;
             state.itemMessage = null;
         },
-        itemFail: (state, action: PayloadAction<string>) => {
+        itemFail: (state, action: PayloadAction<string | null>) => {
             state.itemError = action.payload;
             state.itemLoading = false;
             state.itemMessage = null;
