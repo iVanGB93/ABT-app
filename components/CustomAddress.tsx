@@ -36,6 +36,8 @@ export default function CustomAddress({ placeholder, setAddress }: CustomAddress
       styles={{
         textInputContainer: {
           height: 26,
+          alignItems: 'center',
+          marginBottom: 5,
         },
         textInput: {
           height: 30,

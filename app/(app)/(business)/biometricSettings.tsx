@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,12 +18,18 @@ import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { commonStyles } from '@/constants/commonStyles';
 import { useRouter } from 'expo-router';
+import axiosInstance from '@/axios';
 
 export default function BiometricSettings() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
-  const { userName, token, refreshToken } = useSelector((state: RootState) => state.auth);
+  const { userName } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
-  const [storedUserInfo, setStoredUserInfo] = useState<{ username: string } | null>(null);
+  
+  // Password confirmation modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
   
   const {
     isAvailable,
@@ -36,25 +44,11 @@ export default function BiometricSettings() {
     disableBiometric,
     checkBiometricStatus,
     getBiometricTypeNames,
-    getStoredUserInfo,
   } = useBiometricAuth();
 
   useEffect(() => {
     checkBiometricStatus();
-    loadStoredUserInfo();
   }, []);
-
-  const loadStoredUserInfo = async () => {
-    if (hasStoredCredentials) {
-      const userInfo = await getStoredUserInfo();
-      setStoredUserInfo(userInfo);
-    }
-  };
-
-  // Reload user info when credentials status changes
-  useEffect(() => {
-    loadStoredUserInfo();
-  }, [hasStoredCredentials]);
 
   const handleToggleBiometric = async () => {
     if (isEnabled) {
@@ -73,25 +67,53 @@ export default function BiometricSettings() {
         ]
       );
     } else {
-      // Check if user is logged in and has credentials
-      if (!userName || !token || !refreshToken) {
+      // Check if user is logged in
+      if (!userName) {
         Alert.alert('Error', 'You must be logged in to enable biometric authentication');
         return;
       }
 
-      const credentials = {
-        username: userName,
-        password: '', // Add empty password since we're using token-based auth
-        token: token,
-        refreshToken: refreshToken,
-      };
+      // Show password confirmation modal
+      setShowPasswordModal(true);
+    }
+  };
 
-      const success = await enableBiometric(credentials);
-      if (success) {
-        Alert.alert('Success', 'Biometric login has been enabled successfully!');
-        // Reload stored user info
-        await loadStoredUserInfo();
+  const handlePasswordConfirmation = async () => {
+    if (!confirmPassword) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
+
+    setIsConfirming(true);
+    try {
+      // Verify password by making a login request
+      const response = await axiosInstance.post('token/', {
+        username: userName,
+        password: confirmPassword
+      });
+
+      if (response.data.access) {
+        // Password is correct, enable biometric
+        const credentials = {
+          username: userName!, // Non-null assertion since we checked above
+          password: confirmPassword,
+        };
+
+        const success = await enableBiometric(credentials);
+        if (success) {
+          Alert.alert('Success', 'Biometric login has been enabled successfully!');
+          setShowPasswordModal(false);
+          setConfirmPassword('');
+        }
       }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        Alert.alert('Error', 'Invalid password. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to verify password. Please try again.');
+      }
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -99,23 +121,6 @@ export default function BiometricSettings() {
     const success = await authenticate('Test biometric authentication');
     if (success) {
       Alert.alert('Success', 'Biometric authentication successful!');
-    }
-  };
-
-  const handleViewStoredCredentials = async () => {
-    try {
-      const credentials = await getStoredUserInfo();
-      if (credentials) {
-        Alert.alert(
-          'Stored User Information',
-          `Username: ${credentials.username}\n\nNote: Token details are encrypted and secure.`,
-          [{ text: 'OK' }]
-        );
-      } else {
-        Alert.alert('No Credentials', 'No stored credentials found.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to retrieve stored credentials.');
     }
   };
 
@@ -208,34 +213,24 @@ export default function BiometricSettings() {
         </ThemedSecondaryView>
       )}
 
-      {/* Show stored user info */}
-      {isEnabled && hasStoredCredentials && storedUserInfo && (
+      {/* Show current user */}
+      {isEnabled && hasStoredCredentials && (
         <ThemedSecondaryView style={styles.section}>
           <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Stored Account
+            Biometric Login Active
           </ThemedText>
           <View style={styles.userInfoRow}>
             <View style={styles.userInfoIcon}>
               <Ionicons name="person-circle" size={24} color={color} />
             </View>
             <View style={styles.userInfoText}>
-              <ThemedText type="defaultSemiBold">{storedUserInfo.username}</ThemedText>
+              <ThemedText type="defaultSemiBold">{userName}</ThemedText>
               <ThemedText style={styles.userInfoSubtext}>
-                This account will be used for biometric login
+                Biometric login is enabled for this account
               </ThemedText>
             </View>
-            {userName === storedUserInfo.username && (
-              <Ionicons name="checkmark-circle" size={20} color="#51cf66" />
-            )}
+            <Ionicons name="checkmark-circle" size={20} color="#51cf66" />
           </View>
-          {userName !== storedUserInfo.username && (
-            <View style={styles.warningContainer}>
-              <Ionicons name="warning" size={16} color="#ff6b6b" />
-              <ThemedText style={[styles.warningText, { marginLeft: 8 }]}>
-                Different from current user ({userName})
-              </ThemedText>
-            </View>
-          )}
         </ThemedSecondaryView>
       )}
 
@@ -295,6 +290,91 @@ export default function BiometricSettings() {
           </View>
         </ThemedSecondaryView>
       )}
+      
+      {/* Password Confirmation Modal */}
+      <Modal
+        visible={showPasswordModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setShowPasswordModal(false);
+          setConfirmPassword('');
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <ThemedSecondaryView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Ionicons name={getBiometricIcon()} size={48} color={color} />
+              <ThemedText type="title" style={styles.modalTitle}>
+                Enable Biometric Login
+              </ThemedText>
+              <ThemedText style={styles.modalDescription}>
+                Please confirm your password to enable {getBiometricTypeNames().join(' or ').toLowerCase()} login
+              </ThemedText>
+            </View>
+
+            <View style={styles.passwordInputContainer}>
+              <ThemedText style={styles.inputLabel}>Current Password</ThemedText>
+              <View style={[styles.passwordInput, { borderColor: darkTheme ? '#444' : '#ddd' }]}>
+                <Ionicons 
+                  name="lock-closed" 
+                  size={20} 
+                  color={darkTheme ? '#888' : '#666'} 
+                />
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    { color: darkTheme ? '#fff' : '#000' }
+                  ]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={darkTheme ? '#888' : '#666'}
+                  secureTextEntry={secureTextEntry}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  autoCapitalize="none"
+                  autoFocus
+                />
+                <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
+                  <Ionicons
+                    name={secureTextEntry ? 'eye-off' : 'eye'}
+                    size={20}
+                    color={darkTheme ? '#888' : '#666'}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowPasswordModal(false);
+                  setConfirmPassword('');
+                }}
+                disabled={isConfirming}
+              >
+                <ThemedText>Cancel</ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.confirmButton,
+                  { backgroundColor: color }
+                ]}
+                onPress={handlePasswordConfirmation}
+                disabled={isConfirming || !confirmPassword}
+              >
+                {isConfirming ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <ThemedText style={{ color: '#fff' }}>Confirm</ThemedText>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ThemedSecondaryView>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -397,5 +477,73 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: 12,
     color: '#ff6b6b',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  modalDescription: {
+    textAlign: 'center',
+    opacity: 0.8,
+    lineHeight: 20,
+  },
+  passwordInputContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  passwordInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  confirmButton: {
+    // backgroundColor set dynamically
   },
 });

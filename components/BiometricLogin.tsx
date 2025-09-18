@@ -11,11 +11,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { RootState } from '@/app/(redux)/store';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { darkSecondColor, darkThirdColor, lightSecondColor } from '@/settings';
 
 interface StoredCredentials {
   username: string;
-  token: string;
-  refreshToken: string;
+  password: string;
 }
 
 interface BiometricLoginProps {
@@ -36,7 +36,7 @@ export default function BiometricLogin({
     isEnabled,
     hasStoredCredentials,
     supportedTypes,
-    authenticateAndGetCredentials,
+    getStoredCredentials,
     error,
   } = useBiometricAuth();
 
@@ -93,17 +93,21 @@ export default function BiometricLogin({
       setIsAuthenticating(true);
       startPulseAnimation();
 
-      const credentials = await authenticateAndGetCredentials('Login with biometric authentication');
+      const credentials = await getStoredCredentials('Login with biometric authentication');
       
       if (credentials) {
         Vibration.vibrate(50);
         onSuccess(credentials);
       } else {
         Vibration.vibrate([100, 50, 100]);
+        // Provide more specific error message
+        onError && onError('Failed to retrieve stored credentials. Biometric authentication may need to be reconfigured.');
       }
     } catch (err: any) {
       Vibration.vibrate([100, 50, 100]);
-      onError && onError(err.message || 'Authentication failed');
+      // Pass the specific error message from the hook
+      const errorMessage = err.message || 'Biometric authentication failed';
+      onError && onError(errorMessage);
     } finally {
       setIsAuthenticating(false);
       stopPulseAnimation();
@@ -142,7 +146,7 @@ export default function BiometricLogin({
           styles.biometricButton,
           { 
             borderColor: color,
-            backgroundColor: darkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+            backgroundColor: darkTheme ? darkThirdColor : lightSecondColor,
           }
         ]}
         onPress={handleBiometricLogin}
@@ -195,11 +199,11 @@ const styles = StyleSheet.create({
   biometricButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
+    paddingVertical: 10,
     paddingHorizontal: 24,
-    borderRadius: 16,
-    borderWidth: 2,
-    marginBottom: 12,
+    borderRadius: 10,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
     minWidth: 200,
   },
   iconContainer: {

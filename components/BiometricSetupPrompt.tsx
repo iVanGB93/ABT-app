@@ -53,7 +53,13 @@ export default function BiometricSetupPrompt({
   const handleSetupBiometric = async () => {
     setIsSettingUp(true);
     try {
-      const success = await enableBiometric(credentials);
+      // Only pass username and password to enableBiometric
+      const simplifiedCredentials = {
+        username: credentials.username,
+        password: credentials.password,
+      };
+      
+      const success = await enableBiometric(simplifiedCredentials);
       if (success) {
         Alert.alert(
           'Success!', 
@@ -67,6 +73,8 @@ export default function BiometricSetupPrompt({
       Alert.alert('Error', 'Failed to enable biometric authentication. You can try again later in Settings.');
     } finally {
       setIsSettingUp(false);
+      // Clear sensitive data from local scope
+      // Note: credentials will be cleared when parent component unmounts
     }
   };
 
