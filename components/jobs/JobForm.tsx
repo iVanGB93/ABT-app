@@ -201,7 +201,7 @@ export default function JobForm({ action }: JobFormProps) {
       const formData = new FormData();
       formData.append('action', action);
       formData.append('id', job.id);
-      formData.append('name', client ? client.name : '');
+      formData.append('client', client ? client.id : '');
       formData.append('business', business.name);
       formData.append('description', description);
       formData.append('price', price);
