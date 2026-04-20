@@ -97,7 +97,7 @@ export default function Login() {
               try {
                 const success = await enableBiometric({
                   username: credentials.username,
-                  password: credentials.password
+                  refreshToken: credentials.refreshToken
                 });                  setLoading(false);
                   
                   if (success) {
@@ -140,7 +140,7 @@ export default function Login() {
                         try {
                           const success = await enableBiometric({
                             username: credentials.username,
-                            password: credentials.password
+                            refreshToken: credentials.refreshToken
                           });
                           
                           if (success) {
@@ -194,42 +194,28 @@ export default function Login() {
     router.navigate('/(onboarding)');
   };
 
-  const handleBiometricSuccess = async (credentials: any) => {
-    // Set the form values with the stored credentials
-    setUsername(credentials.username);
-    setPassword(credentials.password);
-    
-    // Execute the same login logic with stored credentials
+  const handleBiometricSuccess = async (credentials: { username: string; refreshToken: string }) => {
+    // Use the stored refresh token to obtain a new access token (no password stored)
     setLoading(true);
     
     try {
-      const response = await axiosInstance.post('token/', { 
-        username: credentials.username, 
-        password: credentials.password 
+      const response = await axiosInstance.post('token/refresh/', {
+        refresh: credentials.refreshToken,
       });
       
       if (response.data.access !== undefined) {
-        const loginCredentials = {
+        const newRefreshToken = response.data.refresh ?? credentials.refreshToken;
+        dispatch(authSuccess({
           username: credentials.username,
-          password: credentials.password,
           token: response.data.access,
-          refreshToken: response.data.refresh,
-        };
-        
-        dispatch(authSuccess(loginCredentials));
+          refreshToken: newRefreshToken,
+        }));
         setLoading(false);
-        
-        // Check if we should offer biometric setup (shouldn't happen since bio is already enabled)
-        if (isAvailable && isEnrolled && !isEnabled) {
-          setLoginCredentials(loginCredentials);
-          setShowBiometricOption(true);
-        } else {
-          router.navigate('/(onboarding)');
-        }
+        router.navigate('/(onboarding)');
       } else {
-        // If login fails, disable biometric auth
+        // Refresh failed — disable biometric so the user re-enables after a fresh login
         await disableBiometric();
-        setError('Stored biometric credentials are no longer valid. Biometric authentication has been disabled.');
+        setError('Biometric session expired. Please log in with your password.');
         setAlertVisible(true);
         setLoading(false);
       }
@@ -481,7 +467,7 @@ export default function Login() {
                     try {
                       const success = await enableBiometric({
                         username: loginCredentials.username,
-                        password: loginCredentials.password
+                        refreshToken: loginCredentials.refreshToken
                       });
                       
                       handleBiometricSetupClose();

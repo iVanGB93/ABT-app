@@ -6,7 +6,15 @@ import { authLogout, setTokensAction } from './app/(redux)/authSlice';
 import { cleanSettings, setError } from './app/(redux)/settingSlice';
 
 const dispatch = (action: any) => store.dispatch(action);
-let count: number = 0;
+
+// Track in-flight token refresh to avoid parallel refresh calls
+let isRefreshing = false;
+let pendingRequests: Array<(token: string) => void> = [];
+
+const onTokenRefreshed = (token: string) => {
+  pendingRequests.forEach((cb) => cb(token));
+  pendingRequests = [];
+};
 
 const axiosInstance = axios.create({
   baseURL: baseURL,
@@ -41,77 +49,75 @@ axiosInstance.interceptors.response.use(
     }
     if (error.response.status === 401 && originalRequest.url === baseURL + 'token/refresh/') {
       console.log('Refresh token not valid...');
+      isRefreshing = false;
+      pendingRequests = [];
       dispatch(authLogout());
       dispatch(cleanSettings());
       dispatch(setError('Session expired, please login again!'));
       return Promise.reject(error);
     }
     if (error.response.data.code === 'token_not_valid' && error.response.status === 401) {
-      console.log('Getting new token...');
-      console.log(count);
+      // Avoid re-entering refresh if this request is already a retry
+      if (originalRequest._retry) {
+        dispatch(authLogout());
+        dispatch(cleanSettings());
+        dispatch(setError('Session expired, please login again!'));
+        return Promise.reject(error);
+      }
+      originalRequest._retry = true;
+
       const state = store.getState();
       const refreshToken = state.auth.refreshToken;
       if (refreshToken) {
         const tokenParts = JSON.parse(atob(refreshToken.split('.')[1]));
-        // exp date in token is expressed in seconds, while now() returns milliseconds:
         const now = Math.ceil(Date.now() / 1000);
         if (tokenParts.exp > now) {
-          if (count < 1) {
-            count += 1;
-            console.log('===========AFTER==============');
-            console.log(count);
-            return axiosInstance
-              .post('/token/refresh/', { refresh: refreshToken })
-              .then((response) => {
-                if (response.data.access) {
-                  count = 0;
-                  if (response.data.refresh) {
-                    dispatch(
-                      setTokensAction({
-                        token: response.data.access,
-                        refreshToken: response.data.refresh,
-                      }),
-                    );
-                  } else {
-                    dispatch(
-                      setTokensAction({ token: response.data.access, refreshToken: refreshToken }),
-                    );
-                  }
-                  axiosInstance.defaults.headers['Authorization'] =
-                    'Bearer ' + response.data.access;
-                }
-                return axiosInstance(originalRequest);
-              })
-              .catch((err) => {
-                console.log(err);
-                dispatch(authLogout());
-                dispatch(cleanSettings());
-                dispatch(setError('Session expired, please login again!'));
-                return Promise.reject(err);
+          if (isRefreshing) {
+            // Queue requests until the refresh completes
+            return new Promise((resolve) => {
+              pendingRequests.push((newToken: string) => {
+                originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
+                resolve(axiosInstance(originalRequest));
               });
-          } else {
-            console.log('Refresh token is wrong');
-            dispatch(authLogout());
-            dispatch(cleanSettings());
-            dispatch(setError('Session expired, please login again!'));
-            return Promise.reject(error);
+            });
           }
+
+          isRefreshing = true;
+          return axiosInstance
+            .post('/token/refresh/', { refresh: refreshToken })
+            .then((response) => {
+              if (response.data.access) {
+                const newToken = response.data.access;
+                const newRefresh = response.data.refresh ?? refreshToken;
+                dispatch(setTokensAction({ token: newToken, refreshToken: newRefresh }));
+                axiosInstance.defaults.headers['Authorization'] = 'Bearer ' + newToken;
+                onTokenRefreshed(newToken);
+                isRefreshing = false;
+                originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
+              }
+              return axiosInstance(originalRequest);
+            })
+            .catch((err) => {
+              isRefreshing = false;
+              pendingRequests = [];
+              dispatch(authLogout());
+              dispatch(cleanSettings());
+              dispatch(setError('Session expired, please login again!'));
+              return Promise.reject(err);
+            });
         } else {
-          console.log('Refresh token is expired', tokenParts.exp, now);
           dispatch(authLogout());
           dispatch(cleanSettings());
           dispatch(setError('Session expired, please login again!'));
           return Promise.reject(error);
         }
       } else {
-        console.log('Refresh token not available.');
         dispatch(authLogout());
         dispatch(cleanSettings());
         dispatch(setError('Session expired, please login again!'));
         return Promise.reject(error);
       }
     }
-    console.log('ELSE', error.response.data.code, error.response.status, error.response.statusText);
     // specific error handling done elsewhere
     return Promise.reject(error);
   },

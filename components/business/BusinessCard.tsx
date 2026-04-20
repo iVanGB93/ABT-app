@@ -35,7 +35,7 @@ interface BusinessCardProps {
   inDetail?: boolean;
 }
 
-export default function BusinessCard({
+function BusinessCard({
   logo,
   id,
   name,
@@ -109,3 +109,5 @@ export default function BusinessCard({
     </ThemedSecondaryView>
   );
 }
+
+export default React.memo(BusinessCard);

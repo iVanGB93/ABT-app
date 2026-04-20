@@ -14,7 +14,7 @@ interface BiometricAuthState {
 
 interface StoredCredentials {
   username: string;
-  password: string;
+  refreshToken: string;
 }
 
 interface BiometricAuthActions {
@@ -147,7 +147,7 @@ export const useBiometricAuth = (): BiometricAuthState & BiometricAuthActions =>
       const credentials = JSON.parse(storedCredsString) as StoredCredentials;
       
       // Validate that credentials have required fields
-      if (!credentials.username || !credentials.password) {
+      if (!credentials.username || !credentials.refreshToken) {
         setError('Stored credentials are corrupted. Please reconfigure biometric authentication.');
         await disableBiometric(); // Clear corrupted credentials
         return null;
@@ -176,7 +176,7 @@ export const useBiometricAuth = (): BiometricAuthState & BiometricAuthActions =>
       const authenticated = await authenticate('Enable biometric login');
       
       if (authenticated) {
-        // Store credentials securely (only username and password)
+        // Store refresh token (never the raw password)
         await SecureStore.setItemAsync(STORED_CREDENTIALS_KEY, JSON.stringify(credentials));
         await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true');
         

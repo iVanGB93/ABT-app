@@ -27,7 +27,7 @@ interface JobCardProps {
   inDetail?: boolean;
 }
 
-export default function JobCard({
+function JobCard({
   id,
   status,
   client,
@@ -94,3 +94,5 @@ export default function JobCard({
     </ThemedSecondaryView>
   );
 }
+
+export default React.memo(JobCard);

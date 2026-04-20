@@ -20,7 +20,7 @@ interface ItemCardProps {
   inDetail?: boolean;
 }
 
-export default function ItemCard({
+function ItemCard({
   image,
   id,
   name,
@@ -57,3 +57,5 @@ export default function ItemCard({
     </ThemedSecondaryView>
   );
 }
+
+export default React.memo(ItemCard);

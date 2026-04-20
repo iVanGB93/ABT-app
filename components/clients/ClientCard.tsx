@@ -14,7 +14,7 @@ interface ClientCardProps {
   last_name: any;
 }
 
-export default function ClientCard({ image, name, last_name }: ClientCardProps) {
+function ClientCard({ image, name, last_name }: ClientCardProps) {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
 
   return (
@@ -49,3 +49,5 @@ export default function ClientCard({ image, name, last_name }: ClientCardProps) 
     </ThemedSecondaryView>
   );
 }
+
+export default React.memo(ClientCard);

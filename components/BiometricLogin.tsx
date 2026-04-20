@@ -15,7 +15,7 @@ import { darkSecondColor, darkThirdColor, lightSecondColor } from '@/settings';
 
 interface StoredCredentials {
   username: string;
-  password: string;
+  refreshToken: string;
 }
 
 interface BiometricLoginProps {
