@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Text, Image, TouchableOpacity, Modal } from 'react-native';
+import { View, TextInput, Text, Image, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '@/app/(redux)/store';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import PhoneInput, {
   getCountryByPhoneNumber,
   isValidPhoneNumber,
 } from 'react-native-international-phone-number';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import {
@@ -42,10 +42,16 @@ interface Errors {
 export default function ClientForm({ action }: ClientFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { clientError, client } = useSelector((state: RootState) => state.client);
-  const [name, setName] = useState(action === 'create' ? '' : client.name);
-  const [lastName, setLastName] = useState(action === 'create' ? '' : client.last_name);
-  const [phone, setPhone] = useState(action === 'create' ? '' : client.phone);
-  const [email, setEmail] = useState(action === 'create' ? '' : client.email);
+  const { prefillName, prefillLastName, prefillPhone, prefillEmail } = useLocalSearchParams<{
+    prefillName?: string;
+    prefillLastName?: string;
+    prefillPhone?: string;
+    prefillEmail?: string;
+  }>();
+  const [name, setName] = useState(action === 'create' ? (prefillName || '') : client.name);
+  const [lastName, setLastName] = useState(action === 'create' ? (prefillLastName || '') : client.last_name);
+  const [phone, setPhone] = useState(action === 'create' ? (prefillPhone || '') : client.phone);
+  const [email, setEmail] = useState(action === 'create' ? (prefillEmail || '') : client.email);
   const [address, setAddress] = useState(action === 'create' ? '' : client.address);
   const [address2, setAddress2] = useState(action === 'create' ? '' : client.address2);
   const [image, setImage] = useState(action === 'create' ? userImageDefault : client.image);
@@ -114,7 +120,7 @@ export default function ClientForm({ action }: ClientFormProps) {
   const takePhoto = async () => {
     let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert('Permission to access camera is required!');
+      Alert.alert('Permission required', 'Permission to access camera is required!');
       return;
     }
 

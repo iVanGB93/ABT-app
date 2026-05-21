@@ -205,13 +205,6 @@ export default function BusinessDetails() {
                (activeTab === 'expenses' ? extraExpenses : extraIncome).length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <View style={styles.emptyStateIcon}>
-                    <Ionicons
-                      name={
-                        activeTab === 'expenses' ? 'remove-circle-outline' : 'add-circle-outline'
-                      }
-                      size={64}
-                      color={activeTab === 'expenses' ? '#FF9800' : '#4CAF50'}
-                    />
                   </View>
                   <ThemedText style={styles.emptyStateTitle}>
                     No {activeTab === 'expenses' ? 'expenses' : 'income'} found
@@ -219,23 +212,6 @@ export default function BusinessDetails() {
                   <ThemedText style={styles.emptyStateSubtitle}>
                     Create your first {activeTab} entry to track your business finances
                   </ThemedText>
-                  <TouchableOpacity
-                    style={[
-                      styles.primaryButton,
-                      { backgroundColor: activeTab === 'expenses' ? '#FF9800' : '#4CAF50' },
-                    ]}
-                    onPress={() =>
-                      router.navigate(
-                        activeTab === 'income'
-                          ? '/(app)/(business)/businessIncomeCreate'
-                          : '/(app)/(business)/businessExpenseCreate',
-                      )
-                    }
-                  >
-                    <ThemedText style={styles.primaryButtonText}>
-                      Add {activeTab === 'expenses' ? 'Expense' : 'Income'}
-                    </ThemedText>
-                  </TouchableOpacity>
                 </View>
               ) : (
                 <FlatList

@@ -1,7 +1,7 @@
 import {
   View,
   ActivityIndicator,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   RefreshControl,
   Image,
@@ -70,6 +70,44 @@ export default function ItemDetail() {
   const toggleImageSize = () => {
     setIsBig((prev) => !prev);
   };
+
+  // --- Grouping logic ---
+  const groupedUsedItems = (() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    const buckets: Record<string, { order: number; items: any[] }> = {};
+
+    const getKey = (dateStr: string) => {
+      const d = new Date(dateStr);
+      const jobDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const diffMs = today.getTime() - jobDay.getTime();
+      const diffDays = Math.round(diffMs / 86400000);
+
+      if (diffDays === 0) return { label: 'Today', order: 0 };
+      if (diffDays === 1) return { label: 'Yesterday', order: 1 };
+      if (diffDays < 7) return { label: dayNames[d.getDay()], order: diffDays };
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth())
+        return { label: 'This Month', order: 7 };
+      return {
+        label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        order: 8 + (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()),
+      };
+    };
+
+    [...usedItems]
+      .sort((a, b) => new Date(b.date || b.updated_at).getTime() - new Date(a.date || a.updated_at).getTime())
+      .forEach((job) => {
+        const { label, order } = getKey(job.date || job.updated_at);
+        if (!buckets[label]) buckets[label] = { order, items: [] };
+        buckets[label].items.push(job);
+      });
+
+    return Object.entries(buckets)
+      .sort(([, a], [, b]) => a.order - b.order)
+      .map(([title, { items }]) => ({ title, data: items }));
+  })();
 
   return (
     <>
@@ -173,8 +211,41 @@ export default function ItemDetail() {
             <ActivityIndicator style={commonStyles.loading} size="large" />
           ) : (
             <View style={commonStylesDetails.list}>
-              <FlatList
-                data={usedItems}
+              <SectionList
+                sections={groupedUsedItems}
+                keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+                renderSectionHeader={({ section: { title, data } }) => (
+                  <View
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      marginTop: 8,
+                      marginBottom: 2,
+                      borderLeftWidth: 3,
+                      borderLeftColor: color,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <ThemedText style={{ fontWeight: '700', fontSize: 13, opacity: 0.75, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                      {title}
+                    </ThemedText>
+                    <View style={{
+                      backgroundColor: color,
+                      borderRadius: 10,
+                      minWidth: 20,
+                      height: 20,
+                      paddingHorizontal: 6,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                      <ThemedText style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
+                        {data.length}
+                      </ThemedText>
+                    </View>
+                  </View>
+                )}
                 renderItem={({ item }) => (
                   <TouchableOpacity onPress={() => handlePressable(item.id)}>
                     <JobCard
@@ -191,13 +262,7 @@ export default function ItemDetail() {
                     />
                   </TouchableOpacity>
                 )}
-                ItemSeparatorComponent={() => (
-                  <View
-                    style={{
-                      height: 5,
-                    }}
-                  />
-                )}
+                ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
                 ListEmptyComponent={
                   <View>
                     <ThemedText style={[commonStylesDetails.headerText, { marginTop: 50 }]}>

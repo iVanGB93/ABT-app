@@ -43,7 +43,6 @@ export default function BusinessExpenseUpdate() {
         setImage(expense.image);
         setCategory(expense.category);
         setIsDeductible(expense.tax_deductible);
-        console.log(isDeductible, expense.tax_deductible);
 
       }
     }

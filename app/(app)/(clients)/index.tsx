@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   RefreshControl,
@@ -6,12 +6,15 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
+  Animated,
+  Modal,
+  Vibration,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
-import { Vibration } from 'react-native';
+import * as Contacts from 'expo-contacts';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -27,6 +30,88 @@ export default function Clients() {
   const [search, setSearch] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  // FAB speed dial
+  const [fabOpen, setFabOpen] = useState(false);
+  const fabAnimation = useRef(new Animated.Value(0)).current;
+
+  const toggleFab = () => {
+    const toValue = fabOpen ? 0 : 1;
+    Animated.spring(fabAnimation, {
+      toValue,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 80,
+    }).start();
+    setFabOpen(!fabOpen);
+  };
+
+  const closeFab = () => {
+    Animated.spring(fabAnimation, {
+      toValue: 0,
+      useNativeDriver: true,
+      friction: 6,
+    }).start();
+    setFabOpen(false);
+  };
+
+  const fabRotation = fabAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '45deg'],
+  });
+
+  const miniFabOpacity = fabAnimation.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  const newClientTranslateY = fabAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -160],
+  });
+
+  const importContactsTranslateY = fabAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -85],
+  });
+
+  // Contacts picker
+  const [contactsModalVisible, setContactsModalVisible] = useState(false);
+  const [allContacts, setAllContacts] = useState<Contacts.ExistingContact[]>([]);
+  const [contactSearch, setContactSearch] = useState('');
+
+  const filteredContacts = allContacts.filter((c) => {
+    const fullName = `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase();
+    return fullName.includes(contactSearch.toLowerCase());
+  });
+
+  const handleImportFromContacts = async () => {
+    closeFab();
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Toast.show({ type: 'error', text1: 'Permission denied', text2: 'Contacts access is required' });
+      return;
+    }
+    const { data } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.FirstName, Contacts.Fields.LastName, Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails],
+    });
+    setAllContacts(data.filter((c) => c.firstName || c.lastName));
+    setContactSearch('');
+    setContactsModalVisible(true);
+  };
+
+  const handleSelectContact = (contact: Contacts.ExistingContact) => {
+    setContactsModalVisible(false);
+    router.navigate({
+      pathname: '/(app)/(clients)/clientCreate',
+      params: {
+        prefillName: contact.firstName || '',
+        prefillLastName: contact.lastName || '',
+        prefillPhone: contact.phoneNumbers?.[0]?.number || '',
+        prefillEmail: contact.emails?.[0]?.email || '',
+      },
+    });
+  };
 
   const { clients, refresh: refreshClients } = useClients(search);
 
@@ -141,12 +226,204 @@ export default function Clients() {
               />
             }
           />
+          {/* FAB backdrop */}
+          {fabOpen && (
+            <TouchableOpacity
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
+              activeOpacity={1}
+              onPress={closeFab}
+            />
+          )}
+
+          {/* Mini FAB: New Client */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              bottom: 30,
+              right: 30,
+              alignItems: 'center',
+              opacity: miniFabOpacity,
+              transform: [{ translateY: newClientTranslateY }],
+            }}
+            pointerEvents={fabOpen ? 'auto' : 'none'}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{
+                backgroundColor: darkTheme ? '#333' : '#fff',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.3,
+                shadowRadius: 2,
+                elevation: 4,
+              }}>
+                <ThemedText style={{ fontSize: 13, fontWeight: '600' }}>New Client</ThemedText>
+              </View>
+              <TouchableOpacity
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: color,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 3,
+                  elevation: 6,
+                }}
+                onPress={() => { closeFab(); router.navigate('/(app)/(clients)/clientCreate'); }}
+              >
+                <Ionicons name="person-add" size={22} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Mini FAB: Import from Contacts */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              bottom: 30,
+              right: 30,
+              alignItems: 'center',
+              opacity: miniFabOpacity,
+              transform: [{ translateY: importContactsTranslateY }],
+            }}
+            pointerEvents={fabOpen ? 'auto' : 'none'}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{
+                backgroundColor: darkTheme ? '#333' : '#fff',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.3,
+                shadowRadius: 2,
+                elevation: 4,
+              }}>
+                <ThemedText style={{ fontSize: 13, fontWeight: '600' }}>Import from Contacts</ThemedText>
+              </View>
+              <TouchableOpacity
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: color,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 3,
+                  elevation: 6,
+                }}
+                onPress={handleImportFromContacts}
+              >
+                <Ionicons name="people" size={22} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Main FAB */}
           <TouchableOpacity
             style={[commonStyles.createButton, { backgroundColor: color }]}
-            onPress={() => router.navigate('/(app)/(clients)/clientCreate')}
+            onPress={toggleFab}
           >
-            <Ionicons name="add" size={36} color="#FFF" />
+            <Animated.View style={{ transform: [{ rotate: fabRotation }] }}>
+              <Ionicons name="add" size={36} color="#FFF" />
+            </Animated.View>
           </TouchableOpacity>
+
+          {/* Contacts Picker Modal */}
+          <Modal
+            visible={contactsModalVisible}
+            animationType="slide"
+            onRequestClose={() => setContactsModalVisible(false)}
+          >
+            <View style={{ flex: 1, backgroundColor: darkTheme ? '#111' : '#f5f5f5' }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 16,
+                paddingTop: 50,
+                backgroundColor: darkTheme ? '#1a1a1a' : '#fff',
+                borderBottomWidth: 1,
+                borderBottomColor: darkTheme ? '#333' : '#ddd',
+              }}>
+                <TouchableOpacity onPress={() => setContactsModalVisible(false)} style={{ marginRight: 12 }}>
+                  <Ionicons name="close" size={26} color={color} />
+                </TouchableOpacity>
+                <ThemedText type="subtitle" style={{ flex: 1 }}>Select a Contact</ThemedText>
+              </View>
+              <View style={{ padding: 12 }}>
+                <TextInput
+                  placeholder="Search contacts..."
+                  placeholderTextColor="#888"
+                  value={contactSearch}
+                  onChangeText={setContactSearch}
+                  style={{
+                    backgroundColor: darkTheme ? '#222' : '#fff',
+                    color: darkTheme ? '#fff' : '#000',
+                    borderRadius: 10,
+                    padding: 10,
+                    borderWidth: 1,
+                    borderColor: darkTheme ? '#444' : '#ccc',
+                  }}
+                />
+              </View>
+              <FlatList
+                data={filteredContacts}
+                keyExtractor={(item) => item.id ?? Math.random().toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => handleSelectContact(item)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      borderBottomWidth: 1,
+                      borderBottomColor: darkTheme ? '#222' : '#eee',
+                    }}
+                  >
+                    <View style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 21,
+                      backgroundColor: color,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginRight: 14,
+                    }}>
+                      <ThemedText style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                        {(item.firstName?.[0] || item.lastName?.[0] || '?').toUpperCase()}
+                      </ThemedText>
+                    </View>
+                    <View>
+                      <ThemedText style={{ fontWeight: '600', fontSize: 15 }}>
+                        {`${item.firstName || ''} ${item.lastName || ''}`.trim()}
+                      </ThemedText>
+                      {item.phoneNumbers?.[0]?.number && (
+                        <ThemedText style={{ fontSize: 13, color: '#888' }}>
+                          {item.phoneNumbers[0].number}
+                        </ThemedText>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={{ alignItems: 'center', padding: 32 }}>
+                    <ThemedText>No contacts found</ThemedText>
+                  </View>
+                }
+              />
+            </View>
+          </Modal>
         </>
       )}
     </ThemedView>

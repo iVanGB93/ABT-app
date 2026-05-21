@@ -490,10 +490,10 @@ export const generatePremiumInvoiceHTML = (invoice: any, charges: any[], busines
         <section class="client-section">
             <div class="bill-to-label">Bill to:</div>
             <div class="client-info">
-                <div class="client-name">${client.name}</div>
-                <div class="client-detail">📧 ${client.email}</div>
-                <div class="client-detail">📞 ${client.phone}</div>
-                <div class="client-detail">📍 ${client.address}</div>
+                <div class="client-name">${client.name}${client.last_name ? ' ' + client.last_name : ''}</div>
+                ${client.email ? `<div class="client-detail">📧 ${client.email}</div>` : ''}
+                ${client.phone ? `<div class="client-detail">📞 ${client.phone}</div>` : ''}
+                ${client.address ? `<div class="client-detail">📍 ${client.address}</div>` : ''}
             </div>
         </section>
         
