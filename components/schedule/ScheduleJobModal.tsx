@@ -4,7 +4,7 @@ import {
   Modal, 
   TouchableOpacity, 
   FlatList, 
-  StyleSheet 
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -25,6 +25,7 @@ interface ScheduleJobModalProps {
   visible: boolean;
   onClose: () => void;
   onScheduleJob: (job: Job) => void;
+  onCreateJob: () => void;
   selectedDate: Date;
   selectedTime: string;
   jobs: Job[];
@@ -36,6 +37,7 @@ export default function ScheduleJobModal({
   visible,
   onClose,
   onScheduleJob,
+  onCreateJob,
   selectedDate,
   selectedTime,
   jobs,
@@ -43,11 +45,11 @@ export default function ScheduleJobModal({
   darkTheme
 }: ScheduleJobModalProps) {
 
-  // Filter unscheduled jobs and jobs that aren't completed
+  // Filter unscheduled jobs that aren't completed/cancelled/paid
   const availableJobs = useMemo(() => {
     return jobs.filter(job => 
-      job && // Ensure job exists
-      job.id && // Ensure job has an ID
+      job &&
+      job.id &&
       !job.scheduled_at && 
       job.status !== 'completed' && 
       job.status !== 'cancelled' &&
@@ -61,35 +63,25 @@ export default function ScheduleJobModal({
       month: 'long', 
       day: 'numeric'
     });
-    
-    // Format time from 24h to 12h
     const hour = parseInt(selectedTime.split(':')[0]);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-    const timeStr = `${displayHour}:00 ${ampm}`;
-    
-    return `${dateStr} at ${timeStr}`;
+    return `${dateStr} at ${displayHour}:00 ${ampm}`;
   };
 
   const renderJobItem = ({ item }: { item: Job }) => {
-    // Additional safety check
-    if (!item || !item.id) {
-      return null;
-    }
+    if (!item || !item.id) return null;
 
     return (
       <TouchableOpacity 
-        style={[
-          styles.jobItem,
-          { borderColor: darkTheme ? '#444' : '#e0e0e0' }
-        ]}
+        style={[styles.jobItem, { borderColor: darkTheme ? '#444' : '#e0e0e0' }]}
         onPress={() => onScheduleJob(item)}
       >
         <View style={styles.jobHeader}>
           <ThemedText style={styles.jobDescription}>
             {item.description || 'No description'}
           </ThemedText>
-          <ThemedText style={[styles.jobPrice, { color: color }]}>
+          <ThemedText style={[styles.jobPrice, { color }]}>
             ${item.price || 0}
           </ThemedText>
         </View>
@@ -101,14 +93,12 @@ export default function ScheduleJobModal({
               {item.client_name_lastName || `Client #${item.client || 'Unknown'}`}
             </ThemedText>
           </View>
-          
           <View style={styles.jobDetailRow}>
             <Ionicons name="location" size={14} color="#666" />
             <ThemedText style={styles.jobDetailText} numberOfLines={1}>
               {item.address || 'No address'}
             </ThemedText>
           </View>
-          
           <View style={styles.jobDetailRow}>
             <Ionicons name="flag" size={14} color="#666" />
             <ThemedText style={[styles.jobDetailText, styles.statusText]}>
@@ -144,6 +134,9 @@ export default function ScheduleJobModal({
             </TouchableOpacity>
           </View>
 
+          {/* Section label */}
+          <ThemedText style={styles.sectionLabel}>Unscheduled jobs</ThemedText>
+
           {/* Job List */}
           {availableJobs.length > 0 ? (
             <FlatList
@@ -161,13 +154,20 @@ export default function ScheduleJobModal({
                 No unscheduled jobs available
               </ThemedText>
               <ThemedText style={styles.emptyStateSubtext}>
-                All jobs are either scheduled or completed
+                All active jobs are already scheduled
               </ThemedText>
             </View>
           )}
 
           {/* Footer */}
           <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[styles.createJobButton, { backgroundColor: color }]}
+              onPress={onCreateJob}
+            >
+              <Ionicons name="add-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
+              <ThemedText style={styles.createJobButtonText}>Create New Job</ThemedText>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.cancelButton, { borderColor: darkTheme ? '#444' : '#ccc' }]}
               onPress={onClose}
@@ -212,9 +212,18 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 4,
   },
+  sectionLabel: {
+    marginTop: 14,
+    marginHorizontal: 20,
+    opacity: 0.7,
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   jobList: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   jobItem: {
     borderWidth: 1,
@@ -255,7 +264,6 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   emptyState: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
@@ -275,13 +283,25 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 12,
+    gap: 10,
+  },
+  createJobButton: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createJobButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
   },
   cancelButton: {
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: 24,
     alignItems: 'center',
   },
 });

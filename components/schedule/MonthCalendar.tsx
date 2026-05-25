@@ -1,14 +1,11 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
-
-interface Job {
-  id: number;
-  scheduled_at?: string | null;
-}
+import type { ScheduleEvent } from '@/services';
 
 interface MonthCalendarProps {
-  jobs: Job[];
+  events: ScheduleEvent[];
+  viewDate: Date;
   selectedDate: Date;
   onDatePress: (date: Date) => void;
   color: string;
@@ -41,12 +38,12 @@ const getDaysInMonth = (date: Date) => {
 };
 
 // Helper to count jobs for a specific date
-const getJobCountForDate = (jobs: Job[], targetDate: Date): number => {
-  return jobs.filter(job => {
-    if (!job.scheduled_at) return false;
+const getEventCountForDate = (events: ScheduleEvent[], targetDate: Date): number => {
+  return events.filter((event) => {
+    if (!event.start_at || event.is_cancelled) return false;
     
-    const jobDate = new Date(job.scheduled_at);
-    return jobDate.toDateString() === targetDate.toDateString();
+    const eventDate = new Date(event.start_at);
+    return eventDate.toDateString() === targetDate.toDateString();
   }).length;
 };
 
@@ -62,14 +59,15 @@ const isSelected = (date: Date, selectedDate: Date): boolean => {
 };
 
 export default function MonthCalendar({
-  jobs,
+  events,
+  viewDate,
   selectedDate,
   onDatePress,
   color,
   darkTheme
 }: MonthCalendarProps) {
   
-  const days = getDaysInMonth(selectedDate);
+  const days = getDaysInMonth(viewDate);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
   return (
@@ -92,7 +90,7 @@ export default function MonthCalendar({
                 return <View key={`empty-${weekIndex}-${dayIndex}`} style={styles.dayCell} />;
               }
               
-              const jobCount = getJobCountForDate(jobs, date);
+              const eventCount = getEventCountForDate(events, date);
               const isTodayDate = isToday(date);
               const isSelectedDate = isSelected(date, selectedDate);
               
@@ -114,8 +112,8 @@ export default function MonthCalendar({
                     {date.getDate()}
                   </ThemedText>
                   
-                  {/* Job count indicator */}
-                  {jobCount > 0 && (
+                  {/* Event count indicator */}
+                  {eventCount > 0 && (
                     <View style={[
                       styles.jobCountBadge,
                       { backgroundColor: isSelectedDate ? '#fff' : color }
@@ -124,7 +122,7 @@ export default function MonthCalendar({
                         styles.jobCountText,
                         { color: isSelectedDate ? color : '#fff' }
                       ]}>
-                        {jobCount}
+                        {eventCount}
                       </ThemedText>
                     </View>
                   )}

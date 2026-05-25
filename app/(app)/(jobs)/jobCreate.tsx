@@ -7,7 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { RootState } from '@/app/(redux)/store';
 import { ThemedSecondaryView } from '@/components/ThemedSecondaryView';
@@ -23,6 +23,7 @@ export default function JobCreate() {
   const { color, darkTheme } = useSelector((state: RootState) => state.settings);
   const { jobLoading } = useSelector((state: RootState) => state.job);
   const router = useRouter();
+  const { scheduledAt } = useLocalSearchParams<{ scheduledAt?: string }>();
 
   return (
     <KeyboardAvoidingView
@@ -51,7 +52,7 @@ export default function JobCreate() {
           style={[commonStylesForm.form, { shadowColor: darkTheme ? '#fff' : '#000' }]}
         >
           <ScrollView keyboardShouldPersistTaps={'handled'} contentContainerStyle={{ flexGrow: 1 }}>
-            <JobForm action="new" />
+            <JobForm action="new" initialScheduledAt={scheduledAt} />
           </ScrollView>
         </ThemedSecondaryView>
       )}

@@ -34,6 +34,7 @@ import { useClients, useJobActions } from '@/hooks';
 
 interface JobFormProps {
   action?: any;
+  initialScheduledAt?: string;
 }
 
 interface Errors {
@@ -43,14 +44,14 @@ interface Errors {
   price?: string;
 }
 
-export default function JobForm({ action }: JobFormProps) {
+export default function JobForm({ action, initialScheduledAt }: JobFormProps) {
   const { color, darkTheme, business } = useSelector((state: RootState) => state.settings);
   const { userName } = useSelector((state: RootState) => state.auth);
   const { clients } = useSelector((state: RootState) => state.client);
   const { job } = useSelector((state: RootState) => state.job);
   const [clientsNames, setClientsNames] = useState<any[]>([]);
-  const [client, setClient] = useState<any | undefined>(); // objeto cliente seleccionado
-  const [clientSelected, setClientSelected] = useState<string | undefined>(); // "Nombre Apellido"
+  const [client, setClient] = useState<any | undefined>();
+  const [clientSelected, setClientSelected] = useState<string | undefined>();
   const [description, setDescription] = useState(action === 'new' ? '' : job.description);
   const [address, setAddress] = useState(action === 'new' ? '' : job.address);
   const [address2, setAddress2] = useState(action === 'new' ? '' : job.address2);
@@ -60,7 +61,6 @@ export default function JobForm({ action }: JobFormProps) {
   );
   const [error, setError] = useState('');
   const [imageModalVisible, setImageModalVisible] = useState(false);
-
   const [errors, setErrors] = useState<Errors>({});
   const [isEnabled, setIsEnabled] = useState(false);
   const dispatch = useAppDispatch();
@@ -207,6 +207,9 @@ export default function JobForm({ action }: JobFormProps) {
       formData.append('price', price);
       formData.append('address', address);
       formData.append('address2', address2);
+      if (action === 'new' && initialScheduledAt) {
+        formData.append('scheduled_at', initialScheduledAt);
+      }
       // Siempre agregar imagen al FormData (puede ser string o asset)
       if (image !== null && typeof image !== 'string' && image.uri) {
         const uriParts = image.uri.split('.');
@@ -244,6 +247,17 @@ export default function JobForm({ action }: JobFormProps) {
       )}
       {action === 'new' ? (
         <>
+          {initialScheduledAt && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, padding: 10, borderRadius: 10, backgroundColor: 'rgba(128,128,128,0.08)' }}>
+              <Ionicons name="calendar" size={16} color={color} />
+              <ThemedText style={{ fontSize: 14 }}>
+                Scheduled:{' '}
+                {new Date(initialScheduledAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
+                at{' '}
+                {new Date(initialScheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              </ThemedText>
+            </View>
+          )}
           <ThemedText type="subtitle">Client</ThemedText>
           <View style={{ flexDirection: 'row' }}>
             <SelectDropdown

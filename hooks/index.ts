@@ -10,6 +10,9 @@ export * from './useJobs';
 // Item hooks
 export * from './useItems';
 
+// Schedule hooks
+export * from './useSchedule';
+
 // Authentication hooks
 export * from './useBiometricAuth';
 

@@ -2,27 +2,25 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
+import type { ScheduleEvent } from '@/services';
 
-interface Job {
-  id: number;
-  description: string;
-  scheduled_at: string;
-  status: string;
-  client: string;
-  price: number;
+type EventStatus = 'active' | 'completed' | 'cancelled';
+
+export interface TimelineScheduleEvent extends ScheduleEvent {
+  linked_job_status?: string | null;
 }
 
 interface DayColumnProps {
   date: Date;
-  jobs: Job[];
+  events: TimelineScheduleEvent[];
   isToday: boolean;
   isSelected: boolean;
-  onJobPress: (job: Job) => void;
+  onEventPress: (event: TimelineScheduleEvent) => void;
   onTimeSlotPress: (date: Date, time: string) => void;
-  onDatePress?: (date: Date) => void; // New prop for date navigation
+  onDatePress?: (date: Date) => void;
   color: string;
   darkTheme: boolean;
-  width?: number; // Optional width prop
+  width?: number;
 }
 
 // Helper to get time slots (8 AM to 8 PM)
@@ -31,27 +29,37 @@ const timeSlots = [
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
 ];
 
-// Helper to format job for display
-const formatJobForTimeline = (job: Job) => {
+const formatEventForTimeline = (event: TimelineScheduleEvent) => {
   const maxLength = 12;
-  const description = job.description || 'No description';
-  return description.length > maxLength 
-    ? description.substring(0, maxLength) + '...' 
-    : description;
+  const title = event.title || 'Untitled';
+  return title.length > maxLength
+    ? title.substring(0, maxLength) + '...'
+    : title;
 };
 
-// Helper to get job time from scheduled_at
-const getJobTime = (scheduledAt: string): string => {
-  const date = new Date(scheduledAt);
+const getEventTime = (startAt: string): string => {
+  const date = new Date(startAt);
   return date.toTimeString().substring(0, 5); // "09:30"
+};
+
+const resolveEventStatus = (event: TimelineScheduleEvent): EventStatus => {
+  if (event.is_cancelled || event.linked_job_status === 'cancelled') {
+    return 'cancelled';
+  }
+
+  if (event.linked_job_status === 'completed' || event.linked_job_status === 'paid') {
+    return 'completed';
+  }
+
+  return 'active';
 };
 
 export default function DayColumn({
   date,
-  jobs,
+  events,
   isToday,
   isSelected,
-  onJobPress,
+  onEventPress,
   onTimeSlotPress,
   onDatePress,
   color,
@@ -59,18 +67,17 @@ export default function DayColumn({
   width
 }: DayColumnProps) {
   
-  // Group jobs by time slot
-  const jobsByTime = jobs.reduce((acc, job) => {
-    const jobTime = getJobTime(job.scheduled_at);
-    const hour = jobTime.split(':')[0];
+  const eventsByTime = events.reduce((acc, event) => {
+    const eventTime = getEventTime(event.start_at);
+    const hour = eventTime.split(':')[0];
     const timeSlot = `${hour}:00`;
     
     if (!acc[timeSlot]) {
       acc[timeSlot] = [];
     }
-    acc[timeSlot].push(job);
+    acc[timeSlot].push(event);
     return acc;
-  }, {} as { [key: string]: Job[] });
+  }, {} as { [key: string]: TimelineScheduleEvent[] });
 
   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
   const dayNumber = date.getDate();
@@ -107,55 +114,69 @@ export default function DayColumn({
       {/* Time slots */}
       <View style={styles.timeSlots}>
         {timeSlots.map((timeSlot) => {
-          const hasJobs = jobsByTime[timeSlot]?.length > 0;
+          const hasEvents = eventsByTime[timeSlot]?.length > 0;
           
           return (
             <TouchableOpacity
               key={timeSlot}
               style={[
                 styles.timeSlot,
-                !hasJobs && styles.emptyTimeSlot
+                !hasEvents && styles.emptyTimeSlot
               ]}
-              onPress={() => !hasJobs && onTimeSlotPress(date, timeSlot)}
-              activeOpacity={hasJobs ? 1 : 0.7}
+              onPress={() => !hasEvents && onTimeSlotPress(date, timeSlot)}
+              activeOpacity={hasEvents ? 1 : 0.7}
             >
-              {/* Show jobs for this time slot */}
-              {jobsByTime[timeSlot]?.map((job) => {
-                const isCompleted = job.status === 'completed' || job.status === 'paid';
+              {/* Show events for this time slot */}
+              {eventsByTime[timeSlot]?.map((event) => {
+                const status = resolveEventStatus(event);
+                const isCompleted = status === 'completed';
+                const isCancelled = status === 'cancelled';
                 
                 return (
                   <TouchableOpacity
-                    key={job.id}
+                    key={event.id}
                     style={[
-                      styles.jobItem,
-                      isCompleted 
-                        ? { 
-                            backgroundColor: '#e8f5e8', 
-                            borderLeftColor: '#4caf50',
-                            opacity: 0.8 
+                      styles.eventItem,
+                      isCancelled
+                        ? {
+                            backgroundColor: '#fdeaea',
+                            borderLeftColor: '#d9534f',
+                            opacity: 0.7,
                           }
-                        : { 
-                            backgroundColor: color + '20', 
-                            borderLeftColor: color 
+                        : isCompleted
+                        ? {
+                            backgroundColor: '#e8f5e8',
+                            borderLeftColor: '#4caf50',
+                            opacity: 0.8,
+                          }
+                        : {
+                            backgroundColor: color + '20',
+                            borderLeftColor: color,
                           }
                     ]}
-                    onPress={() => onJobPress(job)}
+                    onPress={() => onEventPress(event)}
                   >
                     <ThemedText style={[
-                      styles.jobText,
+                      styles.eventText,
                       isCompleted && { textDecorationLine: 'line-through', opacity: 0.7 }
                     ]}>
-                      {formatJobForTimeline(job)}
+                      {formatEventForTimeline(event)}
                     </ThemedText>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      {isCancelled && (
+                        <Ionicons name="close-circle" size={12} color="#d9534f" />
+                      )}
                       {isCompleted && (
                         <Ionicons name="checkmark-circle" size={12} color="#4caf50" />
                       )}
                       <ThemedText style={[
-                        styles.jobPrice,
+                        styles.eventMeta,
                         isCompleted && { opacity: 0.7 }
                       ]}>
-                        ${job.price || 0}
+                        {new Date(event.start_at).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
                       </ThemedText>
                     </View>
                   </TouchableOpacity>
@@ -163,7 +184,7 @@ export default function DayColumn({
               })}
               
               {/* Show plus icon for empty slots */}
-              {!hasJobs && (
+              {!hasEvents && (
                 <View style={styles.addJobIndicator}>
                   <Ionicons name="add" size={16} color="#ccc" />
                 </View>
@@ -173,19 +194,19 @@ export default function DayColumn({
         })}
       </View>
 
-      {/* Jobs count indicator */}
-      {jobs.length > 0 && (
+      {/* Event count indicator */}
+      {events.length > 0 && (
         <View style={styles.jobCountContainer}>
           <View style={[styles.jobCount, { backgroundColor: color }]}>
             <ThemedText style={styles.jobCountText}>
-              {jobs.filter(job => job.status !== 'completed' && job.status !== 'paid').length}
+              {events.filter((event) => resolveEventStatus(event) === 'active').length}
             </ThemedText>
           </View>
-          {jobs.filter(job => job.status === 'completed' || job.status === 'paid').length > 0 && (
+          {events.filter((event) => resolveEventStatus(event) === 'completed').length > 0 && (
             <View style={[styles.jobCount, styles.completedJobCount]}>
               <Ionicons name="checkmark" size={10} color="#fff" />
               <ThemedText style={[styles.jobCountText, { fontSize: 10 }]}>
-                {jobs.filter(job => job.status === 'completed' || job.status === 'paid').length}
+                {events.filter((event) => resolveEventStatus(event) === 'completed').length}
               </ThemedText>
             </View>
           )}
@@ -236,18 +257,18 @@ const styles = StyleSheet.create({
   addJobIndicator: {
     opacity: 0.3,
   },
-  jobItem: {
+  eventItem: {
     backgroundColor: '#f0f8ff',
     borderLeftWidth: 3,
     borderRadius: 4,
     padding: 6,
     marginBottom: 2,
   },
-  jobText: {
+  eventText: {
     fontSize: 11,
     fontWeight: '600',
   },
-  jobPrice: {
+  eventMeta: {
     fontSize: 10,
     opacity: 0.7,
   },
